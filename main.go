@@ -8,7 +8,8 @@ import (
 
 func subcommandMap() map[string]subcommand.Subcommand {
 	return map[string]subcommand.Subcommand{
-		subcommand.START_MEETING_CMD: subcommand.NewStartMeetingSubcommand(),
+		subcommand.StartMeetingCmd:  subcommand.NewStartMeetingSubcommand(),
+		subcommand.FinishMeetingCmd: subcommand.NewFinishMeetingSubcommand(),
 	}
 }
 

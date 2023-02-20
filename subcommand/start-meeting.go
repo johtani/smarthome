@@ -14,11 +14,11 @@ func checkConfig() error {
 	return nil
 }
 
-const START_MEETING_CMD = "start-meeting"
+const StartMeetingCmd = "start-meeting"
 
 func NewStartMeetingSubcommand() Subcommand {
 	return Subcommand{
-		START_MEETING_CMD,
+		StartMeetingCmd,
 		"Actions before starting meeting",
 		[]action.Action{
 			owntone.NewPauseAction(),
