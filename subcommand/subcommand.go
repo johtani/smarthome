@@ -5,8 +5,8 @@ import (
 )
 
 type Subcommand struct {
-	name        string
-	description string
+	Name        string
+	Description string
 	actions     []action.Action
 	checkConfig func() error
 }

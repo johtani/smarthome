@@ -13,11 +13,18 @@ func subcommandMap() map[string]subcommand.Subcommand {
 	}
 }
 
+func printSubcommands() {
+	fmt.Println("利用可能なコマンドは次の通りです。")
+	for _, command := range subcommandMap() {
+		fmt.Printf("  %s: %s\n", command.Name, command.Description)
+	}
+}
+
 func printHelp() string {
 	// TODO もうちょっときれいに？
+	printSubcommands()
 	return `コマンドを指定してください。
 smart_home <コマンド名>`
-	//FIXME コマンド一覧を表示
 }
 
 func main() {
