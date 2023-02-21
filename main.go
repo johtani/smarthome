@@ -6,16 +6,9 @@ import (
 	"smart_home/subcommand"
 )
 
-func subcommandMap() map[string]subcommand.Subcommand {
-	return map[string]subcommand.Subcommand{
-		subcommand.StartMeetingCmd:  subcommand.NewStartMeetingSubcommand(),
-		subcommand.FinishMeetingCmd: subcommand.NewFinishMeetingSubcommand(),
-	}
-}
-
 func printSubcommands() {
 	fmt.Println("利用可能なコマンドは次の通りです。")
-	for _, command := range subcommandMap() {
+	for _, command := range subcommand.SubcommandMap() {
 		fmt.Printf("  %s: %s\n", command.Name, command.Description)
 	}
 }
@@ -42,7 +35,7 @@ func run() error {
 	// 第1引数の文字列から、実行するサブコマンドを決定する
 	name := os.Args[1]
 	// コマンドのインスタンスを探す（全部じゃなくて、呼ばれたやつだけインスタンス化してもよさそう？）
-	c, ok := subcommandMap()[name]
+	c, ok := subcommand.SubcommandMap()[name]
 	if ok {
 		// TODO configを読み込む(コマンドごとにする？それともここで全部読み取る？コマンドで設定を読み込むのと十分かをチェックするメソッドを用意すればいいか？)
 		err := c.CheckConfig()

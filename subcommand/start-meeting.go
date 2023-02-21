@@ -5,15 +5,6 @@ import (
 	"smart_home/subcommand/action/owntone"
 )
 
-func checkConfig() error {
-	// TODO エラーはまとめて返したほうがいいかも
-	err := owntone.CheckConfig()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 const StartMeetingCmd = "start-meeting"
 
 func NewStartMeetingSubcommand() Subcommand {
