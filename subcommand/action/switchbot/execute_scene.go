@@ -1,21 +1,28 @@
 package switchbot
 
-import "github.com/nasa9084/go-switchbot/v2"
+import (
+	"context"
+	"github.com/nasa9084/go-switchbot/v2"
+)
 
 type ExecuteSceneAction struct {
-	name  string
-	scene string
-	c     *switchbot.Client
+	name    string
+	sceneId string
+	c       *switchbot.Client
 }
 
 func (a ExecuteSceneAction) Run() error {
+	err := a.c.Scene().Execute(context.Background(), a.sceneId)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
-func NewExecuteSceneAction(scene string) ExecuteSceneAction {
+func NewExecuteSceneAction(sceneId string) ExecuteSceneAction {
 	return ExecuteSceneAction{
 		"Turn off the target device",
-		scene,
+		sceneId,
 		NewSwitchBotClient(),
 	}
 }
