@@ -5,14 +5,14 @@ import (
 	"smart_home/subcommand/action/switchbot"
 )
 
-const SwitchBotDeviceListCmd = "switchbot-list"
+const SwitchBotDeviceListCmd = "switchbot-device-list"
 
-func NewSwitchBotListSubcommand() Subcommand {
+func NewSwitchBotDeviceListSubcommand() Subcommand {
 	return Subcommand{
 		SwitchBotDeviceListCmd,
-		"List devices on SwithcBot",
+		"List devices on SwitchBot",
 		[]action.Action{
-			switchbot.NewDeviceListAction(),
+			switchbot.NewListDevicesAction(),
 		},
 		checkConfig,
 	}

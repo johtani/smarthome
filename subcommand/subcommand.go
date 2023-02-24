@@ -44,6 +44,7 @@ func SubcommandMap() map[string]Subcommand {
 	return map[string]Subcommand{
 		StartMeetingCmd:        NewStartMeetingSubcommand(),
 		FinishMeetingCmd:       NewFinishMeetingSubcommand(),
-		SwitchBotDeviceListCmd: NewSwitchBotListSubcommand(),
+		SwitchBotDeviceListCmd: NewSwitchBotDeviceListSubcommand(),
+		SwitchBotSceneListCmd:  NewSwitchBotSceneListSubcommand(),
 	}
 }
