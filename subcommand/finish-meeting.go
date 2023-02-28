@@ -15,5 +15,6 @@ func NewFinishMeetingSubcommand() Subcommand {
 			owntone.NewPlayAction(),
 		},
 		checkConfig,
+		true,
 	}
 }

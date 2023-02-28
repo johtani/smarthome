@@ -1,6 +1,7 @@
 package subcommand
 
 import (
+	"fmt"
 	"smart_home/subcommand/action"
 	"smart_home/subcommand/action/owntone"
 	"smart_home/subcommand/action/switchbot"
@@ -11,12 +12,15 @@ type Subcommand struct {
 	Description string
 	actions     []action.Action
 	checkConfig func() error
+	ignoreError bool
 }
 
 func (s Subcommand) Exec() error {
 	for i := range s.actions {
 		err := s.actions[i].Run()
-		if err != nil {
+		if s.ignoreError && err != nil {
+			fmt.Printf("skip error\t %v\n", err)
+		} else if err != nil {
 			return err
 		}
 	}

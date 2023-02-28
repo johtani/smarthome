@@ -15,5 +15,6 @@ func NewSwitchBotDeviceListSubcommand() Subcommand {
 			switchbot.NewListDevicesAction(),
 		},
 		checkConfig,
+		true,
 	}
 }

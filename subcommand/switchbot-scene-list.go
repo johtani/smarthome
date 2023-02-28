@@ -15,5 +15,6 @@ func NewSwitchBotSceneListSubcommand() Subcommand {
 			switchbot.NewListScenesAction(),
 		},
 		checkConfig,
+		true,
 	}
 }

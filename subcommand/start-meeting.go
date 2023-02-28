@@ -19,5 +19,6 @@ func NewStartMeetingSubcommand() Subcommand {
 			switchbot.NewExecuteSceneAction(os.Getenv(EnvStartMeetingScene)),
 		},
 		checkConfig,
+		true,
 	}
 }
