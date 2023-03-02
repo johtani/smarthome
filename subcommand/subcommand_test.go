@@ -32,10 +32,10 @@ func TestSubcommand_Exec(t *testing.T) {
 		wantErr bool
 	}{
 		{"empty action", fields{"test", "test", []action.Action{}, func() error { return nil }, true}, false},
-		{"ok-ng action expect error", fields{"test", "test", []action.Action{okAction{}, ngAction{}}, func() error { return nil }, false}, true},
-		{"ng-ok action expect error", fields{"test", "test", []action.Action{ngAction{}, okAction{}}, func() error { return nil }, false}, true},
-		{"ok-ng action skip error", fields{"test", "test", []action.Action{okAction{}, ngAction{}}, func() error { return nil }, true}, false},
-		{"ng-ok action skip error", fields{"test", "test", []action.Action{ngAction{}, okAction{}}, func() error { return nil }, true}, false},
+		{"ok-ng actions expect error", fields{"test", "test", []action.Action{okAction{}, ngAction{}}, func() error { return nil }, false}, true},
+		{"ng-ok actions expect error", fields{"test", "test", []action.Action{ngAction{}, okAction{}}, func() error { return nil }, false}, true},
+		{"ok-ng actions skip error", fields{"test", "test", []action.Action{okAction{}, ngAction{}}, func() error { return nil }, true}, false},
+		{"ng-ok actions skip error", fields{"test", "test", []action.Action{ngAction{}, okAction{}}, func() error { return nil }, true}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
