@@ -12,7 +12,6 @@ func TestCheckConfig(t *testing.T) {
 		wantErr bool
 	}{
 		{"no env", func(t *testing.T) {}, true},
-
 		{"ok", func(t *testing.T) { t.Setenv(EnvUrl, "aaa") }, false},
 	}
 	for _, tt := range tests {
