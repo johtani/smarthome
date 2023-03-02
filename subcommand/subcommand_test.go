@@ -52,3 +52,35 @@ func TestSubcommand_Exec(t *testing.T) {
 		})
 	}
 }
+
+func TestSubcommand_CheckConfig(t *testing.T) {
+	type fields struct {
+		Name        string
+		Description string
+		actions     []action.Action
+		checkConfig func() error
+		ignoreError bool
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{"ok checkconfig", fields{"test", "test", []action.Action{}, func() error { return nil }, true}, false},
+		{"ng checkconfig", fields{"test", "test", []action.Action{}, func() error { return fmt.Errorf("checkConfig error") }, true}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := Subcommand{
+				Name:        tt.fields.Name,
+				Description: tt.fields.Description,
+				actions:     tt.fields.actions,
+				checkConfig: tt.fields.checkConfig,
+				ignoreError: tt.fields.ignoreError,
+			}
+			if err := s.CheckConfig(); (err != nil) != tt.wantErr {
+				t.Errorf("CheckConfig() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
