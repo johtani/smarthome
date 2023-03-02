@@ -6,14 +6,14 @@ import (
 	"strings"
 )
 
-const ENV_URL = "OWNTONE_URL"
+const EnvUrl = "OWNTONE_URL"
 
 type Client struct {
 	url string
 }
 
 func CheckConfig() error {
-	url := os.Getenv(ENV_URL)
+	url := os.Getenv(EnvUrl)
 	if len(url) == 0 {
 		return fmt.Errorf("Not found \"OWNTONE_URL\". Please set OWNTONE_URL via Environment variable")
 	}
@@ -25,7 +25,7 @@ func (c Client) buildUrl(path string) string {
 }
 
 func NewOwntoneClient() Client {
-	url := os.Getenv("OWNTONE_URL")
+	url := os.Getenv(EnvUrl)
 	if strings.HasSuffix(url, "/") != true {
 		url = url + "/"
 	}
