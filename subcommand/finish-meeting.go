@@ -13,6 +13,7 @@ func NewFinishMeetingSubcommand() Subcommand {
 		"Actions after meeting",
 		[]action.Action{
 			owntone.NewPlayAction(),
+			owntone.NewSetVolumeAction(),
 		},
 		checkConfig,
 		true,
