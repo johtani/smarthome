@@ -103,8 +103,8 @@ func TestClient_Pause(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusNoContent, http.MethodPut, "api/player/pause"}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPut, "api/player/pause"}, true},
+		{"OK", fields{http.StatusNoContent, http.MethodPut, "/api/player/pause"}, false},
+		{"NG", fields{http.StatusInternalServerError, http.MethodPut, "/api/player/pause"}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -114,6 +114,33 @@ func TestClient_Pause(t *testing.T) {
 			c := NewOwntoneClient()
 			if err := c.Pause(); (err != nil) != tt.wantErr {
 				t.Errorf("Pause() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestClient_Play(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{"OK", fields{http.StatusNoContent, http.MethodPut, "/api/player/play"}, false},
+		{"NG", fields{http.StatusInternalServerError, http.MethodPut, "/api/player/play"}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path)
+			defer server.Close()
+			t.Setenv(EnvUrl, server.URL)
+			c := NewOwntoneClient()
+			if err := c.Play(); (err != nil) != tt.wantErr {
+				t.Errorf("Play() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

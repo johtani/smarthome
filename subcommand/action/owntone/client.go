@@ -53,3 +53,19 @@ func (c Client) Pause() error {
 	}
 	return nil
 }
+
+func (c Client) Play() error {
+	req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/player/play"), nil)
+	if err != nil {
+		return err
+	}
+	res, err := c.httpclient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+	return nil
+}
