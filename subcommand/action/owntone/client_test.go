@@ -1,8 +1,11 @@
 package owntone
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestCheckConfig(t *testing.T) {
@@ -59,15 +62,58 @@ func TestNewOwntoneClient(t *testing.T) {
 		setenv func(t *testing.T)
 		want   Client
 	}{
-		{"no env", func(t *testing.T) {}, Client{"/"}},
-		{"no slash", func(t *testing.T) { t.Setenv(EnvUrl, "url") }, Client{"url/"}},
-		{"end with slash", func(t *testing.T) { t.Setenv(EnvUrl, "url/") }, Client{"url/"}},
+		{"no env", func(t *testing.T) {}, Client{"/", http.Client{Timeout: 10 * time.Second}}},
+		{"no slash", func(t *testing.T) { t.Setenv(EnvUrl, "url") }, Client{"url/", http.Client{Timeout: 10 * time.Second}}},
+		{"end with slash", func(t *testing.T) { t.Setenv(EnvUrl, "url/") }, Client{"url/", http.Client{Timeout: 10 * time.Second}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tt.setenv(t)
 			if got := NewOwntoneClient(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewOwntoneClient() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func createMockServer(code int, method string, path string) *httptest.Server {
+	return httptest.NewServer(
+		http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
+			if req.Method != method {
+				rw.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			if req.URL.Path != path {
+				rw.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			rw.WriteHeader(code)
+			return
+		}))
+}
+
+func TestClient_Pause(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{"OK", fields{http.StatusNoContent, http.MethodPut, "api/player/pause"}, false},
+		{"NG", fields{http.StatusInternalServerError, http.MethodPut, "api/player/pause"}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path)
+			defer server.Close()
+			t.Setenv(EnvUrl, server.URL)
+			c := NewOwntoneClient()
+			if err := c.Pause(); (err != nil) != tt.wantErr {
+				t.Errorf("Pause() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

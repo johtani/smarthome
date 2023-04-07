@@ -2,14 +2,17 @@ package owntone
 
 import (
 	"fmt"
+	"net/http"
 	"os"
 	"strings"
+	"time"
 )
 
 const EnvUrl = "OWNTONE_URL"
 
 type Client struct {
-	url string
+	url        string
+	httpclient http.Client
 }
 
 func CheckConfig() error {
@@ -31,5 +34,22 @@ func NewOwntoneClient() Client {
 	}
 	return Client{
 		url,
+		http.Client{Timeout: 10 * time.Second},
 	}
+}
+
+func (c Client) Pause() error {
+	req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/player/pause"), nil)
+	if err != nil {
+		return err
+	}
+	res, err := c.httpclient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+	return nil
 }
