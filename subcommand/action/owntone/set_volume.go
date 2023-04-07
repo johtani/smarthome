@@ -37,7 +37,7 @@ func (a SetVolumeAction) Run() error {
 	if res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
-	println("owntone pause action succeeded.")
+	println("owntone set volume action succeeded.")
 	return nil
 }
 
