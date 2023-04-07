@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -59,6 +60,25 @@ func (c Client) Play() error {
 	if err != nil {
 		return err
 	}
+	res, err := c.httpclient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+	return nil
+}
+
+func (c Client) SetVolume(volume int) error {
+	req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/player/volume"), nil)
+	if err != nil {
+		return err
+	}
+	q := req.URL.Query()
+	q.Set("volume", strconv.Itoa(volume))
+	req.URL.RawQuery = q.Encode()
 	res, err := c.httpclient.Do(req)
 	if err != nil {
 		return err
