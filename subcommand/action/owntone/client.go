@@ -12,14 +12,14 @@ import (
 const EnvUrl = "OWNTONE_URL"
 
 type Client struct {
-	url        string
-	httpclient http.Client
+	url string
+	http.Client
 }
 
 func CheckConfig() error {
 	url := os.Getenv(EnvUrl)
 	if len(url) == 0 {
-		return fmt.Errorf("Not found \"OWNTONE_URL\". Please set OWNTONE_URL via Environment variable")
+		return fmt.Errorf("not found \"OWNTONE_URL\". Please set OWNTONE_URL via Environment variable")
 	}
 	return nil
 }
@@ -44,7 +44,7 @@ func (c Client) Pause() error {
 	if err != nil {
 		return err
 	}
-	res, err := c.httpclient.Do(req)
+	res, err := c.Do(req)
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (c Client) Play() error {
 	if err != nil {
 		return err
 	}
-	res, err := c.httpclient.Do(req)
+	res, err := c.Do(req)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func (c Client) SetVolume(volume int) error {
 	q := req.URL.Query()
 	q.Set("volume", strconv.Itoa(volume))
 	req.URL.RawQuery = q.Encode()
-	res, err := c.httpclient.Do(req)
+	res, err := c.Do(req)
 	if err != nil {
 		return err
 	}
