@@ -22,9 +22,9 @@ func (a ListScenesAction) Run() error {
 	return nil
 }
 
-func NewListScenesAction() ListScenesAction {
+func NewListScenesAction(client *switchbot.Client) ListScenesAction {
 	return ListScenesAction{
 		"List scenes on SwitchBot",
-		NewSwitchBotClient(),
+		client,
 	}
 }

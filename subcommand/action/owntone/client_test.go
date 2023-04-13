@@ -7,23 +7,31 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
-	"time"
 )
 
-func TestCheckConfig(t *testing.T) {
+func TestNewConfig(t *testing.T) {
+	type args struct {
+		url string
+	}
 	tests := []struct {
 		name    string
-		setenv  func(t *testing.T)
+		args    args
+		want    Config
 		wantErr bool
 	}{
-		{"no env", func(t *testing.T) {}, true},
-		{"ok", func(t *testing.T) { t.Setenv(EnvUrl, "aaa") }, false},
+		{"OK:end with slash", args{"hogehoge/"}, Config{"hogehoge/"}, false},
+		{"OK:end without slash", args{"hogehoge"}, Config{"hogehoge/"}, false},
+		{"NG:end without slash", args{""}, Config{}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tt.setenv(t)
-			if err := CheckConfig(); (err != nil) != tt.wantErr {
-				t.Errorf("CheckConfig() error = %v, wantErr %v", err, tt.wantErr)
+			got, err := NewConfig(tt.args.url)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("NewConfig() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewConfig() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -31,8 +39,10 @@ func TestCheckConfig(t *testing.T) {
 
 func TestClient_buildUrl(t *testing.T) {
 	type fields struct {
-		url string
+		config Config
+		Client http.Client
 	}
+	config, _ := NewConfig("URL")
 	type args struct {
 		path string
 	}
@@ -42,37 +52,17 @@ func TestClient_buildUrl(t *testing.T) {
 		args   args
 		want   string
 	}{
-		{"ok url path", fields{"URL"}, args{"path"}, "URLpath"},
-		{"ok only url", fields{"URL"}, args{}, "URL"},
-		{"ok only path", fields{}, args{"path"}, "path"},
+		{"ok url path", fields{config, http.Client{}}, args{"path"}, "URL/path"},
+		{"ok only url", fields{config, http.Client{}}, args{}, "URL/"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Client{
-				url: tt.fields.url,
+				config: tt.fields.config,
+				Client: tt.fields.Client,
 			}
 			if got := c.buildUrl(tt.args.path); got != tt.want {
 				t.Errorf("buildUrl() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestNewOwntoneClient(t *testing.T) {
-	tests := []struct {
-		name   string
-		setenv func(t *testing.T)
-		want   Client
-	}{
-		{"no env", func(t *testing.T) {}, Client{"/", http.Client{Timeout: 10 * time.Second}}},
-		{"no slash", func(t *testing.T) { t.Setenv(EnvUrl, "url") }, Client{"url/", http.Client{Timeout: 10 * time.Second}}},
-		{"end with slash", func(t *testing.T) { t.Setenv(EnvUrl, "url/") }, Client{"url/", http.Client{Timeout: 10 * time.Second}}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setenv(t)
-			if got := NewOwntoneClient(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewOwntoneClient() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -132,8 +122,8 @@ func TestClient_Pause(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			t.Setenv(EnvUrl, server.URL)
-			c := NewOwntoneClient()
+			config, _ := NewConfig(server.URL)
+			c := NewOwntoneClient(config)
 			if err := c.Pause(); (err != nil) != tt.wantErr {
 				t.Errorf("Pause() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -160,8 +150,8 @@ func TestClient_Play(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			t.Setenv(EnvUrl, server.URL)
-			c := NewOwntoneClient()
+			config, _ := NewConfig(server.URL)
+			c := NewOwntoneClient(config)
 			if err := c.Play(); (err != nil) != tt.wantErr {
 				t.Errorf("Play() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -190,8 +180,8 @@ func TestClient_SetVolume(t *testing.T) {
 			reqParams := map[string][]string{"volume": {strconv.Itoa(tt.fields.volume)}}
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
-			t.Setenv(EnvUrl, server.URL)
-			c := NewOwntoneClient()
+			config, _ := NewConfig(server.URL)
+			c := NewOwntoneClient(config)
 			if err := c.SetVolume(tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -220,8 +210,8 @@ func TestClient_AddItem2Queue(t *testing.T) {
 			reqParams := map[string][]string{"uris": {tt.fields.item}}
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
-			t.Setenv(EnvUrl, server.URL)
-			c := NewOwntoneClient()
+			config, _ := NewConfig(server.URL)
+			c := NewOwntoneClient(config)
 			if err := c.AddItem2Queue(tt.fields.item); (err != nil) != tt.wantErr {
 				t.Errorf("AddItem2Queue() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -269,8 +259,8 @@ func TestClient_GetPlaylists(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			t.Setenv(EnvUrl, server.URL)
-			c := NewOwntoneClient()
+			config, _ := NewConfig(server.URL)
+			c := NewOwntoneClient(config)
 
 			playlists, err := c.GetPlaylists()
 			if (err != nil) != tt.wantErr {
@@ -320,8 +310,8 @@ func TestClient_GetGetPlayerStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			t.Setenv(EnvUrl, server.URL)
-			c := NewOwntoneClient()
+			config, _ := NewConfig(server.URL)
+			c := NewOwntoneClient(config)
 
 			status, err := c.GetPlayerStatus()
 			if (err != nil) != tt.wantErr {

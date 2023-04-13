@@ -7,7 +7,7 @@ import (
 
 type PlayAction struct {
 	name string
-	c    Client
+	c    *Client
 }
 
 func (a PlayAction) Run() error {
@@ -44,9 +44,9 @@ func (a PlayAction) Run() error {
 	return nil
 }
 
-func NewPlayAction() PlayAction {
+func NewPlayAction(client *Client) PlayAction {
 	return PlayAction{
 		"Play music on Owntone",
-		NewOwntoneClient(),
+		client,
 	}
 }

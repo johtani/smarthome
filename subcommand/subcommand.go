@@ -2,16 +2,17 @@ package subcommand
 
 import (
 	"fmt"
+	"os"
 	"smart_home/subcommand/action"
 	"smart_home/subcommand/action/owntone"
 	"smart_home/subcommand/action/switchbot"
+	"strings"
 )
 
 type Subcommand struct {
 	Name        string
 	Description string
 	actions     []action.Action
-	checkConfig func() error
 	ignoreError bool
 }
 
@@ -27,28 +28,32 @@ func (s Subcommand) Exec() error {
 	return nil
 }
 
-func (s Subcommand) CheckConfig() error {
-	return s.checkConfig()
-}
-
-func checkConfig() error {
-	// TODO エラーはまとめて返したほうがいいかも
-	err := owntone.CheckConfig()
-	if err != nil {
-		return err
-	}
-	err = switchbot.CheckConfig()
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func SubcommandMap() map[string]Subcommand {
+func Map(config Config) map[string]Subcommand {
 	return map[string]Subcommand{
-		StartMeetingCmd:        NewStartMeetingSubcommand(),
-		FinishMeetingCmd:       NewFinishMeetingSubcommand(),
-		SwitchBotDeviceListCmd: NewSwitchBotDeviceListSubcommand(),
-		SwitchBotSceneListCmd:  NewSwitchBotSceneListSubcommand(),
+		StartMeetingCmd:        NewStartMeetingSubcommand(config),
+		FinishMeetingCmd:       NewFinishMeetingSubcommand(config),
+		SwitchBotDeviceListCmd: NewSwitchBotDeviceListSubcommand(config),
+		SwitchBotSceneListCmd:  NewSwitchBotSceneListSubcommand(config),
 	}
+}
+
+type Config struct {
+	owntone   owntone.Config
+	switchbot switchbot.Config
+}
+
+func NewConfig() (Config, error) {
+	var errs []string
+	owntoneConfig, err := owntone.NewConfig(os.Getenv(owntone.EnvUrl))
+	if err != nil {
+		errs = append(errs, err.Error())
+	}
+	switchbotConfig, err := switchbot.NewConfig(os.Getenv(switchbot.EnvToken), os.Getenv(switchbot.EnvSecret))
+	if err != nil {
+		errs = append(errs, err.Error())
+	}
+	if len(errs) > 0 {
+		return Config{}, fmt.Errorf(strings.Join(errs, "\n"))
+	}
+	return Config{owntoneConfig, switchbotConfig}, nil
 }

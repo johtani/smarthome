@@ -25,9 +25,9 @@ func (a ListDevicesAction) Run() error {
 	return nil
 }
 
-func NewListDevicesAction() ListDevicesAction {
+func NewListDevicesAction(client *switchbot.Client) ListDevicesAction {
 	return ListDevicesAction{
 		"List devices on SwitchBot",
-		NewSwitchBotClient(),
+		client,
 	}
 }

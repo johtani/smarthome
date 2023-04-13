@@ -2,7 +2,7 @@ package owntone
 
 type PauseAction struct {
 	name string
-	c    Client
+	c    *Client
 }
 
 func (a PauseAction) Run() error {
@@ -14,9 +14,9 @@ func (a PauseAction) Run() error {
 	return nil
 }
 
-func NewPauseAction() PauseAction {
+func NewPauseAction(client *Client) PauseAction {
 	return PauseAction{
 		"Pause music on Owntone",
-		NewOwntoneClient(),
+		client,
 	}
 }

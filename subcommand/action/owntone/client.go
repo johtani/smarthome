@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -13,29 +12,35 @@ import (
 const EnvUrl = "OWNTONE_URL"
 
 type Client struct {
-	url string
+	config Config
 	http.Client
 }
 
-func CheckConfig() error {
-	url := os.Getenv(EnvUrl)
+type Config struct {
+	url string
+}
+
+func NewConfig(url string) (Config, error) {
 	if len(url) == 0 {
-		return fmt.Errorf("not found \"OWNTONE_URL\". Please set OWNTONE_URL via Environment variable")
+		return Config{}, fmt.Errorf("not found \"OWNTONE_URL\". Please set OWNTONE_URL via Environment variable")
 	}
-	return nil
+	if strings.HasSuffix(url, "/") != true {
+		return Config{
+			url + "/",
+		}, nil
+	}
+	return Config{
+		url,
+	}, nil
 }
 
 func (c Client) buildUrl(path string) string {
-	return c.url + path
+	return c.config.url + path
 }
 
-func NewOwntoneClient() Client {
-	url := os.Getenv(EnvUrl)
-	if strings.HasSuffix(url, "/") != true {
-		url = url + "/"
-	}
-	return Client{
-		url,
+func NewOwntoneClient(config Config) *Client {
+	return &Client{
+		config,
 		http.Client{Timeout: 10 * time.Second},
 	}
 }

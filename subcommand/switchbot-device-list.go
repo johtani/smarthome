@@ -7,14 +7,14 @@ import (
 
 const SwitchBotDeviceListCmd = "switchbot-device-list"
 
-func NewSwitchBotDeviceListSubcommand() Subcommand {
+func NewSwitchBotDeviceListSubcommand(config Config) Subcommand {
+	switchbotClient := switchbot.NewSwitchBotClient(config.switchbot)
 	return Subcommand{
 		SwitchBotDeviceListCmd,
 		"List devices on SwitchBot",
 		[]action.Action{
-			switchbot.NewListDevicesAction(),
+			switchbot.NewListDevicesAction(switchbotClient),
 		},
-		checkConfig,
 		true,
 	}
 }

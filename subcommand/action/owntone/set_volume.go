@@ -3,7 +3,7 @@ package owntone
 type SetVolumeAction struct {
 	name   string
 	volume int
-	c      Client
+	c      *Client
 }
 
 func (a SetVolumeAction) Run() error {
@@ -15,10 +15,10 @@ func (a SetVolumeAction) Run() error {
 	return nil
 }
 
-func NewSetVolumeAction() SetVolumeAction {
+func NewSetVolumeAction(client *Client) SetVolumeAction {
 	return SetVolumeAction{
 		"Set Owntone Volume",
 		33,
-		NewOwntoneClient(),
+		client,
 	}
 }

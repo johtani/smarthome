@@ -6,16 +6,11 @@ import (
 	"smart_home/subcommand"
 )
 
-func printSubcommands() {
+func printHelp(smap map[string]subcommand.Subcommand) string {
 	fmt.Println("利用可能なコマンドは次の通りです。")
-	for _, command := range subcommand.SubcommandMap() {
+	for _, command := range smap {
 		fmt.Printf("  %s: %s\n", command.Name, command.Description)
 	}
-}
-
-func printHelp() string {
-	// TODO もうちょっときれいに？
-	printSubcommands()
 	return `コマンドを指定してください。
 smart_home <コマンド名>`
 }
@@ -28,20 +23,20 @@ func main() {
 }
 
 func run() error {
+	config, err := subcommand.NewConfig()
+	if err != nil {
+		return err
+	}
+	smap := subcommand.Map(config)
 	// 第1引数がない場合はヘルプを出して終了
 	if len(os.Args) < 2 {
-		return fmt.Errorf(printHelp())
+		return fmt.Errorf(printHelp(smap))
 	}
 	// 第1引数の文字列から、実行するサブコマンドを決定する
 	name := os.Args[1]
 	// コマンドのインスタンスを探す（全部じゃなくて、呼ばれたやつだけインスタンス化してもよさそう？）
-	c, ok := subcommand.SubcommandMap()[name]
+	c, ok := subcommand.Map(config)[name]
 	if ok {
-		// TODO configを読み込む(コマンドごとにする？それともここで全部読み取る？コマンドで設定を読み込むのと十分かをチェックするメソッドを用意すればいいか？)
-		err := c.CheckConfig()
-		if err != nil {
-			return err
-		}
 		err = c.Exec()
 		if err != nil {
 			return err

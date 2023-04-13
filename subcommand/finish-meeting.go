@@ -8,16 +8,16 @@ import (
 
 const FinishMeetingCmd = "finish-meeting"
 
-func NewFinishMeetingSubcommand() Subcommand {
+func NewFinishMeetingSubcommand(config Config) Subcommand {
+	owntoneClient := owntone.NewOwntoneClient(config.owntone)
 	return Subcommand{
 		FinishMeetingCmd,
 		"Actions after meeting",
 		[]action.Action{
-			owntone.NewPlayAction(),
+			owntone.NewPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
-			owntone.NewSetVolumeAction(),
+			owntone.NewSetVolumeAction(owntoneClient),
 		},
-		checkConfig,
 		true,
 	}
 }

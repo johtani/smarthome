@@ -19,10 +19,10 @@ func (a ExecuteSceneAction) Run() error {
 	return nil
 }
 
-func NewExecuteSceneAction(sceneId string) ExecuteSceneAction {
+func NewExecuteSceneAction(client *switchbot.Client, sceneId string) ExecuteSceneAction {
 	return ExecuteSceneAction{
 		"Turn off the target device",
 		sceneId,
-		NewSwitchBotClient(),
+		client,
 	}
 }
