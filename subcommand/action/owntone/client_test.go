@@ -112,13 +112,14 @@ func TestClient_Pause(t *testing.T) {
 		method     string
 		path       string
 	}
+	path := "/api/player/pause"
 	tests := []struct {
 		name    string
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusNoContent, http.MethodPut, "/api/player/pause"}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPut, "/api/player/pause"}, true},
+		{"OK", fields{http.StatusNoContent, http.MethodPut, path}, false},
+		{"NG", fields{http.StatusInternalServerError, http.MethodPut, path}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -139,13 +140,14 @@ func TestClient_Play(t *testing.T) {
 		method     string
 		path       string
 	}
+	path := "/api/player/play"
 	tests := []struct {
 		name    string
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusNoContent, http.MethodPut, "/api/player/play"}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPut, "/api/player/play"}, true},
+		{"OK", fields{http.StatusNoContent, http.MethodPut, path}, false},
+		{"NG", fields{http.StatusInternalServerError, http.MethodPut, path}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -167,13 +169,14 @@ func TestClient_SetVolume(t *testing.T) {
 		path       string
 		volume     int
 	}
+	path := "/api/player/volume"
 	tests := []struct {
 		name    string
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusNoContent, http.MethodPut, "/api/player/volume", 33}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPut, "/api/player/volume", 33}, true},
+		{"OK", fields{http.StatusNoContent, http.MethodPut, path, 33}, false},
+		{"NG", fields{http.StatusInternalServerError, http.MethodPut, path, 33}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
