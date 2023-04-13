@@ -79,6 +79,10 @@ func TestNewOwntoneClient(t *testing.T) {
 }
 
 func createMockServer(code int, method string, path string, requestParam map[string][]string) *httptest.Server {
+	return createMockServerWithResponse(code, method, path, requestParam, "")
+}
+
+func createMockServerWithResponse(code int, method string, path string, requestParam map[string][]string, response string) *httptest.Server {
 	return httptest.NewServer(
 		http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
 			if req.Method != method {
@@ -96,6 +100,9 @@ func createMockServer(code int, method string, path string, requestParam map[str
 				}
 			}
 			rw.WriteHeader(code)
+			if response != "" {
+				rw.Write([]byte(response))
+			}
 			return
 		}))
 }
@@ -187,6 +194,142 @@ func TestClient_SetVolume(t *testing.T) {
 			c := NewOwntoneClient()
 			if err := c.SetVolume(tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestClient_AddItem2Queue(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		item       string
+	}
+	path := "/api/queue/items/add"
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{"OK", fields{http.StatusOK, http.MethodPost, path, "playlist"}, false},
+		{"NG", fields{http.StatusInternalServerError, http.MethodPost, path, "playlist"}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reqParams := map[string][]string{"uris": {tt.fields.item}}
+			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
+			defer server.Close()
+			t.Setenv(EnvUrl, server.URL)
+			c := NewOwntoneClient()
+			if err := c.AddItem2Queue(tt.fields.item); (err != nil) != tt.wantErr {
+				t.Errorf("AddItem2Queue() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func playlistsSampleJSONResponse() string {
+	return `{
+  "items": [
+    {
+      "id": 1,
+      "name": "radio",
+      "path": "/music/srv/radio.m3u",
+      "smart_playlist": false,
+      "uri": "library:playlist:1"
+    }
+  ],
+  "total": 1,
+  "offset": 0,
+  "limit": -1
+}
+`
+}
+
+func TestClient_GetPlaylists(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+
+	path := "/api/library/playlists"
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		expected []string
+	}{
+		{"OK", fields{http.StatusOK, http.MethodGet, path, playlistsSampleJSONResponse()}, false, []string{"library:playlist:1"}},
+		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, playlistsSampleJSONResponse()}, true, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
+			defer server.Close()
+			t.Setenv(EnvUrl, server.URL)
+			c := NewOwntoneClient()
+
+			playlists, err := c.GetPlaylists()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetPlaylists() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(playlists, tt.expected) {
+				t.Errorf("GetPlaylists() playlists = %v, expected %v", playlists, tt.expected)
+			}
+
+		})
+	}
+}
+
+func playerStatusSampleJSONResponse() string {
+	return `{
+  "state": "pause",
+  "repeat": "off",
+  "consume": false,
+  "shuffle": false,
+  "volume": 50,
+  "item_id": 0,
+  "item_length_ms": 0,
+  "item_progress_ms": 0
+}
+`
+}
+
+func TestClient_GetGetPlayerStatus(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+
+	path := "/api/player"
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		expected *PlayerStatus
+	}{
+		{"OK", fields{http.StatusOK, http.MethodGet, path, playerStatusSampleJSONResponse()}, false, &PlayerStatus{"pause", "off", false, false, 50, 0, 0, 0}},
+		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, playerStatusSampleJSONResponse()}, true, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
+			defer server.Close()
+			t.Setenv(EnvUrl, server.URL)
+			c := NewOwntoneClient()
+
+			status, err := c.GetPlayerStatus()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetPlayerStatus() error = %v, wantErr %v", err, tt.wantErr)
+			} else if err == nil {
+				if status == tt.expected {
+					t.Errorf("GetPlayerStatus() status = %v, expected %v", status, tt.expected)
+				}
 			}
 		})
 	}
