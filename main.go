@@ -27,20 +27,23 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	// TODO Helpにコマンド名、説明を出力したいためにsubcommandのインスタンスを生成する＝configが必要となっている
 	smap := subcommand.Map(config)
-	// 第1引数がない場合はヘルプを出して終了
 	if len(os.Args) < 2 {
 		return fmt.Errorf(printHelp(smap))
 	}
-	// 第1引数の文字列から、実行するサブコマンドを決定する
 	name := os.Args[1]
-	// コマンドのインスタンスを探す（全部じゃなくて、呼ばれたやつだけインスタンス化してもよさそう？）
+
+	// TODO ここでインスタンス化したいので、Actionの一覧を基にインスタンスを生成するような仕組みに変えたい
 	c, ok := subcommand.Map(config)[name]
 	if ok {
 		err = c.Exec()
 		if err != nil {
 			return err
 		}
+	} else {
+		fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
+		printHelp(smap)
 	}
 
 	return nil
