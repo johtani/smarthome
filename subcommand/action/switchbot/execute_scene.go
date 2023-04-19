@@ -8,11 +8,11 @@ import (
 type ExecuteSceneAction struct {
 	name    string
 	sceneId string
-	c       *switchbot.Client
+	*switchbot.Client
 }
 
 func (a ExecuteSceneAction) Run() error {
-	err := a.c.Scene().Execute(context.Background(), a.sceneId)
+	err := a.Scene().Execute(context.Background(), a.sceneId)
 	if err != nil {
 		return err
 	}

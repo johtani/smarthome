@@ -8,11 +8,11 @@ import (
 
 type ListDevicesAction struct {
 	name string
-	c    *switchbot.Client
+	*switchbot.Client
 }
 
 func (a ListDevicesAction) Run() error {
-	pdev, vdev, err := a.c.Device().List(context.Background())
+	pdev, vdev, err := a.Device().List(context.Background())
 	if err != nil {
 		return err
 	}

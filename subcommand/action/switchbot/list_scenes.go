@@ -8,11 +8,11 @@ import (
 
 type ListScenesAction struct {
 	name string
-	c    *switchbot.Client
+	*switchbot.Client
 }
 
 func (a ListScenesAction) Run() error {
-	scenes, err := a.c.Scene().List(context.Background())
+	scenes, err := a.Scene().List(context.Background())
 	if err != nil {
 		return err
 	}

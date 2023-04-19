@@ -34,6 +34,7 @@ func Map(config Config) map[string]Subcommand {
 		FinishMeetingCmd:       NewFinishMeetingSubcommand(config),
 		SwitchBotDeviceListCmd: NewSwitchBotDeviceListSubcommand(config),
 		SwitchBotSceneListCmd:  NewSwitchBotSceneListSubcommand(config),
+		LightOffCmd:            NewLightOffSubcommand(config),
 	}
 }
 
