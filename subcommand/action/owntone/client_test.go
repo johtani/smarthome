@@ -227,7 +227,16 @@ func playlistsSampleJSONResponse() string {
       "name": "radio",
       "path": "/music/srv/radio.m3u",
       "smart_playlist": false,
-      "uri": "library:playlist:1"
+      "uri": "library:playlist:1",
+      "item_count": 491
+    },
+    {
+      "id": 2,
+      "name": "stereo",
+      "path": "/music/srv/stereo.m3u",
+      "smart_playlist": false,
+      "uri": "library:playlist:2",
+      "item_count": 0
     }
   ],
   "total": 1,
@@ -250,9 +259,9 @@ func TestClient_GetPlaylists(t *testing.T) {
 		name     string
 		fields   fields
 		wantErr  bool
-		expected []string
+		expected []Playlist
 	}{
-		{"OK", fields{http.StatusOK, http.MethodGet, path, playlistsSampleJSONResponse()}, false, []string{"library:playlist:1"}},
+		{"OK", fields{http.StatusOK, http.MethodGet, path, playlistsSampleJSONResponse()}, false, []Playlist{{"library:playlist:1", "radio", 491}}},
 		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, playlistsSampleJSONResponse()}, true, nil},
 	}
 	for _, tt := range tests {

@@ -18,7 +18,7 @@ func (a PlayAction) Run() error {
 	}
 	if status.ItemID == 0 {
 		//プレイヤーのキューに曲が入っていない状態
-		fmt.Println("queue is empty, so playing a randomly selected playlist")
+		fmt.Print("queue is empty, so playing a randomly selected playlist")
 		playlists, err := a.c.GetPlaylists()
 		if err != nil {
 			fmt.Println("error in GetPlaylists")
@@ -28,7 +28,8 @@ func (a PlayAction) Run() error {
 			rand.Seed(time.Now().UnixNano())
 			index := rand.Intn(len(playlists))
 			target := playlists[index]
-			err := a.c.AddItem2Queue(target)
+			fmt.Printf("[%v]\n", target.Name)
+			err := a.c.AddItem2Queue(target.Uri)
 			if err != nil {
 				fmt.Println("error in AddItem2Queue")
 				return err

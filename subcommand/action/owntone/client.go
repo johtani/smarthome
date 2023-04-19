@@ -96,13 +96,16 @@ func (c Client) SetVolume(volume int) error {
 	return nil
 }
 
-func (c Client) GetPlaylists() ([]string, error) {
-	type Item struct {
-		Uri string `json:"uri"`
-	}
+type Playlist struct {
+	Uri       string `json:"uri"`
+	Name      string `json:"name"`
+	ItemCount int    `json:"item_count"`
+}
+
+func (c Client) GetPlaylists() ([]Playlist, error) {
 	type Playlists struct {
-		Items []Item `json:"items"`
-		Total int    `json:"total"`
+		Items []Playlist `json:"items"`
+		Total int        `json:"total"`
 	}
 	req, err := http.NewRequest(http.MethodGet, c.buildUrl("api/library/playlists"), nil)
 	if err != nil {
@@ -120,9 +123,12 @@ func (c Client) GetPlaylists() ([]string, error) {
 	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %v", err)
 	}
-	var lists []string
+	var lists []Playlist
 	for _, item := range p.Items {
-		lists = append(lists, item.Uri)
+		//曲がないプレイリストは不要なので返さない
+		if item.ItemCount > 0 {
+			lists = append(lists, item)
+		}
 	}
 	return lists, nil
 }
