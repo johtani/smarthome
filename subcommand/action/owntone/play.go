@@ -1,6 +1,7 @@
 package owntone
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -16,10 +17,11 @@ func (a PlayAction) Run() error {
 		return err
 	}
 	if status.ItemID == 0 {
-		println("queue is empty, so playing a randomly selected playlist")
+		//プレイヤーのキューに曲が入っていない状態
+		fmt.Println("queue is empty, so playing a randomly selected playlist")
 		playlists, err := a.c.GetPlaylists()
 		if err != nil {
-			println("error in GetPlaylists")
+			fmt.Println("error in GetPlaylists")
 			return err
 		}
 		if len(playlists) > 0 {
@@ -28,19 +30,19 @@ func (a PlayAction) Run() error {
 			target := playlists[index]
 			err := a.c.AddItem2Queue(target)
 			if err != nil {
-				println("error in AddItem2Queue")
+				fmt.Println("error in AddItem2Queue")
 				return err
 			}
 		} else {
-			println("playlists is empty")
+			fmt.Println("playlists is empty")
 		}
 	}
 	err = a.c.Play()
 	if err != nil {
-		println("error in Play")
+		fmt.Println("error in Play")
 		return err
 	}
-	println("owntone play action succeeded.")
+	fmt.Println("owntone play action succeeded.")
 	return nil
 }
 

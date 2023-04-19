@@ -1,5 +1,7 @@
 package owntone
 
+import "fmt"
+
 type SetVolumeAction struct {
 	name   string
 	volume int
@@ -11,7 +13,7 @@ func (a SetVolumeAction) Run() error {
 	if err != nil {
 		return err
 	}
-	println("owntone set volume action succeeded.")
+	fmt.Println("owntone set volume action succeeded.")
 	return nil
 }
 

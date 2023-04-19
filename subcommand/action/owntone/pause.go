@@ -1,5 +1,7 @@
 package owntone
 
+import "fmt"
+
 type PauseAction struct {
 	name string
 	c    *Client
@@ -10,7 +12,7 @@ func (a PauseAction) Run() error {
 	if err != nil {
 		return err
 	}
-	println("owntone pause action succeeded.")
+	fmt.Println("owntone pause action succeeded.")
 	return nil
 }
 
