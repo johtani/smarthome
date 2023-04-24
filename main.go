@@ -27,14 +27,11 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	// TODO Helpにコマンド名、説明を出力したいためにsubcommandのインスタンスを生成する＝configが必要となっている
 	smap := subcommand.Map()
 	if len(os.Args) < 2 {
 		return fmt.Errorf(printHelp(smap))
 	}
 	name := os.Args[1]
-
-	// TODO ここでインスタンス化したいので、Actionの一覧を基にインスタンスを生成するような仕組みに変えたい
 	d, ok := subcommand.Map()[name]
 	if ok {
 		c := d.Init(config)
