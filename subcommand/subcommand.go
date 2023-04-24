@@ -10,10 +10,15 @@ import (
 )
 
 type Subcommand struct {
-	Name        string
-	Description string
+	Definition
 	actions     []action.Action
 	ignoreError bool
+}
+
+type Definition struct {
+	Name        string
+	Description string
+	Factory     func(Definition, Config) Subcommand
 }
 
 func (s Subcommand) Exec() error {
@@ -28,13 +33,17 @@ func (s Subcommand) Exec() error {
 	return nil
 }
 
-func Map(config Config) map[string]Subcommand {
-	return map[string]Subcommand{
-		StartMeetingCmd:        NewStartMeetingSubcommand(config),
-		FinishMeetingCmd:       NewFinishMeetingSubcommand(config),
-		SwitchBotDeviceListCmd: NewSwitchBotDeviceListSubcommand(config),
-		SwitchBotSceneListCmd:  NewSwitchBotSceneListSubcommand(config),
-		LightOffCmd:            NewLightOffSubcommand(config),
+func (d Definition) Init(config Config) Subcommand {
+	return d.Factory(d, config)
+}
+
+func Map() map[string]Definition {
+	return map[string]Definition{
+		StartMeetingCmd:        NewStartMeetingDefinition(),
+		FinishMeetingCmd:       NewFinishMeetingDefinition(),
+		SwitchBotDeviceListCmd: NewSwitchBotDeviceListDefinition(),
+		SwitchBotSceneListCmd:  NewSwitchBotSceneListDefinition(),
+		LightOffCmd:            NewLightOffDefinition(),
 	}
 }
 

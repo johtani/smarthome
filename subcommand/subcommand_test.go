@@ -23,7 +23,6 @@ func TestSubcommand_Exec(t *testing.T) {
 		Name        string
 		Description string
 		actions     []action.Action
-		checkConfig func() error
 		ignoreError bool
 	}
 	tests := []struct {
@@ -31,17 +30,21 @@ func TestSubcommand_Exec(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"empty action", fields{"test", "test", []action.Action{}, func() error { return nil }, true}, false},
-		{"ok-ng actions expect error", fields{"test", "test", []action.Action{okAction{}, ngAction{}}, func() error { return nil }, false}, true},
-		{"ng-ok actions expect error", fields{"test", "test", []action.Action{ngAction{}, okAction{}}, func() error { return nil }, false}, true},
-		{"ok-ng actions skip error", fields{"test", "test", []action.Action{okAction{}, ngAction{}}, func() error { return nil }, true}, false},
-		{"ng-ok actions skip error", fields{"test", "test", []action.Action{ngAction{}, okAction{}}, func() error { return nil }, true}, false},
+		{"empty action", fields{"test", "test", []action.Action{}, true}, false},
+		{"ok-ng actions expect error", fields{"test", "test", []action.Action{okAction{}, ngAction{}}, false}, true},
+		{"ng-ok actions expect error", fields{"test", "test", []action.Action{ngAction{}, okAction{}}, false}, true},
+		{"ok-ng actions skip error", fields{"test", "test", []action.Action{okAction{}, ngAction{}}, true}, false},
+		{"ng-ok actions skip error", fields{"test", "test", []action.Action{ngAction{}, okAction{}}, true}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := Subcommand{
+			d := Definition{
 				Name:        tt.fields.Name,
 				Description: tt.fields.Description,
+				Factory:     nil,
+			}
+			s := Subcommand{
+				Definition:  d,
 				actions:     tt.fields.actions,
 				ignoreError: tt.fields.ignoreError,
 			}

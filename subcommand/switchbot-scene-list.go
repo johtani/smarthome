@@ -7,11 +7,18 @@ import (
 
 const SwitchBotSceneListCmd = "switchbot-scene-list"
 
-func NewSwitchBotSceneListSubcommand(config Config) Subcommand {
-	switchbotClient := switchbot.NewSwitchBotClient(config.switchbot)
-	return Subcommand{
+func NewSwitchBotSceneListDefinition() Definition {
+	return Definition{
 		SwitchBotSceneListCmd,
 		"List scenes on SwitchBot",
+		NewSwitchBotSceneListSubcommand,
+	}
+}
+
+func NewSwitchBotSceneListSubcommand(definition Definition, config Config) Subcommand {
+	switchbotClient := switchbot.NewSwitchBotClient(config.switchbot)
+	return Subcommand{
+		definition,
 		[]action.Action{
 			switchbot.NewListScenesAction(switchbotClient),
 		},

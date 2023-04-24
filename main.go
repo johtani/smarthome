@@ -6,7 +6,7 @@ import (
 	"smart_home/subcommand"
 )
 
-func printHelp(smap map[string]subcommand.Subcommand) string {
+func printHelp(smap map[string]subcommand.Definition) string {
 	fmt.Println("利用可能なコマンドは次の通りです。")
 	for _, command := range smap {
 		fmt.Printf("  %s: %s\n", command.Name, command.Description)
@@ -28,15 +28,16 @@ func run() error {
 		return err
 	}
 	// TODO Helpにコマンド名、説明を出力したいためにsubcommandのインスタンスを生成する＝configが必要となっている
-	smap := subcommand.Map(config)
+	smap := subcommand.Map()
 	if len(os.Args) < 2 {
 		return fmt.Errorf(printHelp(smap))
 	}
 	name := os.Args[1]
 
 	// TODO ここでインスタンス化したいので、Actionの一覧を基にインスタンスを生成するような仕組みに変えたい
-	c, ok := subcommand.Map(config)[name]
+	d, ok := subcommand.Map()[name]
 	if ok {
+		c := d.Init(config)
 		err = c.Exec()
 		if err != nil {
 			return err
