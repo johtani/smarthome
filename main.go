@@ -47,7 +47,7 @@ func runCmd(config subcommand.Config, smap map[string]subcommand.Definition) err
 		return fmt.Errorf(printHelp(smap))
 	}
 	name := os.Args[1]
-	d, ok := subcommand.Map()[name]
+	d, ok := smap[name]
 	if ok {
 		c := d.Init(config)
 		err := c.Exec()

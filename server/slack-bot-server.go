@@ -50,7 +50,6 @@ func loadSlackConfig() (SlackConfig, error) {
 
 func Run(config subcommand.Config, smap map[string]subcommand.Definition) error {
 	slackConfig, err := loadSlackConfig()
-
 	if err != nil {
 		return err
 	}
@@ -71,28 +70,53 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 	}
 
 	socketModeHandler := socketmode.NewSocketmodeHandler(client)
-	socketModeHandler.HandleEvents(slackevents.AppMention, eventsAppMention)
+	socketModeHandler.HandleEvents(slackevents.AppMention, func(event *socketmode.Event, client *socketmode.Client) {
+
+		eventPayload, ok := event.Data.(slackevents.EventsAPIEvent)
+		if !ok {
+			client.Debugf("Skipped Envelope: %v", event)
+		}
+
+		client.Ack(*event.Request)
+
+		payloadEvent, ok := eventPayload.InnerEvent.Data.(*slackevents.AppMentionEvent)
+		if !ok {
+			client.Debugf("Payload Event: %v", payloadEvent)
+		}
+		fmt.Printf("######### : We have been mentioned in %v\n", payloadEvent.Channel)
+		msg, err := findAndRun(config, smap, payloadEvent.Text)
+		if err != nil {
+			fmt.Printf("######### : Got error %v\n", err)
+			msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
+		}
+		if len(msg) == 0 {
+			msg = "Yes, master."
+		}
+
+		_, _, err2 := client.PostMessage(payloadEvent.Channel, slack.MsgOptionText(msg, false))
+		if err2 != nil {
+			fmt.Printf("failed posting message: %v\n", err2)
+		}
+	})
 	socketModeHandler.RunEventLoop()
 	return nil
 }
 
-func eventsAppMention(event *socketmode.Event, client *socketmode.Client) {
-	eventPayload, ok := event.Data.(slackevents.EventsAPIEvent)
-	if !ok {
-		client.Debugf("Skipped Envelope: %v", event)
+func findAndRun(config subcommand.Config, smap map[string]subcommand.Definition, text string) (string, error) {
+	// message取り出し
+	msgs := strings.Split(text, " ")
+	name := strings.Join(msgs[1:], " ")
+	name = strings.TrimSpace(name)
+
+	d, ok := smap[name]
+	if ok {
+		c := d.Init(config)
+		err := c.Exec()
+		if err != nil {
+			return "", err
+		}
+	} else {
+		return "", fmt.Errorf("command[%v] is not found.\n", name)
 	}
-
-	client.Ack(*event.Request)
-
-	payloadEvent, ok := eventPayload.InnerEvent.Data.(*slackevents.AppMentionEvent)
-	if !ok {
-		client.Debugf("Payload Event: %v", payloadEvent)
-	}
-	fmt.Printf("######### : We have been mentioned in %v\n", payloadEvent.Channel)
-
-	_, _, err := client.PostMessage(payloadEvent.Channel, slack.MsgOptionText("Yes, hello master.", false))
-	if err != nil {
-		fmt.Printf("failed posting message: %v\n", err)
-	}
-
+	return "", nil
 }
