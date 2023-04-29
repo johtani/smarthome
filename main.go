@@ -1,13 +1,16 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"smart_home/server"
 	"smart_home/subcommand"
 )
 
 func printHelp(smap map[string]subcommand.Definition) string {
-	fmt.Println("利用可能なコマンドは次の通りです。")
+	fmt.Println("SlackBot用Serverを起動する場合は-serverオプションをつけてください")
+	fmt.Println("コマンドモードで利用可能なコマンドは次の通りです。")
 	for _, command := range smap {
 		fmt.Printf("  %s: %s\n", command.Name, command.Description)
 	}
@@ -28,6 +31,18 @@ func run() error {
 		return err
 	}
 	smap := subcommand.Map()
+	var serverFlag bool
+	flag.BoolVar(&serverFlag, "server", false, "SlackBot用Serverを起動するかどうか")
+	flag.Parse()
+	if serverFlag {
+		return server.Run(config, smap)
+	} else {
+		return runCmd(config, smap)
+	}
+	return nil
+}
+
+func runCmd(config subcommand.Config, smap map[string]subcommand.Definition) error {
 	if len(os.Args) < 2 {
 		return fmt.Errorf(printHelp(smap))
 	}
@@ -35,7 +50,7 @@ func run() error {
 	d, ok := subcommand.Map()[name]
 	if ok {
 		c := d.Init(config)
-		err = c.Exec()
+		err := c.Exec()
 		if err != nil {
 			return err
 		}
@@ -43,6 +58,5 @@ func run() error {
 		fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
 		printHelp(smap)
 	}
-
 	return nil
 }
