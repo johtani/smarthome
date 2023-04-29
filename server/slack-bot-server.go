@@ -103,7 +103,7 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 }
 
 func findAndRun(config subcommand.Config, smap map[string]subcommand.Definition, text string) (string, error) {
-	// message取り出し
+	// TODO message取り出し(もうちょっとスマートにできないか？)
 	msgs := strings.Split(text, " ")
 	name := strings.Join(msgs[1:], " ")
 	name = strings.TrimSpace(name)
@@ -118,5 +118,6 @@ func findAndRun(config subcommand.Config, smap map[string]subcommand.Definition,
 	} else {
 		return "", fmt.Errorf("command[%v] is not found.\n", name)
 	}
+	// 何を実行したかを返したほうがいい？
 	return "", nil
 }
