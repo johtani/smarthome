@@ -64,10 +64,12 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 		socketmode.OptionDebug(slackConfig.debug),
 		socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)),
 	)
-	_, authTestErr := webApi.AuthTest()
+	authTest, authTestErr := webApi.AuthTest()
 	if authTestErr != nil {
 		return fmt.Errorf("SLACK_BOT_TOKEN is invalid: %v\n", authTestErr)
 	}
+	botUserId := authTest.UserID
+	botUserIdPrefix := fmt.Sprintf("<@%v>", botUserId)
 
 	socketModeHandler := socketmode.NewSocketmodeHandler(client)
 	socketModeHandler.HandleEvents(slackevents.AppMention, func(event *socketmode.Event, client *socketmode.Client) {
@@ -85,18 +87,26 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 			client.Debugf("######### : Payload Event: %v", payloadEvent)
 			return
 		}
-		msg, err := findAndRun(config, smap, payloadEvent.Text)
-		if err != nil {
-			fmt.Printf("######### : Got error %v\n", err)
-			msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
+		var msg string
+
+		// とりあえずBotのUserIDが最初にあるメッセージだけ対象とする
+		if strings.HasPrefix(payloadEvent.Text, botUserIdPrefix) {
+			msg, err = findAndRun(config, smap, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
+			if err != nil {
+				fmt.Printf("######### : Got error %v\n", err)
+				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
+			}
+		} else {
+			fmt.Printf("######### : Skipped message: %v", payloadEvent.Text)
 		}
+
 		if len(msg) == 0 {
 			msg = "Yes, master."
 		}
 
-		_, _, err2 := client.PostMessage(payloadEvent.Channel, slack.MsgOptionText(msg, false))
-		if err2 != nil {
-			fmt.Printf("######### : failed posting message: %v\n", err2)
+		_, _, err := client.PostMessage(payloadEvent.Channel, slack.MsgOptionText(msg, false))
+		if err != nil {
+			fmt.Printf("######### : failed posting message: %v\n", err)
 			return
 		}
 	})
@@ -106,9 +116,7 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 
 func findAndRun(config subcommand.Config, smap map[string]subcommand.Definition, text string) (string, error) {
 	// TODO message取り出し(もうちょっとスマートにできないか？)
-	msgs := strings.Split(text, " ")
-	name := strings.Join(msgs[1:], " ")
-	name = strings.TrimSpace(name)
+	name := strings.TrimSpace(text)
 
 	d, ok := smap[name]
 	if ok {
@@ -118,7 +126,7 @@ func findAndRun(config subcommand.Config, smap map[string]subcommand.Definition,
 			return "", err
 		}
 	} else {
-		return "", fmt.Errorf("command[%v] is not found.\n", name)
+		return "", fmt.Errorf("command[%v] is not found.", name)
 	}
 	// 何を実行したかを返したほうがいい？
 	return "", nil
