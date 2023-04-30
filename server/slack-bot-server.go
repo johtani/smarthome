@@ -74,16 +74,17 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 
 		eventPayload, ok := event.Data.(slackevents.EventsAPIEvent)
 		if !ok {
-			client.Debugf("Skipped Envelope: %v", event)
+			client.Debugf("######### : Skipped Envelope: %v", event)
+			return
 		}
 
 		client.Ack(*event.Request)
 
 		payloadEvent, ok := eventPayload.InnerEvent.Data.(*slackevents.AppMentionEvent)
 		if !ok {
-			client.Debugf("Payload Event: %v", payloadEvent)
+			client.Debugf("######### : Payload Event: %v", payloadEvent)
+			return
 		}
-		fmt.Printf("######### : We have been mentioned in %v\n", payloadEvent.Channel)
 		msg, err := findAndRun(config, smap, payloadEvent.Text)
 		if err != nil {
 			fmt.Printf("######### : Got error %v\n", err)
@@ -95,7 +96,8 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 
 		_, _, err2 := client.PostMessage(payloadEvent.Channel, slack.MsgOptionText(msg, false))
 		if err2 != nil {
-			fmt.Printf("failed posting message: %v\n", err2)
+			fmt.Printf("######### : failed posting message: %v\n", err2)
+			return
 		}
 	})
 	socketModeHandler.RunEventLoop()
