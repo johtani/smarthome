@@ -39,7 +39,6 @@ func run() error {
 	} else {
 		return runCmd(config, smap)
 	}
-	return nil
 }
 
 func runCmd(config subcommand.Config, smap map[string]subcommand.Definition) error {
