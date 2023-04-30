@@ -2,7 +2,7 @@ package subcommand
 
 import (
 	"fmt"
-	"smart_home/subcommand/action"
+	"smarthome/subcommand/action"
 	"testing"
 )
 

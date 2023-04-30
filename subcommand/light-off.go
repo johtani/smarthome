@@ -3,8 +3,8 @@ package subcommand
 import (
 	switchbot2 "github.com/nasa9084/go-switchbot/v2"
 	"os"
-	"smart_home/subcommand/action"
-	"smart_home/subcommand/action/switchbot"
+	"smarthome/subcommand/action"
+	"smarthome/subcommand/action/switchbot"
 )
 
 const LightOffCmd = "light-off"

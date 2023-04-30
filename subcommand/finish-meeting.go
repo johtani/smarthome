@@ -1,8 +1,8 @@
 package subcommand
 
 import (
-	"smart_home/subcommand/action"
-	"smart_home/subcommand/action/owntone"
+	"smarthome/subcommand/action"
+	"smarthome/subcommand/action/owntone"
 	"time"
 )
 

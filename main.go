@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"smart_home/server"
-	"smart_home/subcommand"
+	"smarthome/server"
+	"smarthome/subcommand"
 )
 
 func printHelp(smap map[string]subcommand.Definition) string {
@@ -15,7 +15,7 @@ func printHelp(smap map[string]subcommand.Definition) string {
 		fmt.Printf("  %s: %s\n", command.Name, command.Description)
 	}
 	return `コマンドを指定してください。
-smart_home <コマンド名>`
+smarthome <コマンド名>`
 }
 
 func main() {

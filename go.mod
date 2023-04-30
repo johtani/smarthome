@@ -1,4 +1,4 @@
-module smart_home
+module smarthome
 
 go 1.19
 

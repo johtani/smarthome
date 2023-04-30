@@ -1,8 +1,8 @@
 package subcommand
 
 import (
-	"smart_home/subcommand/action"
-	"smart_home/subcommand/action/switchbot"
+	"smarthome/subcommand/action"
+	"smarthome/subcommand/action/switchbot"
 )
 
 const SwitchBotSceneListCmd = "switchbot-scene-list"

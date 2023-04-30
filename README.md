@@ -23,7 +23,7 @@ go build
 実行例：
 
 ```
-smart_home start-meeting
+smarthome start-meeting
 ```
 
 `start-meeting`がサブコマンド。サブコマンドを指定しない場合は現在利用可能なサブコマンドの一覧が表示される。
@@ -31,7 +31,7 @@ smart_home start-meeting
 ## subcommand
 
 サブコマンド単位で、いくつかの操作をまとめて実行することを想定しています。
-利用できるサブコマンドは[ここ](https://github.com/johtani/smart_home/blob/master/subcommand/subcommand.go#L43)で登録しています。
+利用できるサブコマンドは[ここ](https://github.com/johtani/smarthome/blob/master/subcommand/subcommand.go#L43)で登録しています。
 サブコマンドは完全に自分好みに実装しています。。。
 
 ## ライセンス

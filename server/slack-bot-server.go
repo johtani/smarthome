@@ -7,7 +7,7 @@ import (
 	"github.com/slack-go/slack/socketmode"
 	"log"
 	"os"
-	"smart_home/subcommand"
+	"smarthome/subcommand"
 	"strings"
 )
 

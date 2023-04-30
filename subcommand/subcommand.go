@@ -3,9 +3,9 @@ package subcommand
 import (
 	"fmt"
 	"os"
-	"smart_home/subcommand/action"
-	"smart_home/subcommand/action/owntone"
-	"smart_home/subcommand/action/switchbot"
+	"smarthome/subcommand/action"
+	"smarthome/subcommand/action/owntone"
+	"smarthome/subcommand/action/switchbot"
 	"strings"
 )
 
