@@ -31,6 +31,6 @@ func NewConfig(token string, secret string) (Config, error) {
 	}, nil
 }
 
-func NewSwitchBotClient(config Config) *switchbot.Client {
+func NewClient(config Config) *switchbot.Client {
 	return switchbot.New(config.token, config.secret)
 }

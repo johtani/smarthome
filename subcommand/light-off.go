@@ -19,7 +19,7 @@ func NewLightOffDefinition() Definition {
 }
 
 func NewLightOffSubcommand(definition Definition, config Config) Subcommand {
-	switchbotClient := switchbot.NewSwitchBotClient(config.switchbot)
+	switchbotClient := switchbot.NewClient(config.switchbot)
 	return Subcommand{
 		definition,
 		[]action.Action{

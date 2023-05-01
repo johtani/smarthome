@@ -38,7 +38,7 @@ func (c Client) buildUrl(path string) string {
 	return c.config.url + path
 }
 
-func NewOwntoneClient(config Config) *Client {
+func NewClient(config Config) *Client {
 	return &Client{
 		config,
 		http.Client{Timeout: 10 * time.Second},

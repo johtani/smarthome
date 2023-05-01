@@ -123,7 +123,7 @@ func TestClient_Pause(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
 			config, _ := NewConfig(server.URL)
-			c := NewOwntoneClient(config)
+			c := NewClient(config)
 			if err := c.Pause(); (err != nil) != tt.wantErr {
 				t.Errorf("Pause() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -151,7 +151,7 @@ func TestClient_Play(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
 			config, _ := NewConfig(server.URL)
-			c := NewOwntoneClient(config)
+			c := NewClient(config)
 			if err := c.Play(); (err != nil) != tt.wantErr {
 				t.Errorf("Play() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -181,7 +181,7 @@ func TestClient_SetVolume(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
 			config, _ := NewConfig(server.URL)
-			c := NewOwntoneClient(config)
+			c := NewClient(config)
 			if err := c.SetVolume(tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -211,7 +211,7 @@ func TestClient_AddItem2Queue(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
 			config, _ := NewConfig(server.URL)
-			c := NewOwntoneClient(config)
+			c := NewClient(config)
 			if err := c.AddItem2Queue(tt.fields.item); (err != nil) != tt.wantErr {
 				t.Errorf("AddItem2Queue() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -269,7 +269,7 @@ func TestClient_GetPlaylists(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
 			config, _ := NewConfig(server.URL)
-			c := NewOwntoneClient(config)
+			c := NewClient(config)
 
 			playlists, err := c.GetPlaylists()
 			if (err != nil) != tt.wantErr {
@@ -320,7 +320,7 @@ func TestClient_GetGetPlayerStatus(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
 			config, _ := NewConfig(server.URL)
-			c := NewOwntoneClient(config)
+			c := NewClient(config)
 
 			status, err := c.GetPlayerStatus()
 			if (err != nil) != tt.wantErr {

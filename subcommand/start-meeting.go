@@ -19,8 +19,8 @@ func NewStartMeetingDefinition() Definition {
 }
 
 func NewStartMeetingSubcommand(definition Definition, config Config) Subcommand {
-	owntoneClient := owntone.NewOwntoneClient(config.owntone)
-	switchbotClient := switchbot.NewSwitchBotClient(config.switchbot)
+	owntoneClient := owntone.NewClient(config.owntone)
+	switchbotClient := switchbot.NewClient(config.switchbot)
 	return Subcommand{
 		definition,
 		[]action.Action{
