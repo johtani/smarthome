@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"smarthome/server"
+	"smarthome/server/slack"
 	"smarthome/subcommand"
 )
 
@@ -35,7 +35,7 @@ func run() error {
 	flag.BoolVar(&serverFlag, "server", false, "SlackBot用Serverを起動するかどうか")
 	flag.Parse()
 	if serverFlag {
-		return server.Run(config, smap)
+		return slack.Run(config, smap)
 	} else {
 		return runCmd(config, smap)
 	}

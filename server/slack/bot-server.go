@@ -1,4 +1,4 @@
-package server
+package slack
 
 import (
 	"fmt"
@@ -11,13 +11,13 @@ import (
 	"strings"
 )
 
-type SlackConfig struct {
+type Config struct {
 	appToken string
 	botToken string
 	debug    bool
 }
 
-func loadSlackConfig() (SlackConfig, error) {
+func loadConfig() (Config, error) {
 	var errs []string
 	appToken := os.Getenv("SLACK_APP_TOKEN")
 	if appToken == "" {
@@ -38,10 +38,10 @@ func loadSlackConfig() (SlackConfig, error) {
 	debugFlag := os.Getenv("DEBUG")
 
 	if len(errs) > 0 {
-		return SlackConfig{}, fmt.Errorf(strings.Join(errs, "\n"))
+		return Config{}, fmt.Errorf(strings.Join(errs, "\n"))
 	}
 
-	return SlackConfig{
+	return Config{
 		appToken: appToken,
 		botToken: botToken,
 		debug:    debugFlag == "true",
@@ -49,7 +49,7 @@ func loadSlackConfig() (SlackConfig, error) {
 }
 
 func Run(config subcommand.Config, smap map[string]subcommand.Definition) error {
-	slackConfig, err := loadSlackConfig()
+	slackConfig, err := loadConfig()
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func findAndRun(config subcommand.Config, smap map[string]subcommand.Definition,
 			return "", err
 		}
 	} else {
-		return "", fmt.Errorf("command[%v] is not found.", name)
+		return "", fmt.Errorf("command[%v] is not found", name)
 	}
 	// 何を実行したかを返したほうがいい？
 	return "", nil
