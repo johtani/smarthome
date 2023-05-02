@@ -1,4 +1,4 @@
-module smarthome
+module github.com/johtani/smarthome
 
 go 1.19
 
