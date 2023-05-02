@@ -44,6 +44,7 @@ func Map() map[string]Definition {
 		SwitchBotDeviceListCmd: NewSwitchBotDeviceListDefinition(),
 		SwitchBotSceneListCmd:  NewSwitchBotSceneListDefinition(),
 		LightOffCmd:            NewLightOffDefinition(),
+		LightOnCmd:             NewLightOnDefinition(),
 	}
 }
 

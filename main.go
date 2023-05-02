@@ -6,6 +6,7 @@ import (
 	"os"
 	"smarthome/server/slack"
 	"smarthome/subcommand"
+	"strings"
 )
 
 func printHelp(smap map[string]subcommand.Definition) string {
@@ -35,6 +36,9 @@ func run() error {
 	flag.BoolVar(&serverFlag, "server", false, "SlackBot用Serverを起動するかどうか")
 	flag.Parse()
 	if serverFlag {
+		for s, definition := range smap {
+			smap[strings.ReplaceAll(s, "-", " ")] = definition
+		}
 		return slack.Run(config, smap)
 	} else {
 		return runCmd(config, smap)

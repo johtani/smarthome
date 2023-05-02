@@ -13,7 +13,7 @@ const EnvLightDeviceId = "SWITCHBOT_LIGHT_DEVICE_ID"
 func NewLightOffDefinition() Definition {
 	return Definition{
 		LightOffCmd,
-		"List devices on SwitchBot",
+		"Light off via SwitchBot",
 		NewLightOffSubcommand,
 	}
 }
