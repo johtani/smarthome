@@ -91,7 +91,7 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 
 		// とりあえずBotのUserIDが最初にあるメッセージだけ対象とする
 		if strings.HasPrefix(payloadEvent.Text, botUserIdPrefix) {
-			msg, err = findAndRun(config, smap, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
+			msg, err = findAndExec(config, smap, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
 			if err != nil {
 				fmt.Printf("######### : Got error %v\n", err)
 				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
@@ -114,7 +114,7 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 	return nil
 }
 
-func findAndRun(config subcommand.Config, smap map[string]subcommand.Definition, text string) (string, error) {
+func findAndExec(config subcommand.Config, smap map[string]subcommand.Definition, text string) (string, error) {
 	// TODO message取り出し(もうちょっとスマートにできないか？)
 	name := strings.TrimSpace(text)
 
