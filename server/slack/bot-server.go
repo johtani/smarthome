@@ -2,12 +2,12 @@ package slack
 
 import (
 	"fmt"
+	"github.com/johtani/smarthome/subcommand"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
 	"log"
 	"os"
-	"smarthome/subcommand"
 	"strings"
 )
 

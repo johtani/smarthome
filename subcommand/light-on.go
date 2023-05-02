@@ -1,10 +1,10 @@
 package subcommand
 
 import (
+	"github.com/johtani/smarthome/subcommand/action"
+	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	switchbot2 "github.com/nasa9084/go-switchbot/v2"
 	"os"
-	"smarthome/subcommand/action"
-	"smarthome/subcommand/action/switchbot"
 )
 
 const LightOnCmd = "light-on"

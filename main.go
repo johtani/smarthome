@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/johtani/smarthome/server/slack"
+	"github.com/johtani/smarthome/subcommand"
 	"os"
-	"smarthome/server/slack"
-	"smarthome/subcommand"
 	"strings"
 )
 

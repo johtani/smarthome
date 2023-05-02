@@ -2,7 +2,7 @@ package subcommand
 
 import (
 	"fmt"
-	"smarthome/subcommand/action"
+	"github.com/johtani/smarthome/subcommand/action"
 	"testing"
 )
 

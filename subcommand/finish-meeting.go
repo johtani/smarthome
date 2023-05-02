@@ -1,8 +1,8 @@
 package subcommand
 
 import (
-	"smarthome/subcommand/action"
-	"smarthome/subcommand/action/owntone"
+	"github.com/johtani/smarthome/subcommand/action"
+	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"time"
 )
 
