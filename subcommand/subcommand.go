@@ -41,6 +41,8 @@ func Map() map[string]Definition {
 	return map[string]Definition{
 		StartMeetingCmd:        NewStartMeetingDefinition(),
 		FinishMeetingCmd:       NewFinishMeetingDefinition(),
+		StartMusicCmd:          NewStartMusicCmdDefinition(),
+		StopMusicCmd:           NewStopMusicDefinition(),
 		SwitchBotDeviceListCmd: NewSwitchBotDeviceListDefinition(),
 		SwitchBotSceneListCmd:  NewSwitchBotSceneListDefinition(),
 		LightOffCmd:            NewLightOffDefinition(),
