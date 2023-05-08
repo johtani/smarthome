@@ -2,6 +2,7 @@ package switchbot
 
 import (
 	"context"
+	"fmt"
 	"github.com/nasa9084/go-switchbot/v2"
 )
 
@@ -11,17 +12,17 @@ type ExecuteSceneAction struct {
 	*switchbot.Client
 }
 
-func (a ExecuteSceneAction) Run() error {
+func (a ExecuteSceneAction) Run() (string, error) {
 	err := a.Scene().Execute(context.Background(), a.sceneId)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return fmt.Sprintf("Execute the scene(%v).", a.sceneId), nil
 }
 
 func NewExecuteSceneAction(client *switchbot.Client, sceneId string) ExecuteSceneAction {
 	return ExecuteSceneAction{
-		"Turn off the target device",
+		"Execute the scene",
 		sceneId,
 		client,
 	}

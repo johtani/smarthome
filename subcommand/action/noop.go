@@ -1,14 +1,17 @@
 package action
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type NoOpAction struct {
 	interval time.Duration
 }
 
-func (a NoOpAction) Run() error {
+func (a NoOpAction) Run() (string, error) {
 	time.Sleep(a.interval)
-	return nil
+	return fmt.Sprintf("Paused for %v", a.interval), nil
 }
 
 func NewNoOpAction(interval time.Duration) NoOpAction {

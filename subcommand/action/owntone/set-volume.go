@@ -8,13 +8,12 @@ type SetVolumeAction struct {
 	c      *Client
 }
 
-func (a SetVolumeAction) Run() error {
+func (a SetVolumeAction) Run() (string, error) {
 	err := a.c.SetVolume(a.volume)
 	if err != nil {
-		return err
+		return "", err
 	}
-	fmt.Println("owntone set volume action succeeded.")
-	return nil
+	return fmt.Sprintf("Set volume to %v.", a.volume), nil
 }
 
 func NewSetVolumeAction(client *Client) SetVolumeAction {

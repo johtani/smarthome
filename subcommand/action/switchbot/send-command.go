@@ -2,6 +2,7 @@ package switchbot
 
 import (
 	"context"
+	"fmt"
 	"github.com/nasa9084/go-switchbot/v2"
 )
 
@@ -12,17 +13,17 @@ type SendCommandAction struct {
 	*switchbot.Client
 }
 
-func (a SendCommandAction) Run() error {
+func (a SendCommandAction) Run() (string, error) {
 	err := a.Device().Command(context.Background(), a.deviceId, a.command)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return fmt.Sprintf("Sned the command(%v) to the device(%v)", a.command, a.deviceId), nil
 }
 
 func NewSendCommandAction(client *switchbot.Client, deviceId string, command switchbot.Command) SendCommandAction {
 	return SendCommandAction{
-		"List scenes on SwitchBot",
+		"Send the command to the device on SwitchBot",
 		deviceId,
 		command,
 		client,

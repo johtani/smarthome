@@ -21,16 +21,19 @@ type Definition struct {
 	Factory     func(Definition, Config) Subcommand
 }
 
-func (s Subcommand) Exec() error {
+func (s Subcommand) Exec() (string, error) {
+	var msgs []string
 	for i := range s.actions {
-		err := s.actions[i].Run()
+		msg, err := s.actions[i].Run()
 		if s.ignoreError && err != nil {
 			fmt.Printf("skip error\t %v\n", err)
+			//TODO msgsにエラーを追加する？
 		} else if err != nil {
-			return err
+			return "", err
 		}
+		msgs = append(msgs, msg)
 	}
-	return nil
+	return strings.Join(msgs, "\n"), nil
 }
 
 func (d Definition) Init(config Config) Subcommand {

@@ -53,10 +53,11 @@ func runCmd(config subcommand.Config, smap map[string]subcommand.Definition) err
 	d, ok := smap[name]
 	if ok {
 		c := d.Init(config)
-		err := c.Exec()
+		msg, err := c.Exec()
 		if err != nil {
 			return err
 		}
+		fmt.Fprintln(os.Stdout, msg)
 	} else {
 		fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
 		printHelp(smap)

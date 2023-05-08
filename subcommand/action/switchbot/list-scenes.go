@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/nasa9084/go-switchbot/v2"
+	"strings"
 )
 
 type ListScenesAction struct {
@@ -11,15 +12,16 @@ type ListScenesAction struct {
 	*switchbot.Client
 }
 
-func (a ListScenesAction) Run() error {
+func (a ListScenesAction) Run() (string, error) {
 	scenes, err := a.Scene().List(context.Background())
+	var msg []string
 	if err != nil {
-		return err
+		return "", err
 	}
 	for _, s := range scenes {
-		fmt.Printf("%s\t%s\n", s.Name, s.ID)
+		msg = append(msg, fmt.Sprintf("%s\t%s", s.Name, s.ID))
 	}
-	return nil
+	return strings.Join(msg, "\n"), nil
 }
 
 func NewListScenesAction(client *switchbot.Client) ListScenesAction {

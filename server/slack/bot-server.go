@@ -117,11 +117,12 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 func findAndExec(config subcommand.Config, smap map[string]subcommand.Definition, text string) (string, error) {
 	// TODO message取り出し(もうちょっとスマートにできないか？)
 	name := strings.TrimSpace(text)
-
+	var msg string
 	d, ok := smap[name]
 	if ok {
 		c := d.Init(config)
-		err := c.Exec()
+		var err error
+		msg, err = c.Exec()
 		if err != nil {
 			return "", err
 		}
@@ -129,5 +130,5 @@ func findAndExec(config subcommand.Config, smap map[string]subcommand.Definition
 		return "", fmt.Errorf("command[%v] is not found", name)
 	}
 	// 何を実行したかを返したほうがいい？
-	return "", nil
+	return msg, nil
 }

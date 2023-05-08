@@ -3,6 +3,7 @@ package owntone
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -11,10 +12,11 @@ type PlayAction struct {
 	c    *Client
 }
 
-func (a PlayAction) Run() error {
+func (a PlayAction) Run() (string, error) {
 	status, err := a.c.GetPlayerStatus()
+	msg := []string{"Playing music"}
 	if err != nil {
-		return err
+		return "", err
 	}
 	if status.ItemID == 0 {
 		//プレイヤーのキューに曲が入っていない状態
@@ -22,17 +24,18 @@ func (a PlayAction) Run() error {
 		playlists, err := a.c.GetPlaylists()
 		if err != nil {
 			fmt.Println("error in GetPlaylists")
-			return err
+			return "", err
 		}
 		if len(playlists) > 0 {
 			rand.Seed(time.Now().UnixNano())
 			index := rand.Intn(len(playlists))
 			target := playlists[index]
 			fmt.Printf("[%v]\n", target.Name)
+			msg = append(msg, fmt.Sprintf("from %v.", target.Name))
 			err := a.c.AddItem2Queue(target.Uri)
 			if err != nil {
 				fmt.Println("error in AddItem2Queue")
-				return err
+				return "", err
 			}
 		} else {
 			fmt.Println("playlists is empty")
@@ -41,10 +44,9 @@ func (a PlayAction) Run() error {
 	err = a.c.Play()
 	if err != nil {
 		fmt.Println("error in Play")
-		return err
+		return "", err
 	}
-	fmt.Println("owntone play action succeeded.")
-	return nil
+	return strings.Join(msg, " "), nil
 }
 
 func NewPlayAction(client *Client) PlayAction {
