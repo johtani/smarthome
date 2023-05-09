@@ -39,7 +39,7 @@ func run() error {
 		for s, definition := range smap {
 			smap[strings.ReplaceAll(s, "-", " ")] = definition
 		}
-		fmt.Fprintf(os.Stdout, "pid:[%v] ppid:[%v]", os.Getpid(), os.Getppid())
+		fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
 
 		return slack.Run(config, smap)
 	} else {
