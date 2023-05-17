@@ -50,6 +50,7 @@ func Map() map[string]Definition {
 		SwitchBotSceneListCmd:  NewSwitchBotSceneListDefinition(),
 		LightOffCmd:            NewLightOffDefinition(),
 		LightOnCmd:             NewLightOnDefinition(),
+		HelpCmd:                NewHelpDefinition(),
 	}
 }
 
