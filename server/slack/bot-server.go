@@ -127,7 +127,7 @@ func findAndExec(config subcommand.Config, smap map[string]subcommand.Definition
 			return "", err
 		}
 	} else {
-		return "", fmt.Errorf("command[%v] is not found", name)
+		return "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", name)
 	}
 	// 何を実行したかを返したほうがいい？
 	return msg, nil
