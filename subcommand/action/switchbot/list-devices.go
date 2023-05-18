@@ -3,13 +3,12 @@ package switchbot
 import (
 	"context"
 	"fmt"
-	"github.com/nasa9084/go-switchbot/v2"
 	"strings"
 )
 
 type ListDevicesAction struct {
 	name string
-	*switchbot.Client
+	CachedClient
 }
 
 func (a ListDevicesAction) Run() (string, error) {
@@ -27,7 +26,7 @@ func (a ListDevicesAction) Run() (string, error) {
 	return strings.Join(msg, "\n"), nil
 }
 
-func NewListDevicesAction(client *switchbot.Client) ListDevicesAction {
+func NewListDevicesAction(client CachedClient) ListDevicesAction {
 	return ListDevicesAction{
 		"List devices on SwitchBot",
 		client,

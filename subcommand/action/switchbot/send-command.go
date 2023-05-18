@@ -10,7 +10,7 @@ type SendCommandAction struct {
 	name     string
 	deviceId string
 	command  switchbot.Command
-	*switchbot.Client
+	CachedClient
 }
 
 func (a SendCommandAction) Run() (string, error) {
@@ -18,10 +18,14 @@ func (a SendCommandAction) Run() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Sned the command(%v) to the device(%v)", a.command, a.deviceId), nil
+	name, err := a.GetDeviceName(a.deviceId)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Sned the command(%v) to the device(%v)", a.command, name), nil
 }
 
-func NewSendCommandAction(client *switchbot.Client, deviceId string, command switchbot.Command) SendCommandAction {
+func NewSendCommandAction(client CachedClient, deviceId string, command switchbot.Command) SendCommandAction {
 	return SendCommandAction{
 		"Send the command to the device on SwitchBot",
 		deviceId,

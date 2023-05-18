@@ -1,6 +1,7 @@
 package switchbot
 
 import (
+	"context"
 	"fmt"
 	"github.com/nasa9084/go-switchbot/v2"
 	"strings"
@@ -31,6 +32,51 @@ func NewConfig(token string, secret string) (Config, error) {
 	}, nil
 }
 
-func NewClient(config Config) *switchbot.Client {
-	return switchbot.New(config.token, config.secret)
+type CachedClient struct {
+	*switchbot.Client
+	deviceNameCache map[string]string
+	sceneNameCache  map[string]string
+}
+
+func NewClient(config Config) CachedClient {
+	return CachedClient{
+		switchbot.New(config.token, config.secret),
+		map[string]string{},
+		map[string]string{},
+	}
+}
+
+func (c CachedClient) GetSceneName(id string) (string, error) {
+	name, ok := c.sceneNameCache[id]
+	if ok {
+		return name, nil
+	}
+	scenes, err := c.Scene().List(context.Background())
+	if err != nil {
+		return "", err
+	}
+	c.sceneNameCache = map[string]string{}
+	for _, scene := range scenes {
+		c.sceneNameCache[scene.ID] = scene.Name
+	}
+	return c.sceneNameCache[id], nil
+}
+
+func (c CachedClient) GetDeviceName(id string) (string, error) {
+	name, ok := c.deviceNameCache[id]
+	if ok {
+		return name, nil
+	}
+	pDevices, vDevices, err := c.Device().List(context.Background())
+	if err != nil {
+		return "", err
+	}
+	c.deviceNameCache = map[string]string{}
+	for _, device := range pDevices {
+		c.deviceNameCache[device.ID] = device.Name
+	}
+	for _, device := range vDevices {
+		c.deviceNameCache[device.ID] = device.Name
+	}
+	return c.deviceNameCache[id], nil
 }
