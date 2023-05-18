@@ -3,13 +3,12 @@ package switchbot
 import (
 	"context"
 	"fmt"
-	"github.com/nasa9084/go-switchbot/v2"
 )
 
 type ExecuteSceneAction struct {
 	name    string
 	sceneId string
-	*switchbot.Client
+	CachedClient
 }
 
 func (a ExecuteSceneAction) Run() (string, error) {
@@ -17,10 +16,14 @@ func (a ExecuteSceneAction) Run() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Execute the scene(%v).", a.sceneId), nil
+	name, err := a.GetSceneName(a.sceneId)
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("Execute the scene(%v).", name), nil
 }
 
-func NewExecuteSceneAction(client *switchbot.Client, sceneId string) ExecuteSceneAction {
+func NewExecuteSceneAction(client CachedClient, sceneId string) ExecuteSceneAction {
 	return ExecuteSceneAction{
 		"Execute the scene",
 		sceneId,
