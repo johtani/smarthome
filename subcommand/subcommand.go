@@ -5,6 +5,7 @@ import (
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
+	"github.com/johtani/smarthome/subcommand/action/yamaha"
 	"os"
 	"strings"
 )
@@ -51,12 +52,14 @@ func Map() map[string]Definition {
 		LightOffCmd:            NewLightOffDefinition(),
 		LightOnCmd:             NewLightOnDefinition(),
 		HelpCmd:                NewHelpDefinition(),
+		StartSwitchCmd:         NewStartSwitchDefinition(),
 	}
 }
 
 type Config struct {
 	owntone   owntone.Config
 	switchbot switchbot.Config
+	yamaha    yamaha.Config
 }
 
 func NewConfig() (Config, error) {
@@ -69,8 +72,13 @@ func NewConfig() (Config, error) {
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
+	yamahaConfig, err := yamaha.NewConfig(os.Getenv(yamaha.EnvUrl))
+	if err != nil {
+		errs = append(errs, err.Error())
+	}
 	if len(errs) > 0 {
 		return Config{}, fmt.Errorf(strings.Join(errs, "\n"))
 	}
-	return Config{owntoneConfig, switchbotConfig}, nil
+
+	return Config{owntoneConfig, switchbotConfig, yamahaConfig}, nil
 }
