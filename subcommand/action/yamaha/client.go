@@ -71,7 +71,7 @@ func (c Client) SetScene(scene int) error {
 		return fmt.Errorf("failed to decode response: %v", err)
 	}
 	if rc.ResponseCode != 0 {
-		return fmt.Errorf("something wrong... response_code is %v", rc.ResponseCode)
+		return fmt.Errorf("something wrong SetScene... response_code is %v", rc.ResponseCode)
 	}
 	return nil
 }
@@ -97,7 +97,7 @@ func (c Client) SetVolume(volume int) error {
 		return fmt.Errorf("failed to decode response: %v", err)
 	}
 	if rc.ResponseCode != 0 {
-		return fmt.Errorf("something wrong... response_code is %v", rc.ResponseCode)
+		return fmt.Errorf("something wrong SetVolume... response_code is %v", rc.ResponseCode)
 	}
 	return nil
 }

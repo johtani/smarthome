@@ -52,6 +52,7 @@ func Map() map[string]Definition {
 		LightOffCmd:            NewLightOffDefinition(),
 		LightOnCmd:             NewLightOnDefinition(),
 		HelpCmd:                NewHelpDefinition(),
+		StartSwitchCmd:         NewStartSwitchDefinition(),
 	}
 }
 

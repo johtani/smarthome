@@ -16,10 +16,10 @@ func (a SetSceneAction) Run() (string, error) {
 	return fmt.Sprintf("Set scene to No.%v.", a.scene), nil
 }
 
-func NewSetSceneAction(client *Client) SetSceneAction {
+func NewSetSceneAction(client *Client, scene int) SetSceneAction {
 	return SetSceneAction{
 		"Set Yamaha Scene",
-		70,
+		scene,
 		client,
 	}
 }
