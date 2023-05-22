@@ -63,15 +63,15 @@ type Config struct {
 
 func NewConfig() (Config, error) {
 	var errs []string
-	owntone, err := owntone.NewConfig(os.Getenv(owntone.EnvUrl))
+	owntoneConfig, err := owntone.NewConfig(os.Getenv(owntone.EnvUrl))
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
-	switchbot, err := switchbot.NewConfig(os.Getenv(switchbot.EnvToken), os.Getenv(switchbot.EnvSecret))
+	switchbotConfig, err := switchbot.NewConfig(os.Getenv(switchbot.EnvToken), os.Getenv(switchbot.EnvSecret))
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
-	yamaha, err := yamaha.NewConfig(os.Getenv(yamaha.EnvUrl))
+	yamahaConfig, err := yamaha.NewConfig(os.Getenv(yamaha.EnvUrl))
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
@@ -79,5 +79,5 @@ func NewConfig() (Config, error) {
 		return Config{}, fmt.Errorf(strings.Join(errs, "\n"))
 	}
 
-	return Config{owntone, switchbot, yamaha}, nil
+	return Config{owntoneConfig, switchbotConfig, yamahaConfig}, nil
 }
