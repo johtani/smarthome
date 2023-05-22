@@ -24,13 +24,13 @@ func NewConfig(url string) (Config, error) {
 	if len(url) == 0 {
 		return Config{}, fmt.Errorf("not found \"OWNTONE_URL\". Please set OWNTONE_URL via Environment variable")
 	}
-	if strings.HasSuffix(url, "/") != true {
+	if strings.HasSuffix(url, "/") {
 		return Config{
-			url + "/",
+			url,
 		}, nil
 	}
 	return Config{
-		url,
+		url + "/",
 	}, nil
 }
 
