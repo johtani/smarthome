@@ -68,10 +68,6 @@ func TestClient_buildUrl(t *testing.T) {
 	}
 }
 
-func createMockServer(code int, method string, path string, requestParam map[string][]string) *httptest.Server {
-	return createMockServerWithResponse(code, method, path, requestParam, "")
-}
-
 func createMockServerWithResponse(code int, method string, path string, requestParam map[string][]string, response string) *httptest.Server {
 	return httptest.NewServer(
 		http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
