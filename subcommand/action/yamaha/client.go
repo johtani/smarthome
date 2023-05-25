@@ -51,7 +51,7 @@ type ResponseCode struct {
 	ResponseCode int `json:"response_code"`
 }
 
-func ParseHttpResponse(res *http.Response, caller string) error {
+func parseHttpResponse(res *http.Response, caller string) error {
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
@@ -77,7 +77,7 @@ func (c Client) SetScene(scene int) error {
 		return err
 	}
 	defer res.Body.Close()
-	err = ParseHttpResponse(res, "SetScene")
+	err = parseHttpResponse(res, "SetScene")
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (c Client) SetVolume(volume int) error {
 		return err
 	}
 	defer res.Body.Close()
-	err = ParseHttpResponse(res, "SetVolume")
+	err = parseHttpResponse(res, "SetVolume")
 	if err != nil {
 		return err
 	}
