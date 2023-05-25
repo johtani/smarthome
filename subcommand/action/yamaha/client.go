@@ -3,6 +3,7 @@ package yamaha
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/johtani/smarthome/subcommand/action/internal"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,25 +51,10 @@ type ResponseCode struct {
 	ResponseCode int `json:"response_code"`
 }
 
-func buildHttpRequest(method string, url string, params map[string]string) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, nil)
-	if err != nil {
-		return nil, err
-	}
-	q := req.URL.Query()
-	for key, param := range params {
-		q.Set(key, param)
-	}
-	req.URL.RawQuery = q.Encode()
-	return req, nil
-}
-
 func (c Client) SetScene(scene int) error {
-	url := c.buildUrl("recallScene")
-	method := http.MethodGet
 	params := map[string]string{}
 	params["num"] = strconv.Itoa(scene)
-	req, err := buildHttpRequest(method, url, params)
+	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("recallScene"), params)
 	if err != nil {
 		return err
 	}
@@ -91,11 +77,9 @@ func (c Client) SetScene(scene int) error {
 }
 
 func (c Client) SetVolume(volume int) error {
-	url := c.buildUrl("setVolume")
-	method := http.MethodGet
 	params := map[string]string{}
 	params["volume"] = strconv.Itoa(volume)
-	req, err := buildHttpRequest(method, url, params)
+	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("setVolume"), params)
 	if err != nil {
 		return err
 	}

@@ -3,6 +3,7 @@ package owntone
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/johtani/smarthome/subcommand/action/internal"
 	"net/http"
 	"strconv"
 	"strings"
@@ -78,13 +79,12 @@ func (c Client) Play() error {
 }
 
 func (c Client) SetVolume(volume int) error {
-	req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/player/volume"), nil)
+	params := map[string]string{}
+	params["volume"] = strconv.Itoa(volume)
+	req, err := internal.BuildHttpRequestWithParams(http.MethodPut, c.buildUrl("api/player/volume"), params)
 	if err != nil {
 		return err
 	}
-	q := req.URL.Query()
-	q.Set("volume", strconv.Itoa(volume))
-	req.URL.RawQuery = q.Encode()
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -134,13 +134,12 @@ func (c Client) GetPlaylists() ([]Playlist, error) {
 }
 
 func (c Client) AddItem2Queue(uri string) error {
-	req, err := http.NewRequest(http.MethodPost, c.buildUrl("api/queue/items/add"), nil)
+	params := map[string]string{}
+	params["uris"] = uri
+	req, err := internal.BuildHttpRequestWithParams(http.MethodPost, c.buildUrl("api/queue/items/add"), params)
 	if err != nil {
 		return err
 	}
-	q := req.URL.Query()
-	q.Set("uris", uri)
-	req.URL.RawQuery = q.Encode()
 	res, err := c.Do(req)
 	if err != nil {
 		return err
