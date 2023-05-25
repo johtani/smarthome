@@ -51,6 +51,20 @@ type ResponseCode struct {
 	ResponseCode int `json:"response_code"`
 }
 
+func ParseHttpResponse(res *http.Response, caller string) error {
+	if res.StatusCode != http.StatusOK {
+		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+	var rc ResponseCode
+	if err := json.NewDecoder(res.Body).Decode(&rc); err != nil {
+		return fmt.Errorf("failed to decode response: %v", err)
+	}
+	if rc.ResponseCode != 0 {
+		return fmt.Errorf("something wrong %v... response_code is %v", caller, rc.ResponseCode)
+	}
+	return nil
+}
+
 func (c Client) SetScene(scene int) error {
 	params := map[string]string{}
 	params["num"] = strconv.Itoa(scene)
@@ -63,15 +77,9 @@ func (c Client) SetScene(scene int) error {
 		return err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
-	var rc ResponseCode
-	if err := json.NewDecoder(res.Body).Decode(&rc); err != nil {
-		return fmt.Errorf("failed to decode response: %v", err)
-	}
-	if rc.ResponseCode != 0 {
-		return fmt.Errorf("something wrong SetScene... response_code is %v", rc.ResponseCode)
+	err = ParseHttpResponse(res, "SetScene")
+	if err != nil {
+		return err
 	}
 	return nil
 }
@@ -88,15 +96,9 @@ func (c Client) SetVolume(volume int) error {
 		return err
 	}
 	defer res.Body.Close()
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
-	var rc ResponseCode
-	if err := json.NewDecoder(res.Body).Decode(&rc); err != nil {
-		return fmt.Errorf("failed to decode response: %v", err)
-	}
-	if rc.ResponseCode != 0 {
-		return fmt.Errorf("something wrong SetVolume... response_code is %v", rc.ResponseCode)
+	err = ParseHttpResponse(res, "SetVolume")
+	if err != nil {
+		return err
 	}
 	return nil
 }
