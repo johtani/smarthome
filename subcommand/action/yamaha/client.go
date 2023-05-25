@@ -51,12 +51,18 @@ type ResponseCode struct {
 }
 
 func (c Client) SetScene(scene int) error {
-	req, err := http.NewRequest(http.MethodGet, c.buildUrl("recallScene"), nil)
+	url := c.buildUrl("recallScene")
+	method := http.MethodGet
+	params := map[string]string{}
+	params["num"] = strconv.Itoa(scene)
+	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return err
 	}
 	q := req.URL.Query()
-	q.Set("num", strconv.Itoa(scene))
+	for key, param := range params {
+		q.Set(key, param)
+	}
 	req.URL.RawQuery = q.Encode()
 	res, err := c.Do(req)
 	if err != nil {
@@ -77,12 +83,18 @@ func (c Client) SetScene(scene int) error {
 }
 
 func (c Client) SetVolume(volume int) error {
-	req, err := http.NewRequest(http.MethodGet, c.buildUrl("setVolume"), nil)
+	url := c.buildUrl("setVolume")
+	method := http.MethodGet
+	params := map[string]string{}
+	params["volume"] = strconv.Itoa(volume)
+	req, err := http.NewRequest(method, url, nil)
 	if err != nil {
 		return err
 	}
 	q := req.URL.Query()
-	q.Set("volume", strconv.Itoa(volume))
+	for key, param := range params {
+		q.Set(key, param)
+	}
 	req.URL.RawQuery = q.Encode()
 	res, err := c.Do(req)
 	if err != nil {
