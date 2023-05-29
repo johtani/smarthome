@@ -1,0 +1,5 @@
+{
+  "app_token": "YOUR_SLACK_APP_TOKEN",
+  "bot_token": "YOUR_SLACK_BOT_TOKEN",
+  "debug": false
+}

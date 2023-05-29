@@ -10,33 +10,28 @@ import (
 	"time"
 )
 
-const EnvUrl = "OWNTONE_URL"
-
 type Client struct {
 	config Config
 	http.Client
 }
 
 type Config struct {
-	url string
+	Url string `json:"url"`
 }
 
-func NewConfig(url string) (Config, error) {
-	if len(url) == 0 {
-		return Config{}, fmt.Errorf("not found \"OWNTONE_URL\". Please set OWNTONE_URL via Environment variable")
+func (c Config) Validate() error {
+	if c.Url == "" {
+		return fmt.Errorf("owntone Url is null")
 	}
-	if strings.HasSuffix(url, "/") {
-		return Config{
-			url,
-		}, nil
-	}
-	return Config{
-		url + "/",
-	}, nil
+	return nil
 }
 
 func (c Client) buildUrl(path string) string {
-	return c.config.url + path
+	url := c.config.Url
+	if !strings.HasSuffix(url, "/") {
+		url = url + "/"
+	}
+	return url + path
 }
 
 func NewClient(config Config) *Client {

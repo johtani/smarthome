@@ -27,10 +27,7 @@ func main() {
 }
 
 func run() error {
-	config, err := subcommand.NewConfig()
-	if err != nil {
-		return err
-	}
+	config := subcommand.LoadConfig()
 	smap := subcommand.Map()
 	var serverFlag bool
 	flag.BoolVar(&serverFlag, "server", false, "SlackBot用Serverを起動するかどうか")

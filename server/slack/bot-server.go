@@ -1,6 +1,7 @@
 package slack
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/slack-go/slack"
@@ -11,57 +12,66 @@ import (
 	"strings"
 )
 
-type Config struct {
-	appToken string
-	botToken string
-	debug    bool
+type config struct {
+	AppToken string `json:"app_token"`
+	BotToken string `json:"bot_token"`
+	Debug    bool   `json:"debug"`
 }
 
-func loadConfig() (Config, error) {
+const ConfigFileName = "config/slack.json"
+
+func (c config) validate() error {
 	var errs []string
-	appToken := os.Getenv("SLACK_APP_TOKEN")
-	if appToken == "" {
+	if c.AppToken == "" {
 		errs = append(errs, fmt.Sprintf("SLACK_APP_TOKEN must be set.\n"))
 	}
-	if !strings.HasPrefix(appToken, "xapp-") {
+	if !strings.HasPrefix(c.AppToken, "xapp-") {
 		errs = append(errs, fmt.Sprintf("SLACK_APP_TOKEN must have the prefix \"xapp-\"."))
 	}
 
-	botToken := os.Getenv("SLACK_BOT_TOKEN")
-	if botToken == "" {
+	if c.BotToken == "" {
 		errs = append(errs, fmt.Sprintf("SLACK_BOT_TOKEN must be set.\n"))
 	}
-	if !strings.HasPrefix(botToken, "xoxb-") {
+	if !strings.HasPrefix(c.BotToken, "xoxb-") {
 		errs = append(errs, fmt.Sprintf("SLACK_BOT_TOKEN must have the prefix \"xoxb-\"."))
 	}
-
-	debugFlag := os.Getenv("DEBUG")
-
 	if len(errs) > 0 {
-		return Config{}, fmt.Errorf(strings.Join(errs, "\n"))
+		return fmt.Errorf(strings.Join(errs, "\n"))
+	}
+	return nil
+}
+
+func loadConfigFromFile() config {
+	file, err := os.Open(ConfigFileName)
+	if err != nil {
+		panic(fmt.Sprintf("ファイルの読み込みエラー: %v", err))
+	}
+	// JSONデコード
+	decoder := json.NewDecoder(file)
+	var config config
+	err = decoder.Decode(&config)
+	if err != nil {
+		panic(fmt.Sprintf("JSONデコードエラー: %v", err))
+	}
+	err = config.validate()
+	if err != nil {
+		panic(fmt.Sprintf("Validation エラー: %v", err))
 	}
 
-	return Config{
-		appToken: appToken,
-		botToken: botToken,
-		debug:    debugFlag == "true",
-	}, nil
+	return config
 }
 
 func Run(config subcommand.Config, smap map[string]subcommand.Definition) error {
-	slackConfig, err := loadConfig()
-	if err != nil {
-		return err
-	}
+	slackConfig := loadConfigFromFile()
 	webApi := slack.New(
-		slackConfig.botToken,
-		slack.OptionAppLevelToken(slackConfig.appToken),
-		slack.OptionDebug(slackConfig.debug),
+		slackConfig.BotToken,
+		slack.OptionAppLevelToken(slackConfig.AppToken),
+		slack.OptionDebug(slackConfig.Debug),
 		slack.OptionLog(log.New(os.Stdout, "api: ", log.Lshortfile|log.LstdFlags)),
 	)
 	client := socketmode.New(
 		webApi,
-		socketmode.OptionDebug(slackConfig.debug),
+		socketmode.OptionDebug(slackConfig.Debug),
 		socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)),
 	)
 	authTest, authTestErr := webApi.AuthTest()
@@ -91,6 +101,7 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 
 		// とりあえずBotのUserIDが最初にあるメッセージだけ対象とする
 		if strings.HasPrefix(payloadEvent.Text, botUserIdPrefix) {
+			var err error
 			msg, err = findAndExec(config, smap, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
 			if err != nil {
 				fmt.Printf("######### : Got error %v\n", err)

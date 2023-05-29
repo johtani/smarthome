@@ -4,7 +4,6 @@ import (
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	switchbot2 "github.com/nasa9084/go-switchbot/v2"
-	"os"
 )
 
 const LightOnCmd = "light-on"
@@ -18,12 +17,12 @@ func NewLightOnDefinition() Definition {
 }
 
 func NewLightOnSubcommand(definition Definition, config Config) Subcommand {
-	switchbotClient := switchbot.NewClient(config.switchbot)
+	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
 		definition,
 		[]action.Action{
-			switchbot.NewSendCommandAction(switchbotClient, os.Getenv(EnvLightDeviceId), switchbot2.TurnOnCommand()),
-			switchbot.NewExecuteSceneAction(switchbotClient, os.Getenv(EnvStartMeetingScene)),
+			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.LightDeviceId, switchbot2.TurnOnCommand()),
+			switchbot.NewExecuteSceneAction(switchbotClient, config.Switchbot.LightSceneId),
 		},
 		true,
 	}

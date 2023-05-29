@@ -1,6 +1,7 @@
 package subcommand
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
@@ -57,28 +58,50 @@ func Map() map[string]Definition {
 }
 
 type Config struct {
-	owntone   owntone.Config
-	switchbot switchbot.Config
-	yamaha    yamaha.Config
+	Owntone   owntone.Config   `json:"Owntone"`
+	Switchbot switchbot.Config `json:"Switchbot"`
+	Yamaha    yamaha.Config    `json:"Yamaha"`
 }
 
-func NewConfig() (Config, error) {
+const ConfigFileName = "./config/config.json"
+
+func LoadConfig() Config {
+	file, err := os.Open(ConfigFileName)
+	if err != nil {
+		panic(fmt.Sprintf("ファイルの読み込みエラー: %v", err))
+	}
+	// JSONデコード
+	decoder := json.NewDecoder(file)
+	var config Config
+	err = decoder.Decode(&config)
+	if err != nil {
+		panic(fmt.Sprintf("JSONデコードエラー: %v", err))
+	}
+	err = config.validate()
+	if err != nil {
+		panic(fmt.Sprintf("Validation エラー: \n%v", err))
+	}
+	return config
+}
+
+func (c Config) validate() error {
 	var errs []string
-	owntoneConfig, err := owntone.NewConfig(os.Getenv(owntone.EnvUrl))
+	var err error
+	err = c.Owntone.Validate()
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
-	switchbotConfig, err := switchbot.NewConfig(os.Getenv(switchbot.EnvToken), os.Getenv(switchbot.EnvSecret))
+	err = c.Switchbot.Validate()
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
-	yamahaConfig, err := yamaha.NewConfig(os.Getenv(yamaha.EnvUrl))
+	err = c.Yamaha.Validate()
 	if err != nil {
 		errs = append(errs, err.Error())
-	}
-	if len(errs) > 0 {
-		return Config{}, fmt.Errorf(strings.Join(errs, "\n"))
 	}
 
-	return Config{owntoneConfig, switchbotConfig, yamahaConfig}, nil
+	if len(errs) > 0 {
+		return fmt.Errorf(strings.Join(errs, "\n"))
+	}
+	return nil
 }

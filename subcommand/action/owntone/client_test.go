@@ -9,40 +9,12 @@ import (
 	"testing"
 )
 
-func TestNewConfig(t *testing.T) {
-	type args struct {
-		url string
-	}
-	tests := []struct {
-		name    string
-		args    args
-		want    Config
-		wantErr bool
-	}{
-		{"OK:end with slash", args{"hogehoge/"}, Config{"hogehoge/"}, false},
-		{"OK:end without slash", args{"hogehoge"}, Config{"hogehoge/"}, false},
-		{"NG:end without slash", args{""}, Config{}, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := NewConfig(tt.args.url)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("NewConfig() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewConfig() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestClient_buildUrl(t *testing.T) {
 	type fields struct {
 		config Config
 		Client http.Client
 	}
-	config, _ := NewConfig("URL")
+	config := Config{"URL"}
 	type args struct {
 		path string
 	}
@@ -52,8 +24,8 @@ func TestClient_buildUrl(t *testing.T) {
 		args   args
 		want   string
 	}{
-		{"ok url path", fields{config, http.Client{}}, args{"path"}, "URL/path"},
-		{"ok only url", fields{config, http.Client{}}, args{}, "URL/"},
+		{"ok Url path", fields{config, http.Client{}}, args{"path"}, "URL/path"},
+		{"ok only Url", fields{config, http.Client{}}, args{}, "URL/"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -122,7 +94,7 @@ func TestClient_Pause(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			config, _ := NewConfig(server.URL)
+			config := Config{server.URL}
 			c := NewClient(config)
 			if err := c.Pause(); (err != nil) != tt.wantErr {
 				t.Errorf("Pause() error = %v, wantErr %v", err, tt.wantErr)
@@ -150,7 +122,7 @@ func TestClient_Play(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			config, _ := NewConfig(server.URL)
+			config := Config{server.URL}
 			c := NewClient(config)
 			if err := c.Play(); (err != nil) != tt.wantErr {
 				t.Errorf("Play() error = %v, wantErr %v", err, tt.wantErr)
@@ -180,7 +152,7 @@ func TestClient_SetVolume(t *testing.T) {
 			reqParams := map[string][]string{"volume": {strconv.Itoa(tt.fields.volume)}}
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
-			config, _ := NewConfig(server.URL)
+			config := Config{server.URL}
 			c := NewClient(config)
 			if err := c.SetVolume(tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
@@ -210,7 +182,7 @@ func TestClient_AddItem2Queue(t *testing.T) {
 			reqParams := map[string][]string{"uris": {tt.fields.item}}
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
-			config, _ := NewConfig(server.URL)
+			config := Config{server.URL}
 			c := NewClient(config)
 			if err := c.AddItem2Queue(tt.fields.item); (err != nil) != tt.wantErr {
 				t.Errorf("AddItem2Queue() error = %v, wantErr %v", err, tt.wantErr)
@@ -268,7 +240,7 @@ func TestClient_GetPlaylists(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config, _ := NewConfig(server.URL)
+			config := Config{server.URL}
 			c := NewClient(config)
 
 			playlists, err := c.GetPlaylists()
@@ -319,7 +291,7 @@ func TestClient_GetGetPlayerStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config, _ := NewConfig(server.URL)
+			config := Config{server.URL}
 			c := NewClient(config)
 
 			status, err := c.GetPlayerStatus()
@@ -329,6 +301,30 @@ func TestClient_GetGetPlayerStatus(t *testing.T) {
 				if status == tt.expected {
 					t.Errorf("GetPlayerStatus() status = %v, expected %v", status, tt.expected)
 				}
+			}
+		})
+	}
+}
+
+func TestConfig_Validate(t *testing.T) {
+	type fields struct {
+		url string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{"OK", fields{"Url"}, false},
+		{"NG", fields{""}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Config{
+				Url: tt.fields.url,
+			}
+			if err := c.Validate(); (err != nil) != tt.wantErr {
+				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

@@ -1,0 +1,14 @@
+{
+  "switchbot": {
+    "token": "",
+    "secret": "",
+    "light_device_id": "",
+    "light_scene_id": ""
+  },
+  "owntone": {
+    "url": ""
+  },
+  "yamaha": {
+    "url": ""
+  }
+}
