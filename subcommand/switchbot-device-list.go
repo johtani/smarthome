@@ -5,7 +5,7 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 )
 
-const SwitchBotDeviceListCmd = "Switchbot-device-list"
+const SwitchBotDeviceListCmd = "switchbot-device-list"
 
 func NewSwitchBotDeviceListDefinition() Definition {
 	return Definition{
