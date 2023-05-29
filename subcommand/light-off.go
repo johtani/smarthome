@@ -4,11 +4,9 @@ import (
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	switchbot2 "github.com/nasa9084/go-switchbot/v2"
-	"os"
 )
 
 const LightOffCmd = "light-off"
-const EnvLightDeviceId = "SWITCHBOT_LIGHT_DEVICE_ID"
 
 func NewLightOffDefinition() Definition {
 	return Definition{
@@ -19,11 +17,11 @@ func NewLightOffDefinition() Definition {
 }
 
 func NewLightOffSubcommand(definition Definition, config Config) Subcommand {
-	switchbotClient := switchbot.NewClient(config.switchbot)
+	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
 		definition,
 		[]action.Action{
-			switchbot.NewSendCommandAction(switchbotClient, os.Getenv(EnvLightDeviceId), switchbot2.TurnOffCommand()),
+			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.LightDeviceId, switchbot2.TurnOffCommand()),
 		},
 		true,
 	}

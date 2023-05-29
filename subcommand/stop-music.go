@@ -16,7 +16,7 @@ func NewStopMusicDefinition() Definition {
 }
 
 func NewStopMusicSubcommand(definition Definition, config Config) Subcommand {
-	owntoneClient := owntone.NewClient(config.owntone)
+	owntoneClient := owntone.NewClient(config.Owntone)
 	return Subcommand{
 		definition,
 		[]action.Action{

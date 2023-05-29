@@ -17,7 +17,7 @@ func NewStartSwitchDefinition() Definition {
 }
 
 func NewStartSwitchSubcommand(definition Definition, config Config) Subcommand {
-	yamahaClient := yamaha.NewClient(config.yamaha)
+	yamahaClient := yamaha.NewClient(config.Yamaha)
 	return Subcommand{
 		definition,
 		[]action.Action{

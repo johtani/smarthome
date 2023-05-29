@@ -10,7 +10,6 @@ import (
 	"time"
 )
 
-const EnvUrl = "YAMAHA_AMP_URL"
 const basePath = "YamahaExtendedControl/v1/main/"
 
 type Client struct {
@@ -19,25 +18,22 @@ type Client struct {
 }
 
 type Config struct {
-	url string
+	Url string `json:"url"`
 }
 
-func NewConfig(url string) (Config, error) {
-	if len(url) == 0 {
-		return Config{}, fmt.Errorf("not found \"YAMAHA_AMP_URL\". Please set YAMAHA_AMP_URL via Environment variable")
+func (c Config) Validate() error {
+	if c.Url == "" {
+		return fmt.Errorf("yamaha Url is null")
 	}
-	if strings.HasSuffix(url, "/") {
-		return Config{
-			url,
-		}, nil
-	}
-	return Config{
-		url + "/",
-	}, nil
+	return nil
 }
 
 func (c Client) buildUrl(path string) string {
-	return c.config.url + basePath + path
+	url := c.config.Url
+	if !strings.HasSuffix(url, "/") {
+		url = url + "/"
+	}
+	return url + basePath + path
 }
 
 func NewClient(config Config) *Client {

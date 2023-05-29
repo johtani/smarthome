@@ -17,7 +17,7 @@ func NewFinishMeetingDefinition() Definition {
 }
 
 func NewFinishMeetingSubcommand(definition Definition, config Config) Subcommand {
-	owntoneClient := owntone.NewClient(config.owntone)
+	owntoneClient := owntone.NewClient(config.Owntone)
 	return Subcommand{
 		definition,
 		[]action.Action{

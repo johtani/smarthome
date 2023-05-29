@@ -17,7 +17,7 @@ func NewSwitchBotDeviceListDefinition() Definition {
 }
 
 func NewSwitchBotDeviceListSubcommand(definition Definition, config Config) Subcommand {
-	switchbotClient := switchbot.NewClient(config.switchbot)
+	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
 		definition,
 		[]action.Action{
