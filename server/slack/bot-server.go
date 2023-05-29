@@ -12,28 +12,28 @@ import (
 	"strings"
 )
 
-type config struct {
+type Config struct {
 	AppToken string `json:"app_token"`
 	BotToken string `json:"bot_token"`
 	Debug    bool   `json:"debug"`
 }
 
-const ConfigFileName = "config/slack.json"
+const ConfigFileName = "./config/slack.json"
 
-func (c config) validate() error {
+func (c Config) validate() error {
 	var errs []string
 	if c.AppToken == "" {
-		errs = append(errs, fmt.Sprintf("SLACK_APP_TOKEN must be set.\n"))
+		errs = append(errs, fmt.Sprintf("app_token must be set.\n"))
 	}
 	if !strings.HasPrefix(c.AppToken, "xapp-") {
-		errs = append(errs, fmt.Sprintf("SLACK_APP_TOKEN must have the prefix \"xapp-\"."))
+		errs = append(errs, fmt.Sprintf("app_token must have the prefix \"xapp-\"."))
 	}
 
 	if c.BotToken == "" {
-		errs = append(errs, fmt.Sprintf("SLACK_BOT_TOKEN must be set.\n"))
+		errs = append(errs, fmt.Sprintf("bot_token must be set.\n"))
 	}
 	if !strings.HasPrefix(c.BotToken, "xoxb-") {
-		errs = append(errs, fmt.Sprintf("SLACK_BOT_TOKEN must have the prefix \"xoxb-\"."))
+		errs = append(errs, fmt.Sprintf("bot_token must have the prefix \"xoxb-\"."))
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf(strings.Join(errs, "\n"))
@@ -41,14 +41,14 @@ func (c config) validate() error {
 	return nil
 }
 
-func loadConfigFromFile() config {
+func loadConfigFromFile() Config {
 	file, err := os.Open(ConfigFileName)
 	if err != nil {
 		panic(fmt.Sprintf("ファイルの読み込みエラー: %v", err))
 	}
 	// JSONデコード
 	decoder := json.NewDecoder(file)
-	var config config
+	var config Config
 	err = decoder.Decode(&config)
 	if err != nil {
 		panic(fmt.Sprintf("JSONデコードエラー: %v", err))
