@@ -54,6 +54,7 @@ func Map() map[string]Definition {
 		LightOnCmd:             NewLightOnDefinition(),
 		HelpCmd:                NewHelpDefinition(),
 		StartSwitchCmd:         NewStartSwitchDefinition(),
+		StartPS5Cmd:            NewStartPS5Definition(),
 	}
 }
 
