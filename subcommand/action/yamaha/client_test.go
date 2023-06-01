@@ -171,3 +171,34 @@ func TestConfig_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_PowerOff(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+	path := "/YamahaExtendedControl/v1/main/setPower"
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{"OK", fields{http.StatusOK, http.MethodGet, path, responseCodeOK()}, false},
+		{"OK_body_NG", fields{http.StatusOK, http.MethodGet, path, responseCodeNG()}, true},
+		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, responseCodeNG()}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			reqParams := map[string][]string{"power": {"standby"}}
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams, tt.fields.response)
+			defer server.Close()
+			config := Config{server.URL}
+			c := NewClient(config)
+			if err := c.PowerOff(); (err != nil) != tt.wantErr {
+				t.Errorf("PowerOff() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

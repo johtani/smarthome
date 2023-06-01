@@ -98,3 +98,22 @@ func (c Client) SetVolume(volume int) error {
 	}
 	return nil
 }
+
+func (c Client) PowerOff() error {
+	params := map[string]string{}
+	params["power"] = "standby"
+	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("setPower"), params)
+	if err != nil {
+		return err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	err = parseHttpResponse(res, "PowerOff")
+	if err != nil {
+		return err
+	}
+	return nil
+}
