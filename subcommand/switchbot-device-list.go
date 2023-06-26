@@ -6,6 +6,7 @@ import (
 )
 
 const SwitchBotDeviceListCmd = "switchbot-device-list"
+const DeviceListCmd = "device-list"
 
 func NewSwitchBotDeviceListDefinition() Definition {
 	return Definition{

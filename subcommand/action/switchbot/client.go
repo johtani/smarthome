@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	Token         string `json:"token"`
-	Secret        string `json:"secret"`
-	LightDeviceId string `json:"light_device_id"`
-	LightSceneId  string `json:"light_scene_id"`
+	Token            string `json:"token"`
+	Secret           string `json:"secret"`
+	LightDeviceId    string `json:"light_device_id"`
+	LightSceneId     string `json:"light_scene_id"`
+	AirConditionerId string `json:"air_conditioner_id"`
 }
 
 func (c Config) Validate() error {

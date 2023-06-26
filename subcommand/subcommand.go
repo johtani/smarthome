@@ -49,12 +49,18 @@ func Map() map[string]Definition {
 		StartMusicCmd:          NewStartMusicCmdDefinition(),
 		StopMusicCmd:           NewStopMusicDefinition(),
 		SwitchBotDeviceListCmd: NewSwitchBotDeviceListDefinition(),
+		DeviceListCmd:          NewSwitchBotDeviceListDefinition(),
 		SwitchBotSceneListCmd:  NewSwitchBotSceneListDefinition(),
+		SceneListCmd:           NewSwitchBotSceneListDefinition(),
 		LightOffCmd:            NewLightOffDefinition(),
 		LightOnCmd:             NewLightOnDefinition(),
 		HelpCmd:                NewHelpDefinition(),
 		StartSwitchCmd:         NewStartSwitchDefinition(),
 		StartPS5Cmd:            NewStartPS5Definition(),
+		AirConditionerOnCmd:    NewAirConditionerOnDefinition(),
+		ACOnCmd:                NewAirConditionerOnDefinition(),
+		AirConditionerOffCmd:   NewAirConditionerOffDefinition(),
+		ACOffCmd:               NewAirConditionerOffDefinition(),
 	}
 }
 

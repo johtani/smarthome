@@ -6,6 +6,7 @@ import (
 )
 
 const SwitchBotSceneListCmd = "switchbot-scene-list"
+const SceneListCmd = "scene-list"
 
 func NewSwitchBotSceneListDefinition() Definition {
 	return Definition{
