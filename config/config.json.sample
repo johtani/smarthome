@@ -3,7 +3,8 @@
     "token": "",
     "secret": "",
     "light_device_id": "",
-    "light_scene_id": ""
+    "light_scene_id": "",
+    "air_conditioner_id": ""
   },
   "owntone": {
     "url": ""
