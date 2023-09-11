@@ -8,6 +8,7 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -42,34 +43,62 @@ func (d Definition) Init(config Config) Subcommand {
 	return d.Factory(d, config)
 }
 
-func Map() map[string]Definition {
-	return map[string]Definition{
-		StartMeetingCmd:        NewStartMeetingDefinition(),
-		FinishMeetingCmd:       NewFinishMeetingDefinition(),
-		StartMusicCmd:          NewStartMusicCmdDefinition(),
-		StopMusicCmd:           NewStopMusicDefinition(),
-		SwitchBotDeviceListCmd: NewSwitchBotDeviceListDefinition(),
-		DeviceListCmd:          NewSwitchBotDeviceListDefinition(),
-		SwitchBotSceneListCmd:  NewSwitchBotSceneListDefinition(),
-		SceneListCmd:           NewSwitchBotSceneListDefinition(),
-		LightOffCmd:            NewLightOffDefinition(),
-		LightOnCmd:             NewLightOnDefinition(),
-		HelpCmd:                NewHelpDefinition(),
-		StartSwitchCmd:         NewStartSwitchDefinition(),
-		StartPS5Cmd:            NewStartPS5Definition(),
-		AirConditionerOnCmd:    NewAirConditionerOnDefinition(),
-		ACOnCmd:                NewAirConditionerOnDefinition(),
-		AirConditionerOffCmd:   NewAirConditionerOffDefinition(),
-		ACOffCmd:               NewAirConditionerOffDefinition(),
-		DisplayTemperature:     NewDisplayTemperatureDefinition(),
-		DispTemp:               NewDisplayTemperatureDefinition(),
+type Entry struct {
+	Name       string
+	definition Definition
+	shortnames []string
+	noHyphens  []string
+	Help       string
+}
+
+func newEntry(name string, definition Definition, shortnames []string) Entry {
+	noHyphens := []string{strings.ReplaceAll(name, "-", " ")}
+	for _, shortname := range shortnames {
+		noHyphens = append(noHyphens, strings.ReplaceAll(shortname, "-", " "))
 	}
+	var help string
+	if len(shortnames) > 0 {
+		help = fmt.Sprintf("  %s [%s]: %s\n", name, strings.Join(shortnames, "/"), definition.Description)
+	} else {
+		help = fmt.Sprintf("  %s : %s\n", name, definition.Description)
+	}
+	return Entry{Name: name, definition: definition, shortnames: shortnames, noHyphens: noHyphens, Help: help}
+}
+
+func (e Entry) IsTarget(name string, withoutHyphen bool) bool {
+	if withoutHyphen {
+		return name == e.Name || slices.Contains(e.shortnames, name) || slices.Contains(e.noHyphens, name)
+	} else {
+		return name == e.Name || slices.Contains(e.shortnames, name)
+	}
+}
+
+type Commands struct {
+	entries []Entry
+}
+
+func (c Commands) Find(name string, withoutHyphen bool) (Definition, error) {
+	for _, entry := range c.entries {
+		if entry.IsTarget(name, withoutHyphen) {
+			return entry.definition, nil
+		}
+	}
+	return Definition{}, fmt.Errorf("not found %s command", name)
+}
+
+func (c Commands) Help() string {
+	var builder strings.Builder
+	for _, command := range c.entries {
+		builder.WriteString(command.Help)
+	}
+	return builder.String()
 }
 
 type Config struct {
 	Owntone   owntone.Config   `json:"Owntone"`
 	Switchbot switchbot.Config `json:"Switchbot"`
 	Yamaha    yamaha.Config    `json:"Yamaha"`
+	Commands  Commands
 }
 
 const ConfigFileName = "./config/config.json"
@@ -89,6 +118,26 @@ func LoadConfig() Config {
 	err = config.validate()
 	if err != nil {
 		panic(fmt.Sprintf("Validation エラー: \n%v", err))
+	}
+	config.Commands = Commands{
+		[]Entry{
+			newEntry(StartMeetingCmd, NewStartMeetingDefinition(), []string{}),
+			newEntry(FinishMeetingCmd, NewFinishMeetingDefinition(), []string{}),
+			newEntry(StartMusicCmd, NewStartMusicCmdDefinition(), []string{}),
+			newEntry(StopMusicCmd, NewStopMusicDefinition(), []string{}),
+			newEntry(SwitchBotDeviceListCmd, NewSwitchBotDeviceListDefinition(), []string{}),
+			newEntry(DeviceListCmd, NewSwitchBotDeviceListDefinition(), []string{}),
+			newEntry(SwitchBotSceneListCmd, NewSwitchBotSceneListDefinition(), []string{}),
+			newEntry(SceneListCmd, NewSwitchBotSceneListDefinition(), []string{}),
+			newEntry(LightOffCmd, NewLightOffDefinition(), []string{}),
+			newEntry(LightOnCmd, NewLightOnDefinition(), []string{}),
+			newEntry(HelpCmd, NewHelpDefinition(), []string{}),
+			newEntry(StartSwitchCmd, NewStartSwitchDefinition(), []string{}),
+			newEntry(StartPS5Cmd, NewStartPS5Definition(), []string{}),
+			newEntry(AirConditionerOnCmd, NewAirConditionerOnDefinition(), []string{ACOnCmd}),
+			newEntry(AirConditionerOffCmd, NewAirConditionerOffDefinition(), []string{ACOffCmd}),
+			newEntry(DisplayTemperatureCmd, NewDisplayTemperatureDefinition(), []string{DispTempCmd}),
+		},
 	}
 	return config
 }
