@@ -8,7 +8,6 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 	"os"
-	"slices"
 	"strings"
 )
 
@@ -67,10 +66,20 @@ func newEntry(name string, definition Definition, shortnames []string) Entry {
 
 func (e Entry) IsTarget(name string, withoutHyphen bool) bool {
 	if withoutHyphen {
-		return name == e.Name || slices.Contains(e.shortnames, name) || slices.Contains(e.noHyphens, name)
+		return name == e.Name || e.contains(e.shortnames, name) || e.contains(e.noHyphens, name)
 	} else {
-		return name == e.Name || slices.Contains(e.shortnames, name)
+		return name == e.Name || e.contains(e.shortnames, name)
 	}
+}
+
+// slices.Contains includes >= Go 1.21
+func (e Entry) contains(names []string, target string) bool {
+	for _, name := range names {
+		if target == name {
+			return true
+		}
+	}
+	return false
 }
 
 type Commands struct {
