@@ -3,7 +3,7 @@ package subcommand
 import (
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
-	switchbot2 "github.com/nasa9084/go-switchbot/v2"
+	switchbotsdk "github.com/nasa9084/go-switchbot/v3"
 )
 
 const AirConditionerOnCmd = "air-conditioner-on"
@@ -22,7 +22,7 @@ func NewAirConditionerOnSubcommand(definition Definition, config Config) Subcomm
 	return Subcommand{
 		definition,
 		[]action.Action{
-			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.AirConditionerId, switchbot2.TurnOnCommand()),
+			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.AirConditionerId, switchbotsdk.TurnOnCommand()),
 		},
 		true,
 	}
