@@ -1,6 +1,6 @@
 module github.com/johtani/smarthome
 
-go 1.21
+go 1.20
 
 require (
 	github.com/nasa9084/go-switchbot/v3 v3.0.1
