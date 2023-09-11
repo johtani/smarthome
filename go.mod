@@ -1,10 +1,10 @@
 module github.com/johtani/smarthome
 
-go 1.19
+go 1.20
 
 require (
-	github.com/nasa9084/go-switchbot/v2 v2.1.0
-	github.com/slack-go/slack v0.12.2
+	github.com/nasa9084/go-switchbot/v3 v3.0.1
+	github.com/slack-go/slack v0.12.3
 )
 
 require (

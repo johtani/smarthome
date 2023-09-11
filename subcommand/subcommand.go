@@ -61,6 +61,8 @@ func Map() map[string]Definition {
 		ACOnCmd:                NewAirConditionerOnDefinition(),
 		AirConditionerOffCmd:   NewAirConditionerOffDefinition(),
 		ACOffCmd:               NewAirConditionerOffDefinition(),
+		DisplayTemperature:     NewDisplayTemperatureDefinition(),
+		DispTemp:               NewDisplayTemperatureDefinition(),
 	}
 }
 
