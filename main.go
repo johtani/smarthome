@@ -6,15 +6,12 @@ import (
 	"github.com/johtani/smarthome/server/slack"
 	"github.com/johtani/smarthome/subcommand"
 	"os"
-	"strings"
 )
 
-func printHelp(smap map[string]subcommand.Definition) string {
+func printHelp(commandsHelp string) string {
 	fmt.Println("SlackBot用Serverを起動する場合は-serverオプションをつけてください")
 	fmt.Println("コマンドモードで利用可能なコマンドは次の通りです。")
-	for _, command := range smap {
-		fmt.Printf("  %s: %s\n", command.Name, command.Description)
-	}
+	fmt.Printf(commandsHelp)
 	return `コマンドを指定してください。
 smarthome <コマンド名>`
 }
@@ -28,38 +25,33 @@ func main() {
 
 func run() error {
 	config := subcommand.LoadConfig()
-	smap := subcommand.Map()
 	var serverFlag bool
 	flag.BoolVar(&serverFlag, "server", false, "SlackBot用Serverを起動するかどうか")
 	flag.Parse()
 	if serverFlag {
-		for s, definition := range smap {
-			smap[strings.ReplaceAll(s, "-", " ")] = definition
-		}
 		fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
-
-		return slack.Run(config, smap)
+		return slack.Run(config)
 	} else {
-		return runCmd(config, smap)
+		return runCmd(config)
 	}
 }
 
-func runCmd(config subcommand.Config, smap map[string]subcommand.Definition) error {
+func runCmd(config subcommand.Config) error {
 	if len(os.Args) < 2 {
-		return fmt.Errorf(printHelp(smap))
+		return fmt.Errorf(printHelp(config.Commands.Help()))
 	}
 	name := os.Args[1]
-	d, ok := smap[name]
-	if ok {
+	d, err := config.Commands.Find(name, false)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
+		printHelp(config.Commands.Help())
+	} else {
 		c := d.Init(config)
 		msg, err := c.Exec()
 		if err != nil {
 			return err
 		}
 		fmt.Fprintln(os.Stdout, msg)
-	} else {
-		fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
-		printHelp(smap)
 	}
 	return nil
 }

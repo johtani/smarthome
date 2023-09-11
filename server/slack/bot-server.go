@@ -61,7 +61,7 @@ func loadConfigFromFile() Config {
 	return config
 }
 
-func Run(config subcommand.Config, smap map[string]subcommand.Definition) error {
+func Run(config subcommand.Config) error {
 	slackConfig := loadConfigFromFile()
 	webApi := slack.New(
 		slackConfig.BotToken,
@@ -102,7 +102,7 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 		// とりあえずBotのUserIDが最初にあるメッセージだけ対象とする
 		if strings.HasPrefix(payloadEvent.Text, botUserIdPrefix) {
 			var err error
-			msg, err = findAndExec(config, smap, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
+			msg, err = findAndExec(config, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
 			if err != nil {
 				fmt.Printf("######### : Got error %v\n", err)
 				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
@@ -125,20 +125,20 @@ func Run(config subcommand.Config, smap map[string]subcommand.Definition) error 
 	return nil
 }
 
-func findAndExec(config subcommand.Config, smap map[string]subcommand.Definition, text string) (string, error) {
+func findAndExec(config subcommand.Config, text string) (string, error) {
 	// TODO message取り出し(もうちょっとスマートにできないか？)
 	name := strings.TrimSpace(text)
 	var msg string
-	d, ok := smap[name]
-	if ok {
+	d, err := config.Commands.Find(name, true)
+	if err != nil {
+		return "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", name)
+	} else {
 		c := d.Init(config)
 		var err error
 		msg, err = c.Exec()
 		if err != nil {
 			return "", err
 		}
-	} else {
-		return "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", name)
 	}
 	// 何を実行したかを返したほうがいい？
 	return msg, nil
