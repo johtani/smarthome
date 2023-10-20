@@ -6,6 +6,7 @@ import (
 	"github.com/johtani/smarthome/server/slack"
 	"github.com/johtani/smarthome/subcommand"
 	"os"
+	"strings"
 )
 
 func printHelp(commandsHelp string) string {
@@ -41,17 +42,28 @@ func runCmd(config subcommand.Config) error {
 		return fmt.Errorf(printHelp(config.Commands.Help()))
 	}
 	name := os.Args[1]
+	dymMsg := ""
 	d, err := config.Commands.Find(name, false)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
-		printHelp(config.Commands.Help())
-	} else {
-		c := d.Init(config)
-		msg, err := c.Exec()
-		if err != nil {
-			return err
+		candidates, cmds := config.Commands.DidYouMean(name, true)
+		if len(candidates) == 0 {
+			fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
+			printHelp(config.Commands.Help())
+			return nil
+		} else {
+			d = candidates[0]
+			dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
 		}
-		fmt.Fprintln(os.Stdout, msg)
 	}
+	c := d.Init(config)
+	msg, err := c.Exec()
+	if err != nil {
+		return err
+	}
+	if len(dymMsg) > 0 {
+		msg = strings.Join([]string{dymMsg, msg}, "\n")
+	}
+	fmt.Fprintln(os.Stdout, msg)
+
 	return nil
 }
