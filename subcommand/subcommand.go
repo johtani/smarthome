@@ -3,6 +3,7 @@ package subcommand
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hbollon/go-edlib"
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
@@ -72,6 +73,31 @@ func (e Entry) IsTarget(name string, withoutHyphen bool) bool {
 	}
 }
 
+func (e Entry) Distance(name string, withoutHyphen bool) (int, string) {
+	distance := edlib.LevenshteinDistance(name, e.Name)
+	command := e.Name
+	// TODO shortnameどうする？一番小さいDistanceでいいか？
+	if len(e.shortnames) > 0 {
+		for _, tmp := range e.shortnames {
+			sd := edlib.LevenshteinDistance(name, tmp)
+			if sd < distance {
+				distance = sd
+				command = tmp
+			}
+		}
+	}
+	if withoutHyphen && len(e.noHyphens) > 0 {
+		for _, tmp := range e.noHyphens {
+			sd := edlib.LevenshteinDistance(name, tmp)
+			if sd < distance {
+				distance = sd
+				command = tmp
+			}
+		}
+	}
+	return distance, command
+}
+
 // slices.Contains includes >= Go 1.21
 func (e Entry) contains(names []string, target string) bool {
 	for _, name := range names {
@@ -93,6 +119,20 @@ func (c Commands) Find(name string, withoutHyphen bool) (Definition, error) {
 		}
 	}
 	return Definition{}, fmt.Errorf("not found %s command", name)
+}
+
+func (c Commands) DidYouMean(name string, withoutHyphen bool) ([]Definition, []string) {
+	var candidates []Definition
+	var cmds []string
+	for _, entry := range c.entries {
+		d, cmd := entry.Distance(name, withoutHyphen)
+		// TODO 3にした場合は、candidatesの距離の小さい順で返したほうが便利な気がする
+		if d < 3 {
+			candidates = append(candidates, entry.definition)
+			cmds = append(cmds, cmd)
+		}
+	}
+	return candidates, cmds
 }
 
 func (c Commands) Help() string {

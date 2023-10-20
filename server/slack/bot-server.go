@@ -129,17 +129,24 @@ func findAndExec(config subcommand.Config, text string) (string, error) {
 	// TODO message取り出し(もうちょっとスマートにできないか？)
 	name := strings.TrimSpace(text)
 	var msg string
+	dymMsg := ""
 	d, err := config.Commands.Find(name, true)
 	if err != nil {
-		return "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", name)
-	} else {
-		c := d.Init(config)
-		var err error
-		msg, err = c.Exec()
-		if err != nil {
-			return "", err
+		candidates, cmds := config.Commands.DidYouMean(name, true)
+		if len(candidates) == 0 {
+			return "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", name)
+		} else {
+			d = candidates[0]
+			dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
 		}
 	}
-	// 何を実行したかを返したほうがいい？
+	c := d.Init(config)
+	msg, err = c.Exec()
+	if err != nil {
+		return "", err
+	}
+	if len(dymMsg) > 0 {
+		msg = strings.Join([]string{dymMsg, msg}, "\n")
+	}
 	return msg, nil
 }
