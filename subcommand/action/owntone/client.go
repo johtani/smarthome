@@ -176,3 +176,19 @@ func (c Client) GetPlayerStatus() (*PlayerStatus, error) {
 	}
 	return &p, nil
 }
+
+func (c Client) ClearQueue() error {
+	req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/queue/clear"), nil)
+	if err != nil {
+		return err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+	return nil
+}

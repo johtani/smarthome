@@ -12,6 +12,9 @@ type PlayAction struct {
 	c    *Client
 }
 
+// Run
+// キューに曲がある場合は、そのまま再生
+// キューに曲がない場合は、ランダムにプレイリストを選択してからキューに登録して再生
 func (a PlayAction) Run() (string, error) {
 	status, err := a.c.GetPlayerStatus()
 	msg := []string{"Playing music"}
@@ -27,7 +30,7 @@ func (a PlayAction) Run() (string, error) {
 			return "", err
 		}
 		if len(playlists) > 0 {
-			rand.Seed(time.Now().UnixNano())
+			rand.New(rand.NewSource(time.Now().UnixNano()))
 			index := rand.Intn(len(playlists))
 			target := playlists[index]
 			fmt.Printf("[%v]\n", target.Name)
