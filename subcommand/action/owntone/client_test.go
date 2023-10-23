@@ -329,3 +329,31 @@ func TestConfig_Validate(t *testing.T) {
 		})
 	}
 }
+
+func TestClient_ClearQueue(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+	}
+	path := "/api/queue/clear"
+	tests := []struct {
+		name    string
+		fields  fields
+		wantErr bool
+	}{
+		{"OK", fields{http.StatusNoContent, http.MethodPut, path}, false},
+		{"NG", fields{http.StatusInternalServerError, http.MethodPut, path}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
+			defer server.Close()
+			config := Config{server.URL}
+			c := NewClient(config)
+			if err := c.ClearQueue(); (err != nil) != tt.wantErr {
+				t.Errorf("ClearQueue() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}

@@ -174,6 +174,7 @@ func LoadConfig() Config {
 			newEntry(FinishMeetingCmd, NewFinishMeetingDefinition(), []string{}),
 			newEntry(StartMusicCmd, NewStartMusicCmdDefinition(), []string{}),
 			newEntry(StopMusicCmd, NewStopMusicDefinition(), []string{}),
+			newEntry(ChangePlaylistCmd, NewChangePlaylistCmdDefinition(), []string{}),
 			newEntry(SwitchBotDeviceListCmd, NewSwitchBotDeviceListDefinition(), []string{}),
 			newEntry(DeviceListCmd, NewSwitchBotDeviceListDefinition(), []string{}),
 			newEntry(SwitchBotSceneListCmd, NewSwitchBotSceneListDefinition(), []string{}),
