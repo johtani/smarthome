@@ -4,7 +4,7 @@
 
 * [OwnTone API](https://owntone.github.io/owntone-server/json-api/)
 * [SwitchBot API](https://github.com/OpenWonderLabs/SwitchBotAPI)
-* [Yamaha Extendced Control](https://github.com/rsc-dev/pyamaha/blob/master/doc/YXC_API_Spec_Basic_v2.0.pdf)
+* [Yamaha Extended Control](https://github.com/rsc-dev/pyamaha/blob/master/doc/YXC_API_Spec_Basic_v2.0.pdf)
  
 ## 必要な設定
 
@@ -15,7 +15,7 @@
 * switchbot.secret : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started)
 * yamaha.url : 例："http://IPアドレス"
 
-### SlackのScoket Mode
+### SlackのSocket Mode
 
 SlackのSocket Modeを利用したサーバー機能も用意しています。
 [config/slack.json.sample](./config/slack.json.sample)を`slack.json`に変更して値を設定します。

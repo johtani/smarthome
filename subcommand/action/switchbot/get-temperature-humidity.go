@@ -13,7 +13,7 @@ type GetTemperatureAndHumidityAction struct {
 	CachedClient
 }
 
-func is_target_device(deviceTypes []string, target string) bool {
+func isTargetDevice(deviceTypes []string, target string) bool {
 	for _, item := range deviceTypes {
 		if target == item {
 			return true
@@ -24,12 +24,13 @@ func is_target_device(deviceTypes []string, target string) bool {
 
 func (a GetTemperatureAndHumidityAction) Run() (string, error) {
 	msg := map[string]string{}
+	//goland:noinspection SpellCheckingInspection
 	pdev, vdev, err := a.Device().List(context.Background())
 	if err != nil {
 		return "", err
 	}
 	for _, d := range pdev {
-		if is_target_device(a.deviceTypes, string(d.Type)) {
+		if isTargetDevice(a.deviceTypes, string(d.Type)) {
 			status, err := a.Device().Status(context.Background(), d.ID)
 			if err != nil {
 				return "", err
@@ -38,7 +39,7 @@ func (a GetTemperatureAndHumidityAction) Run() (string, error) {
 		}
 	}
 	for _, d := range vdev {
-		if is_target_device(a.deviceTypes, string(d.Type)) {
+		if isTargetDevice(a.deviceTypes, string(d.Type)) {
 			status, err := a.Device().Status(context.Background(), d.ID)
 			if err != nil {
 				return "", err

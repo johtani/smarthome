@@ -98,7 +98,7 @@ func (e Entry) Distance(name string, withoutHyphen bool) (int, string) {
 	return distance, command
 }
 
-// slices.Contains includes >= Go 1.21
+// slices.Contains support >= Go 1.21
 func (e Entry) contains(names []string, target string) bool {
 	for _, name := range names {
 		if target == name {

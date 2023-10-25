@@ -121,7 +121,10 @@ func Run(config subcommand.Config) error {
 			return
 		}
 	})
-	socketModeHandler.RunEventLoop()
+	err := socketModeHandler.RunEventLoop()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

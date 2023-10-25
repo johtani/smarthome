@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/johtani/smarthome/subcommand/action/internal"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -72,7 +73,9 @@ func (c Client) SetScene(scene int) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	err = parseHttpResponse(res, "SetScene")
 	if err != nil {
 		return err
@@ -91,7 +94,9 @@ func (c Client) SetVolume(volume int) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	err = parseHttpResponse(res, "SetVolume")
 	if err != nil {
 		return err
@@ -110,7 +115,9 @@ func (c Client) PowerOff() error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	err = parseHttpResponse(res, "PowerOff")
 	if err != nil {
 		return err

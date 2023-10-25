@@ -19,7 +19,7 @@ smarthome <コマンド名>`
 
 func main() {
 	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "%v", err)
+		_, _ = fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
 	}
 }
@@ -30,7 +30,7 @@ func run() error {
 	flag.BoolVar(&serverFlag, "server", false, "SlackBot用Serverを起動するかどうか")
 	flag.Parse()
 	if serverFlag {
-		fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
+		_, _ = fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
 		return slack.Run(config)
 	} else {
 		return runCmd(config)
@@ -47,7 +47,7 @@ func runCmd(config subcommand.Config) error {
 	if err != nil {
 		candidates, cmds := config.Commands.DidYouMean(name, true)
 		if len(candidates) == 0 {
-			fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
+			_, _ = fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
 			printHelp(config.Commands.Help())
 			return nil
 		} else {
@@ -63,7 +63,7 @@ func runCmd(config subcommand.Config) error {
 	if len(dymMsg) > 0 {
 		msg = strings.Join([]string{dymMsg, msg}, "\n")
 	}
-	fmt.Fprintln(os.Stdout, msg)
+	_, _ = fmt.Fprintln(os.Stdout, msg)
 
 	return nil
 }

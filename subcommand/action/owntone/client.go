@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/johtani/smarthome/subcommand/action/internal"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -50,7 +51,9 @@ func (c Client) Pause() error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
@@ -66,7 +69,9 @@ func (c Client) Play() error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
@@ -84,7 +89,9 @@ func (c Client) SetVolume(volume int) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
@@ -110,7 +117,9 @@ func (c Client) GetPlaylists() ([]Playlist, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
@@ -139,7 +148,9 @@ func (c Client) AddItem2Queue(uri string) error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
@@ -166,7 +177,9 @@ func (c Client) GetPlayerStatus() (*PlayerStatus, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
@@ -186,7 +199,9 @@ func (c Client) ClearQueue() error {
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 	if res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}
