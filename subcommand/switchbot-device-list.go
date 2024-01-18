@@ -10,20 +10,19 @@ const DeviceListCmd = "device-list"
 
 func NewSwitchBotDeviceListDefinition() Definition {
 	return Definition{
-
-		SwitchBotDeviceListCmd,
-		"List devices on SwitchBot",
-		NewSwitchBotDeviceListSubcommand,
+		Name:        SwitchBotDeviceListCmd,
+		Description: "List devices on SwitchBot",
+		Factory:     NewSwitchBotDeviceListSubcommand,
 	}
 }
 
 func NewSwitchBotDeviceListSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			switchbot.NewListDevicesAction(switchbotClient),
 		},
-		true,
+		ignoreError: true,
 	}
 }

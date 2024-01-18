@@ -16,10 +16,9 @@ func NewHelpDefinition() Definition {
 
 func NewHelpSubcommand(definition Definition, config Config) Subcommand {
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			action.NewHelpAction(config.Commands.Help()),
 		},
-		false,
 	}
 }

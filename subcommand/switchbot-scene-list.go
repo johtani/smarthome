@@ -10,19 +10,19 @@ const SceneListCmd = "scene-list"
 
 func NewSwitchBotSceneListDefinition() Definition {
 	return Definition{
-		SwitchBotSceneListCmd,
-		"List scenes on SwitchBot",
-		NewSwitchBotSceneListSubcommand,
+		Name:        SwitchBotSceneListCmd,
+		Description: "List scenes on SwitchBot",
+		Factory:     NewSwitchBotSceneListSubcommand,
 	}
 }
 
 func NewSwitchBotSceneListSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			switchbot.NewListScenesAction(switchbotClient),
 		},
-		true,
+		ignoreError: true,
 	}
 }

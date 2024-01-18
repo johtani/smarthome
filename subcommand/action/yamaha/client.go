@@ -39,8 +39,8 @@ func (c Client) buildUrl(path string) string {
 
 func NewClient(config Config) *Client {
 	return &Client{
-		config,
-		http.Client{Timeout: 10 * time.Second},
+		config: config,
+		Client: http.Client{Timeout: 10 * time.Second},
 	}
 }
 

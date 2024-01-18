@@ -89,9 +89,10 @@ func (c Client) SetVolume(volume int) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_ = Body.Close()
-	}(res.Body)
+	defer func() {
+		_, _ = io.Copy(io.Discard, res.Body)
+		_ = res.Body.Close()
+	}()
 	if res.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
 	}

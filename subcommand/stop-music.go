@@ -10,9 +10,9 @@ const StopMusicCmd = "stop-music"
 
 func NewStopMusicDefinition() Definition {
 	return Definition{
-		StopMusicCmd,
-		"Stop Music",
-		NewStopMusicSubcommand,
+		Name:        StopMusicCmd,
+		Description: "Stop Music",
+		Factory:     NewStopMusicSubcommand,
 	}
 }
 
@@ -20,11 +20,11 @@ func NewStopMusicSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	yamahaClient := yamaha.NewClient(config.Yamaha)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			owntone.NewPauseAction(owntoneClient),
 			yamaha.NewPowerOffAction(yamahaClient),
 		},
-		true,
+		ignoreError: true,
 	}
 }
