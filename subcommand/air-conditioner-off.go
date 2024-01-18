@@ -11,19 +11,19 @@ const ACOffCmd = "ac-off"
 
 func NewAirConditionerOffDefinition() Definition {
 	return Definition{
-		AirConditionerOffCmd,
-		"Air Conditioner switch off via SwitchBot",
-		NewAirConditionerOffSubcommand,
+		Name:        AirConditionerOffCmd,
+		Description: "Air Conditioner switch off via SwitchBot",
+		Factory:     NewAirConditionerOffSubcommand,
 	}
 }
 
 func NewAirConditionerOffSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.AirConditionerId, switchbotsdk.TurnOffCommand()),
 		},
-		true,
+		ignoreError: true,
 	}
 }

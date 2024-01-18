@@ -57,7 +57,7 @@ func (a ChangePlaylistAction) Run() (string, error) {
 
 func NewChangePlaylistAction(client *Client) ChangePlaylistAction {
 	return ChangePlaylistAction{
-		"Change playlist on Owntone",
-		client,
+		name: "Change playlist on Owntone",
+		c:    client,
 	}
 }

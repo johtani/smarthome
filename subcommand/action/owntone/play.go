@@ -54,7 +54,7 @@ func (a PlayAction) Run() (string, error) {
 
 func NewPlayAction(client *Client) PlayAction {
 	return PlayAction{
-		"Play music on Owntone",
-		client,
+		name: "Play music on Owntone",
+		c:    client,
 	}
 }

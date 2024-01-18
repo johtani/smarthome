@@ -17,7 +17,7 @@ func (a PowerOffAction) Run() (string, error) {
 
 func NewPowerOffAction(client *Client) PowerOffAction {
 	return PowerOffAction{
-		"Power off Yamaha Amplifier",
-		client,
+		name: "Power off Yamaha Amplifier",
+		c:    client,
 	}
 }

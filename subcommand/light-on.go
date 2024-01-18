@@ -10,20 +10,20 @@ const LightOnCmd = "light-on"
 
 func NewLightOnDefinition() Definition {
 	return Definition{
-		LightOnCmd,
-		"Light on via SwitchBot",
-		NewLightOnSubcommand,
+		Name:        LightOnCmd,
+		Description: "Light on via SwitchBot",
+		Factory:     NewLightOnSubcommand,
 	}
 }
 
 func NewLightOnSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.LightDeviceId, switchbotsdk.TurnOnCommand()),
 			switchbot.NewExecuteSceneAction(switchbotClient, config.Switchbot.LightSceneId),
 		},
-		true,
+		ignoreError: true,
 	}
 }

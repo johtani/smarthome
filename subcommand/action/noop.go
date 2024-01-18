@@ -16,6 +16,6 @@ func (a NoOpAction) Run() (string, error) {
 
 func NewNoOpAction(interval time.Duration) NoOpAction {
 	return NoOpAction{
-		interval,
+		interval: interval,
 	}
 }

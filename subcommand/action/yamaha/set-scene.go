@@ -18,8 +18,8 @@ func (a SetSceneAction) Run() (string, error) {
 
 func NewSetSceneAction(client *Client, scene int) SetSceneAction {
 	return SetSceneAction{
-		"Set Yamaha Scene",
-		scene,
-		client,
+		name:  "Set Yamaha Scene",
+		scene: scene,
+		c:     client,
 	}
 }

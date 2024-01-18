@@ -25,7 +25,7 @@ func (a ListScenesAction) Run() (string, error) {
 
 func NewListScenesAction(client CachedClient) ListScenesAction {
 	return ListScenesAction{
-		"List scenes on SwitchBot",
-		client,
+		name:         "List scenes on SwitchBot",
+		CachedClient: client,
 	}
 }

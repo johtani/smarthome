@@ -15,7 +15,7 @@ func (a PauseAction) Run() (string, error) {
 
 func NewPauseAction(client *Client) PauseAction {
 	return PauseAction{
-		"Pause music on Owntone",
-		client,
+		name: "Pause music on Owntone",
+		c:    client,
 	}
 }

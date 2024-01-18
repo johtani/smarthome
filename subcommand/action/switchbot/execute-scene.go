@@ -25,8 +25,8 @@ func (a ExecuteSceneAction) Run() (string, error) {
 
 func NewExecuteSceneAction(client CachedClient, sceneId string) ExecuteSceneAction {
 	return ExecuteSceneAction{
-		"Execute the scene",
-		sceneId,
-		client,
+		name:         "Execute the scene",
+		sceneId:      sceneId,
+		CachedClient: client,
 	}
 }

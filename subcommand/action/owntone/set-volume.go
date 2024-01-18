@@ -18,8 +18,8 @@ func (a SetVolumeAction) Run() (string, error) {
 
 func NewSetVolumeAction(client *Client) SetVolumeAction {
 	return SetVolumeAction{
-		"Set Owntone Volume",
-		33,
-		client,
+		name:   "Set Owntone Volume",
+		volume: 33,
+		c:      client,
 	}
 }

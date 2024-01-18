@@ -10,19 +10,19 @@ const DispTempCmd = "disp-temp"
 
 func NewDisplayTemperatureDefinition() Definition {
 	return Definition{
-		DisplayTemperatureCmd,
-		"Display temperature/humidity",
-		NewDisplayTemperatureSubcommnad,
+		Name:        DisplayTemperatureCmd,
+		Description: "Display temperature/humidity",
+		Factory:     NewDisplayTemperatureSubcommnad,
 	}
 }
 
 func NewDisplayTemperatureSubcommnad(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			switchbot.NewGetTemperatureAndHumidityAction(switchbotClient),
 		},
-		true,
+		ignoreError: true,
 	}
 }

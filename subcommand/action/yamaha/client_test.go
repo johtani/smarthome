@@ -13,7 +13,7 @@ func TestClient_buildUrl(t *testing.T) {
 		config Config
 		Client http.Client
 	}
-	config := Config{"URL"}
+	config := Config{Url: "URL"}
 	type args struct {
 		path string
 	}
@@ -23,8 +23,8 @@ func TestClient_buildUrl(t *testing.T) {
 		args   args
 		want   string
 	}{
-		{"ok Url path", fields{config, http.Client{}}, args{"path"}, "URL/YamahaExtendedControl/v1/main/path"},
-		{"ok only Url", fields{config, http.Client{}}, args{}, "URL/YamahaExtendedControl/v1/main/"},
+		{"ok Url path", fields{config: config}, args{path: "path"}, "URL/YamahaExtendedControl/v1/main/path"},
+		{"ok only Url", fields{config: config}, args{}, "URL/YamahaExtendedControl/v1/main/"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -98,16 +98,16 @@ func TestClient_SetScene(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusOK, http.MethodGet, path, 2, responseCodeOK()}, false},
-		{"OK_body_NG", fields{http.StatusOK, http.MethodGet, path, 2, responseCodeNG()}, true},
-		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, 2, responseCodeNG()}, true},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, scene: 2, response: responseCodeOK()}, false},
+		{"OK_body_NG", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, scene: 2, response: responseCodeNG()}, true},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, scene: 2, response: responseCodeNG()}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reqParams := map[string][]string{"num": {strconv.Itoa(tt.fields.scene)}}
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams, tt.fields.response)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 			if err := c.SetScene(tt.fields.scene); (err != nil) != tt.wantErr {
 				t.Errorf("SetScene() error = %v, wantErr %v", err, tt.wantErr)
@@ -130,16 +130,16 @@ func TestClient_SetVolume(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusOK, http.MethodGet, path, 2, responseCodeOK()}, false},
-		{"OK_body_NG", fields{http.StatusOK, http.MethodGet, path, 2, responseCodeNG()}, true},
-		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, 2, responseCodeNG()}, true},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, volume: 2, response: responseCodeOK()}, false},
+		{"OK_body_NG", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, volume: 2, response: responseCodeNG()}, true},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, volume: 2, response: responseCodeNG()}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reqParams := map[string][]string{"volume": {strconv.Itoa(tt.fields.volume)}}
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams, tt.fields.response)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 			if err := c.SetVolume(tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
@@ -157,8 +157,8 @@ func TestConfig_Validate(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{"Url"}, false},
-		{"NG", fields{""}, true},
+		{"OK", fields{url: "Url"}, false},
+		{"NG", fields{}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -185,16 +185,16 @@ func TestClient_PowerOff(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusOK, http.MethodGet, path, responseCodeOK()}, false},
-		{"OK_body_NG", fields{http.StatusOK, http.MethodGet, path, responseCodeNG()}, true},
-		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, responseCodeNG()}, true},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: responseCodeOK()}, false},
+		{"OK_body_NG", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: responseCodeNG()}, true},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: responseCodeNG()}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reqParams := map[string][]string{"power": {"standby"}}
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams, tt.fields.response)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 			if err := c.PowerOff(); (err != nil) != tt.wantErr {
 				t.Errorf("PowerOff() error = %v, wantErr %v", err, tt.wantErr)

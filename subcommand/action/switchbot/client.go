@@ -37,9 +37,9 @@ type CachedClient struct {
 
 func NewClient(config Config) CachedClient {
 	return CachedClient{
-		switchbot.New(config.Token, config.Secret),
-		map[string]string{},
-		map[string]string{},
+		Client:          switchbot.New(config.Token, config.Secret),
+		deviceNameCache: map[string]string{},
+		sceneNameCache:  map[string]string{},
 	}
 }
 

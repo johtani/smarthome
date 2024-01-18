@@ -169,7 +169,7 @@ func LoadConfig() Config {
 		panic(fmt.Sprintf("Validation エラー: \n%v", err))
 	}
 	config.Commands = Commands{
-		[]Entry{
+		entries: []Entry{
 			newEntry(StartMeetingCmd, NewStartMeetingDefinition(), []string{}),
 			newEntry(FinishMeetingCmd, NewFinishMeetingDefinition(), []string{}),
 			newEntry(StartMusicCmd, NewStartMusicCmdDefinition(), []string{}),

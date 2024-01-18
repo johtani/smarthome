@@ -11,9 +11,9 @@ const StartMeetingCmd = "start-meeting"
 
 func NewStartMeetingDefinition() Definition {
 	return Definition{
-		StartMeetingCmd,
-		"Actions before starting meeting",
-		NewStartMeetingSubcommand,
+		Name:        StartMeetingCmd,
+		Description: "Actions before starting meeting",
+		Factory:     NewStartMeetingSubcommand,
 	}
 }
 
@@ -22,12 +22,12 @@ func NewStartMeetingSubcommand(definition Definition, config Config) Subcommand 
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	yamahaClient := yamaha.NewClient(config.Yamaha)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			owntone.NewPauseAction(owntoneClient),
 			switchbot.NewExecuteSceneAction(switchbotClient, config.Switchbot.LightSceneId),
 			yamaha.NewPowerOffAction(yamahaClient),
 		},
-		true,
+		ignoreError: true,
 	}
 }

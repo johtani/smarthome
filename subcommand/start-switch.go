@@ -10,21 +10,21 @@ const StartSwitchCmd = "start-switch"
 
 func NewStartSwitchDefinition() Definition {
 	return Definition{
-		StartSwitchCmd,
-		"Actions before starting switch",
-		NewStartSwitchSubcommand,
+		Name:        StartSwitchCmd,
+		Description: "Actions before starting switch",
+		Factory:     NewStartSwitchSubcommand,
 	}
 }
 
 func NewStartSwitchSubcommand(definition Definition, config Config) Subcommand {
 	yamahaClient := yamaha.NewClient(config.Yamaha)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			yamaha.NewSetSceneAction(yamahaClient, 2),
 			action.NewNoOpAction(1 * time.Second),
 			yamaha.NewSetVolumeAction(yamahaClient),
 		},
-		true,
+		ignoreError: true,
 	}
 }

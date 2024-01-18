@@ -10,19 +10,19 @@ const LightOffCmd = "light-off"
 
 func NewLightOffDefinition() Definition {
 	return Definition{
-		LightOffCmd,
-		"Light off via SwitchBot",
-		NewLightOffSubcommand,
+		Name:        LightOffCmd,
+		Description: "Light off via SwitchBot",
+		Factory:     NewLightOffSubcommand,
 	}
 }
 
 func NewLightOffSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.LightDeviceId, switchbotsdk.TurnOffCommand()),
 		},
-		true,
+		ignoreError: true,
 	}
 }

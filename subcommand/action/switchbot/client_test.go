@@ -14,10 +14,10 @@ func TestConfig_Validate(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"no args", fields{"", ""}, true},
-		{"only Token", fields{"Token", ""}, true},
-		{"only Secret", fields{"", "Secret"}, true},
-		{"ok Token and Secret", fields{"Token", "Secret"}, false},
+		{"no args", fields{}, true},
+		{"only Token", fields{token: "Token"}, true},
+		{"only Secret", fields{secret: "Secret"}, true},
+		{"ok Token and Secret", fields{token: "Token", secret: "Secret"}, false},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

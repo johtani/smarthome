@@ -28,7 +28,7 @@ func (a ListDevicesAction) Run() (string, error) {
 
 func NewListDevicesAction(client CachedClient) ListDevicesAction {
 	return ListDevicesAction{
-		"List devices on SwitchBot",
-		client,
+		name:         "List devices on SwitchBot",
+		CachedClient: client,
 	}
 }

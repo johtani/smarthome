@@ -14,7 +14,7 @@ func TestClient_buildUrl(t *testing.T) {
 		config Config
 		Client http.Client
 	}
-	config := Config{"URL"}
+	config := Config{Url: "URL"}
 	type args struct {
 		path string
 	}
@@ -24,8 +24,8 @@ func TestClient_buildUrl(t *testing.T) {
 		args   args
 		want   string
 	}{
-		{"ok Url path", fields{config, http.Client{}}, args{"path"}, "URL/path"},
-		{"ok only Url", fields{config, http.Client{}}, args{}, "URL/"},
+		{"ok Url path", fields{config: config}, args{path: "path"}, "URL/path"},
+		{"ok only Url", fields{config: config}, args{}, "URL/"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -87,14 +87,14 @@ func TestClient_Pause(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusNoContent, http.MethodPut, path}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPut, path}, true},
+		{"OK", fields{statusCode: http.StatusNoContent, method: http.MethodPut, path: path}, false},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodPut, path: path}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 			if err := c.Pause(); (err != nil) != tt.wantErr {
 				t.Errorf("Pause() error = %v, wantErr %v", err, tt.wantErr)
@@ -115,14 +115,14 @@ func TestClient_Play(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusNoContent, http.MethodPut, path}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPut, path}, true},
+		{"OK", fields{statusCode: http.StatusNoContent, method: http.MethodPut, path: path}, false},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodPut, path: path}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 			if err := c.Play(); (err != nil) != tt.wantErr {
 				t.Errorf("Play() error = %v, wantErr %v", err, tt.wantErr)
@@ -144,15 +144,15 @@ func TestClient_SetVolume(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusNoContent, http.MethodPut, path, 33}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPut, path, 33}, true},
+		{"OK", fields{statusCode: http.StatusNoContent, method: http.MethodPut, path: path, volume: 33}, false},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodPut, path: path, volume: 33}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reqParams := map[string][]string{"volume": {strconv.Itoa(tt.fields.volume)}}
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 			if err := c.SetVolume(tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
@@ -174,15 +174,15 @@ func TestClient_AddItem2Queue(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusOK, http.MethodPost, path, "playlist"}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPost, path, "playlist"}, true},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodPost, path: path, item: "playlist"}, false},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodPost, path: path, item: "playlist"}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			reqParams := map[string][]string{"uris": {tt.fields.item}}
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 			if err := c.AddItem2Queue(tt.fields.item); (err != nil) != tt.wantErr {
 				t.Errorf("AddItem2Queue() error = %v, wantErr %v", err, tt.wantErr)
@@ -233,14 +233,14 @@ func TestClient_GetPlaylists(t *testing.T) {
 		wantErr  bool
 		expected []Playlist
 	}{
-		{"OK", fields{http.StatusOK, http.MethodGet, path, playlistsSampleJSONResponse()}, false, []Playlist{{"library:playlist:1", "radio", 491}}},
-		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, playlistsSampleJSONResponse()}, true, nil},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: playlistsSampleJSONResponse()}, false, []Playlist{{"library:playlist:1", "radio", 491}}},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: playlistsSampleJSONResponse()}, true, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 
 			playlists, err := c.GetPlaylists()
@@ -284,14 +284,14 @@ func TestClient_GetGetPlayerStatus(t *testing.T) {
 		wantErr  bool
 		expected *PlayerStatus
 	}{
-		{"OK", fields{http.StatusOK, http.MethodGet, path, playerStatusSampleJSONResponse()}, false, &PlayerStatus{"pause", "off", false, false, 50, 0, 0, 0}},
-		{"NG", fields{http.StatusInternalServerError, http.MethodGet, path, playerStatusSampleJSONResponse()}, true, nil},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: playerStatusSampleJSONResponse()}, false, &PlayerStatus{State: "pause", Repeat: "off", Volume: 50}},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: playerStatusSampleJSONResponse()}, true, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 
 			status, err := c.GetPlayerStatus()
@@ -315,8 +315,8 @@ func TestConfig_Validate(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{"Url"}, false},
-		{"NG", fields{""}, true},
+		{"OK", fields{url: "Url"}, false},
+		{"NG", fields{}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -342,14 +342,14 @@ func TestClient_ClearQueue(t *testing.T) {
 		fields  fields
 		wantErr bool
 	}{
-		{"OK", fields{http.StatusNoContent, http.MethodPut, path}, false},
-		{"NG", fields{http.StatusInternalServerError, http.MethodPut, path}, true},
+		{"OK", fields{statusCode: http.StatusNoContent, method: http.MethodPut, path: path}, false},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodPut, path: path}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			config := Config{server.URL}
+			config := Config{Url: server.URL}
 			c := NewClient(config)
 			if err := c.ClearQueue(); (err != nil) != tt.wantErr {
 				t.Errorf("ClearQueue() error = %v, wantErr %v", err, tt.wantErr)

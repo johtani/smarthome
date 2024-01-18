@@ -62,8 +62,8 @@ func (a GetTemperatureAndHumidityAction) Run() (string, error) {
 
 func NewGetTemperatureAndHumidityAction(client CachedClient) GetTemperatureAndHumidityAction {
 	return GetTemperatureAndHumidityAction{
-		"Get temperature and humidity from devices on SwitchBot",
-		[]string{"Meter", "WoIOSensor"},
-		client,
+		name:         "Get temperature and humidity from devices on SwitchBot",
+		deviceTypes:  []string{"Meter", "WoIOSensor"},
+		CachedClient: client,
 	}
 }

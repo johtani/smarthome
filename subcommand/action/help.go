@@ -9,5 +9,5 @@ func (a HelpAction) Run() (string, error) {
 }
 
 func NewHelpAction(msg string) HelpAction {
-	return HelpAction{msg}
+	return HelpAction{help: msg}
 }

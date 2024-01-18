@@ -27,9 +27,9 @@ func (a SendCommandAction) Run() (string, error) {
 
 func NewSendCommandAction(client CachedClient, deviceId string, command switchbot.Command) SendCommandAction {
 	return SendCommandAction{
-		"Send the command to the device on SwitchBot",
-		deviceId,
-		command,
-		client,
+		name:         "Send the command to the device on SwitchBot",
+		deviceId:     deviceId,
+		command:      command,
+		CachedClient: client,
 	}
 }

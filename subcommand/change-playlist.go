@@ -9,19 +9,19 @@ const ChangePlaylistCmd = "change-playlist"
 
 func NewChangePlaylistCmdDefinition() Definition {
 	return Definition{
-		ChangePlaylistCmd,
-		"Change Playlist",
-		NewChangePlaylistSubcommand,
+		Name:        ChangePlaylistCmd,
+		Description: "Change Playlist",
+		Factory:     NewChangePlaylistSubcommand,
 	}
 }
 
 func NewChangePlaylistSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	return Subcommand{
-		definition,
-		[]action.Action{
+		Definition: definition,
+		actions: []action.Action{
 			owntone.NewChangePlaylistAction(owntoneClient),
 		},
-		true,
+		ignoreError: true,
 	}
 }

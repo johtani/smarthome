@@ -8,9 +8,9 @@ const HelpCmd = "help"
 
 func NewHelpDefinition() Definition {
 	return Definition{
-		HelpCmd,
-		"Display commands list",
-		NewHelpSubcommand,
+		Name:        HelpCmd,
+		Description: "Display commands list",
+		Factory:     NewHelpSubcommand,
 	}
 }
 
