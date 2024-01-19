@@ -130,6 +130,9 @@ func Run(config subcommand.Config) error {
 
 func findAndExec(config subcommand.Config, text string) (string, error) {
 	name := strings.TrimSpace(text)
+	if len(name) == 0 {
+		return config.Commands.Help(), nil
+	}
 	d, args, dymMsg, err := config.Commands.Find(name, true)
 	if err != nil {
 		return "", err
