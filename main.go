@@ -56,7 +56,8 @@ func runCmd(config subcommand.Config) error {
 		}
 	}
 	c := d.Init(config)
-	msg, err := c.Exec()
+	args := strings.Join(os.Args[2:], " ")
+	msg, err := c.Exec(args)
 	if err != nil {
 		return err
 	}

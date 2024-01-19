@@ -14,7 +14,7 @@ type ChangePlaylistAction struct {
 
 // Run
 // キューに曲が存在する場合は、キューの曲を削除して
-func (a ChangePlaylistAction) Run() (string, error) {
+func (a ChangePlaylistAction) Run(_ string) (string, error) {
 	status, err := a.c.GetPlayerStatus()
 	msg := []string{"Change playlist to"}
 	if err != nil {

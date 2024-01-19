@@ -24,10 +24,10 @@ type Definition struct {
 	Factory     func(Definition, Config) Subcommand
 }
 
-func (s Subcommand) Exec() (string, error) {
+func (s Subcommand) Exec(args string) (string, error) {
 	var msgs []string
 	for i := range s.actions {
-		msg, err := s.actions[i].Run()
+		msg, err := s.actions[i].Run(args)
 		if s.ignoreError && err != nil {
 			fmt.Printf("skip error\t %v\n", err)
 			//TODO msgsにエラーを追加する？
@@ -187,6 +187,9 @@ func LoadConfig() Config {
 			newEntry(AirConditionerOnCmd, NewAirConditionerOnDefinition(), []string{ACOnCmd}),
 			newEntry(AirConditionerOffCmd, NewAirConditionerOffDefinition(), []string{ACOffCmd}),
 			newEntry(DisplayTemperatureCmd, NewDisplayTemperatureDefinition(), []string{DispTempCmd}),
+			newEntry(TokenizeIpaCmd, NewTokenizeIpaDefinition(), []string{TokenizeIpaCmd}),
+			newEntry(TokenizeUniCmd, NewTokenizeUniDefinition(), []string{TokenizeUniCmd}),
+			newEntry(TokenizeNeologdCmd, NewTokenizeNeologdDefinition(), []string{TokenizeNeologdCmd}),
 		},
 	}
 	return config

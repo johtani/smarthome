@@ -11,7 +11,7 @@ type ListDevicesAction struct {
 	CachedClient
 }
 
-func (a ListDevicesAction) Run() (string, error) {
+func (a ListDevicesAction) Run(_ string) (string, error) {
 	var msg []string
 	pdev, vdev, err := a.Device().List(context.Background())
 	if err != nil {

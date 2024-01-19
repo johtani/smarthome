@@ -11,7 +11,7 @@ type ExecuteSceneAction struct {
 	CachedClient
 }
 
-func (a ExecuteSceneAction) Run() (string, error) {
+func (a ExecuteSceneAction) Run(_ string) (string, error) {
 	err := a.Scene().Execute(context.Background(), a.sceneId)
 	if err != nil {
 		return "", err

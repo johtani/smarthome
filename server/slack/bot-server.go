@@ -144,7 +144,8 @@ func findAndExec(config subcommand.Config, text string) (string, error) {
 		}
 	}
 	c := d.Init(config)
-	msg, err = c.Exec()
+	// TODO nameからコマンド名を除去した文字列にする
+	msg, err = c.Exec(name)
 	if err != nil {
 		return "", err
 	}

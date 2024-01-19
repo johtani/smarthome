@@ -1,5 +1,5 @@
 package action
 
 type Action interface {
-	Run() (string, error)
+	Run(args string) (string, error)
 }

@@ -8,7 +8,7 @@ type SetVolumeAction struct {
 	c      *Client
 }
 
-func (a SetVolumeAction) Run() (string, error) {
+func (a SetVolumeAction) Run(_ string) (string, error) {
 	err := a.c.SetVolume(a.volume)
 	if err != nil {
 		return "", err

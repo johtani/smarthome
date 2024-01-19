@@ -7,7 +7,7 @@ type PowerOffAction struct {
 	c    *Client
 }
 
-func (a PowerOffAction) Run() (string, error) {
+func (a PowerOffAction) Run(_ string) (string, error) {
 	err := a.c.PowerOff()
 	if err != nil {
 		return "", err
