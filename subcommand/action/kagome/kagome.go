@@ -48,7 +48,7 @@ func (a KagomeAction) Run(args string) (string, error) {
 		}
 		fmt.Fprintf(&buf, "%s\t%s\n", token.Surface, strings.Join(token.Features(), ","))
 	}
-	return buf.String(), nil
+	return "```\n" + buf.String() + "```", nil
 }
 
 func NewKagomeAction(dict Dict) KagomeAction {
