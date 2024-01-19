@@ -15,7 +15,7 @@ type PlayAction struct {
 // Run
 // キューに曲がある場合は、そのまま再生
 // キューに曲がない場合は、ランダムにプレイリストを選択してからキューに登録して再生
-func (a PlayAction) Run() (string, error) {
+func (a PlayAction) Run(_ string) (string, error) {
 	status, err := a.c.GetPlayerStatus()
 	msg := []string{"Playing music"}
 	if err != nil {

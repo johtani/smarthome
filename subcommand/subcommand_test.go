@@ -8,13 +8,13 @@ import (
 
 type okAction struct{}
 
-func (a okAction) Run() (string, error) {
+func (a okAction) Run(_ string) (string, error) {
 	return "", nil
 }
 
 type ngAction struct{}
 
-func (a ngAction) Run() (string, error) {
+func (a ngAction) Run(_ string) (string, error) {
 	return "", fmt.Errorf("something wrong")
 }
 
@@ -48,7 +48,7 @@ func TestSubcommand_Exec(t *testing.T) {
 				actions:     tt.fields.actions,
 				ignoreError: tt.fields.ignoreError,
 			}
-			if _, err := s.Exec(); (err != nil) != tt.wantErr {
+			if _, err := s.Exec(""); (err != nil) != tt.wantErr {
 				t.Errorf("Exec() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

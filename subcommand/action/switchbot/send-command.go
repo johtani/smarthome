@@ -13,7 +13,7 @@ type SendCommandAction struct {
 	CachedClient
 }
 
-func (a SendCommandAction) Run() (string, error) {
+func (a SendCommandAction) Run(_ string) (string, error) {
 	err := a.Device().Command(context.Background(), a.deviceId, a.command)
 	if err != nil {
 		return "", err

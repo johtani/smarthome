@@ -9,7 +9,7 @@ type NoOpAction struct {
 	interval time.Duration
 }
 
-func (a NoOpAction) Run() (string, error) {
+func (a NoOpAction) Run(_ string) (string, error) {
 	time.Sleep(a.interval)
 	return fmt.Sprintf("Paused for %v", a.interval), nil
 }

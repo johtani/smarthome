@@ -22,7 +22,7 @@ func isTargetDevice(deviceTypes []string, target string) bool {
 	return false
 }
 
-func (a GetTemperatureAndHumidityAction) Run() (string, error) {
+func (a GetTemperatureAndHumidityAction) Run(_ string) (string, error) {
 	msg := map[string]string{}
 	//goland:noinspection SpellCheckingInspection
 	pdev, vdev, err := a.Device().List(context.Background())

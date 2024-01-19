@@ -8,7 +8,7 @@ type SetSceneAction struct {
 	c     *Client
 }
 
-func (a SetSceneAction) Run() (string, error) {
+func (a SetSceneAction) Run(_ string) (string, error) {
 	err := a.c.SetScene(a.scene)
 	if err != nil {
 		return "", err

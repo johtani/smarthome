@@ -11,7 +11,7 @@ type ListScenesAction struct {
 	CachedClient
 }
 
-func (a ListScenesAction) Run() (string, error) {
+func (a ListScenesAction) Run(_ string) (string, error) {
 	scenes, err := a.Scene().List(context.Background())
 	var msg []string
 	if err != nil {
