@@ -1,7 +1,6 @@
 package kagome
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -39,15 +38,5 @@ func TestKagomeAction_Run(t *testing.T) {
 				t.Errorf("Run() got = %v, want %v", got, tt.want)
 			}
 		})
-	}
-}
-
-func Test_hoge(t *testing.T) {
-	msg := "hoge"
-	params := strings.SplitN(msg, " ", 2)
-	if len(params) == 1 {
-		t.Errorf("why length is one!!!")
-	} else {
-		t.Errorf("OK!!")
 	}
 }
