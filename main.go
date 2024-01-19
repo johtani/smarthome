@@ -41,22 +41,14 @@ func runCmd(config subcommand.Config) error {
 	if len(os.Args) < 2 {
 		return fmt.Errorf(printHelp(config.Commands.Help()))
 	}
-	name := os.Args[1]
-	dymMsg := ""
-	d, err := config.Commands.Find(name, false)
+	name := strings.Join(os.Args[1:], " ")
+	d, args, dymMsg, err := config.Commands.Find(name, false)
 	if err != nil {
-		candidates, cmds := config.Commands.DidYouMean(name, true)
-		if len(candidates) == 0 {
-			_, _ = fmt.Fprintf(os.Stderr, "command[%v] is not found.\n", name)
-			printHelp(config.Commands.Help())
-			return nil
-		} else {
-			d = candidates[0]
-			dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
-		}
+		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
+		printHelp(config.Commands.Help())
+		return nil
 	}
 	c := d.Init(config)
-	args := strings.Join(os.Args[2:], " ")
 	msg, err := c.Exec(args)
 	if err != nil {
 		return err

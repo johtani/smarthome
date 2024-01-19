@@ -129,23 +129,13 @@ func Run(config subcommand.Config) error {
 }
 
 func findAndExec(config subcommand.Config, text string) (string, error) {
-	// TODO message取り出し(もうちょっとスマートにできないか？)
 	name := strings.TrimSpace(text)
-	var msg string
-	dymMsg := ""
-	d, err := config.Commands.Find(name, true)
+	d, args, dymMsg, err := config.Commands.Find(name, true)
 	if err != nil {
-		candidates, cmds := config.Commands.DidYouMean(name, true)
-		if len(candidates) == 0 {
-			return "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", name)
-		} else {
-			d = candidates[0]
-			dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
-		}
+		return "", err
 	}
 	c := d.Init(config)
-	// TODO nameからコマンド名を除去した文字列にする
-	msg, err = c.Exec(name)
+	msg, err := c.Exec(args)
 	if err != nil {
 		return "", err
 	}

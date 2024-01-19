@@ -11,11 +11,12 @@ func NewTokenizeIpaDefinition() Definition {
 	return Definition{
 		Name:        TokenizeIpaCmd,
 		Description: "Tokenize text by Kagome w/ IPA dic",
+		WithArgs:    true,
 		Factory:     NewTokenizeIpaCommand,
 	}
 }
 
-func NewTokenizeIpaCommand(definition Definition, config Config) Subcommand {
+func NewTokenizeIpaCommand(definition Definition, _ Config) Subcommand {
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
@@ -31,11 +32,12 @@ func NewTokenizeUniDefinition() Definition {
 	return Definition{
 		Name:        TokenizeUniCmd,
 		Description: "Tokenize text by Kagome with Uni dic",
+		WithArgs:    true,
 		Factory:     NewTokenizeUniCommand,
 	}
 }
 
-func NewTokenizeUniCommand(definition Definition, config Config) Subcommand {
+func NewTokenizeUniCommand(definition Definition, _ Config) Subcommand {
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
@@ -51,11 +53,12 @@ func NewTokenizeNeologdDefinition() Definition {
 	return Definition{
 		Name:        TokenizeIpaCmd,
 		Description: "Tokenize text by Kagome with Neologd",
+		WithArgs:    true,
 		Factory:     NewTokenizeNeologdCommand,
 	}
 }
 
-func NewTokenizeNeologdCommand(definition Definition, config Config) Subcommand {
+func NewTokenizeNeologdCommand(definition Definition, _ Config) Subcommand {
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
