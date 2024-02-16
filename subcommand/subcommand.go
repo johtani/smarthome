@@ -31,12 +31,23 @@ func (s Subcommand) Exec(args string) (string, error) {
 type Definition struct {
 	Name        string
 	Description string
+	shortnames  []string
 	WithArgs    bool
 	Factory     func(Definition, Config) Subcommand
 }
 
 func (d Definition) Init(config Config) Subcommand {
 	return d.Factory(d, config)
+}
+
+func (d Definition) Help() string {
+	var help string
+	if len(d.shortnames) > 0 {
+		help = fmt.Sprintf("  %s [%s]: %s\n", d.Name, strings.Join(d.shortnames, "/"), d.Description)
+	} else {
+		help = fmt.Sprintf("  %s : %s\n", d.Name, d.Description)
+	}
+	return help
 }
 
 type Entry struct {
@@ -49,16 +60,11 @@ type Entry struct {
 
 func newEntry(name string, definition Definition, shortnames []string) Entry {
 	noHyphens := []string{strings.ReplaceAll(name, "-", " ")}
+	definition.shortnames = shortnames
 	for _, shortname := range shortnames {
 		noHyphens = append(noHyphens, strings.ReplaceAll(shortname, "-", " "))
 	}
-	var help string
-	if len(shortnames) > 0 {
-		help = fmt.Sprintf("  %s [%s]: %s\n", name, strings.Join(shortnames, "/"), definition.Description)
-	} else {
-		help = fmt.Sprintf("  %s : %s\n", name, definition.Description)
-	}
-	return Entry{Name: name, definition: definition, shortnames: shortnames, noHyphens: noHyphens, Help: help}
+	return Entry{Name: name, definition: definition, shortnames: shortnames, noHyphens: noHyphens, Help: definition.Help()}
 }
 
 func (e Entry) IsTarget(name string, withoutHyphen bool) bool {

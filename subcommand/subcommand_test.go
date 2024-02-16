@@ -119,13 +119,14 @@ func TestCommands_Help(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		{name: "a command help",
+		{name: "a and b command help",
 			fields: fields{
 				entries: []Entry{
 					newEntry("a", Definition{Name: "a", Description: "description", Factory: NewDummySubcommand}, []string{}),
+					newEntry("b", Definition{Name: "b", Description: "description", Factory: NewDummySubcommand}, []string{"c"}),
 				},
 			},
-			want: "  a : description\n"},
+			want: "  a : description\n  b [c]: description\n"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
