@@ -34,6 +34,7 @@ type Definition struct {
 	shortnames  []string
 	WithArgs    bool
 	Factory     func(Definition, Config) Subcommand
+	Match       func(message string) (bool, string)
 }
 
 func (d Definition) Init(config Config) Subcommand {
@@ -50,32 +51,37 @@ func (d Definition) Help() string {
 	return help
 }
 
-type Entry struct {
-	Name       string
-	definition Definition
-	noHyphens  []string
-	Help       string
-}
-
-func newEntry(name string, definition Definition) Entry {
-	noHyphens := []string{strings.ReplaceAll(name, "-", " ")}
-	for _, shortname := range definition.shortnames {
+func (d Definition) noHyphens() []string {
+	noHyphens := []string{strings.ReplaceAll(d.Name, "-", " ")}
+	for _, shortname := range d.shortnames {
 		noHyphens = append(noHyphens, strings.ReplaceAll(shortname, "-", " "))
 	}
-	return Entry{Name: name, definition: definition, noHyphens: noHyphens, Help: definition.Help()}
+	return noHyphens
+}
+
+func DefaultMatch(message string) (bool, string) {
+	return false, ""
+}
+
+type Entry struct {
+	definition Definition
+}
+
+func newEntry(definition Definition) Entry {
+	return Entry{definition: definition}
 }
 
 func (e Entry) IsTarget(name string, withoutHyphen bool) bool {
 	if withoutHyphen {
-		return name == e.Name || e.contains(e.definition.shortnames, name) || e.contains(e.noHyphens, name)
+		return name == e.definition.Name || e.contains(e.definition.shortnames, name) || e.contains(e.definition.noHyphens(), name)
 	} else {
-		return name == e.Name || e.contains(e.definition.shortnames, name)
+		return name == e.definition.Name || e.contains(e.definition.shortnames, name)
 	}
 }
 
 func (e Entry) Distance(name string, withoutHyphen bool) (int, string) {
-	distance := edlib.LevenshteinDistance(name, e.Name)
-	command := e.Name
+	distance := edlib.LevenshteinDistance(name, e.definition.Name)
+	command := e.definition.Name
 	// TODO shortnameどうする？一番小さいDistanceでいいか？
 	if len(e.definition.shortnames) > 0 {
 		for _, tmp := range e.definition.shortnames {
@@ -86,8 +92,8 @@ func (e Entry) Distance(name string, withoutHyphen bool) (int, string) {
 			}
 		}
 	}
-	if withoutHyphen && len(e.noHyphens) > 0 {
-		for _, tmp := range e.noHyphens {
+	if withoutHyphen && len(e.definition.noHyphens()) > 0 {
+		for _, tmp := range e.definition.noHyphens() {
 			sd := edlib.LevenshteinDistance(name, tmp)
 			if sd < distance {
 				distance = sd
@@ -169,7 +175,7 @@ func (c Commands) didYouMean(name string, withoutHyphen bool) ([]Definition, []s
 func (c Commands) Help() string {
 	var builder strings.Builder
 	for _, command := range c.entries {
-		builder.WriteString(command.Help)
+		builder.WriteString(command.definition.Help())
 	}
 	return builder.String()
 }
