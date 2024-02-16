@@ -14,6 +14,7 @@ func NewAirConditionerOffDefinition() Definition {
 		Name:        AirConditionerOffCmd,
 		Description: "Air Conditioner switch off via SwitchBot",
 		Factory:     NewAirConditionerOffSubcommand,
+		shortnames:  []string{ACOffCmd},
 	}
 }
 

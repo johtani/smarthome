@@ -13,6 +13,7 @@ func NewDisplayTemperatureDefinition() Definition {
 		Name:        DisplayTemperatureCmd,
 		Description: "Display temperature/humidity",
 		Factory:     NewDisplayTemperatureSubcommnad,
+		shortnames:  []string{DispTempCmd},
 	}
 }
 

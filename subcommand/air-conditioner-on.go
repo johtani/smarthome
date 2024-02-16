@@ -14,6 +14,7 @@ func NewAirConditionerOnDefinition() Definition {
 		Name:        AirConditionerOnCmd,
 		Description: "Air Conditioner switch on via SwitchBot",
 		Factory:     NewAirConditionerOnSubcommand,
+		shortnames:  []string{ACOnCmd},
 	}
 }
 

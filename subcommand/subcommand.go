@@ -53,25 +53,23 @@ func (d Definition) Help() string {
 type Entry struct {
 	Name       string
 	definition Definition
-	shortnames []string
 	noHyphens  []string
 	Help       string
 }
 
-func newEntry(name string, definition Definition, shortnames []string) Entry {
+func newEntry(name string, definition Definition) Entry {
 	noHyphens := []string{strings.ReplaceAll(name, "-", " ")}
-	definition.shortnames = shortnames
-	for _, shortname := range shortnames {
+	for _, shortname := range definition.shortnames {
 		noHyphens = append(noHyphens, strings.ReplaceAll(shortname, "-", " "))
 	}
-	return Entry{Name: name, definition: definition, shortnames: shortnames, noHyphens: noHyphens, Help: definition.Help()}
+	return Entry{Name: name, definition: definition, noHyphens: noHyphens, Help: definition.Help()}
 }
 
 func (e Entry) IsTarget(name string, withoutHyphen bool) bool {
 	if withoutHyphen {
-		return name == e.Name || e.contains(e.shortnames, name) || e.contains(e.noHyphens, name)
+		return name == e.Name || e.contains(e.definition.shortnames, name) || e.contains(e.noHyphens, name)
 	} else {
-		return name == e.Name || e.contains(e.shortnames, name)
+		return name == e.Name || e.contains(e.definition.shortnames, name)
 	}
 }
 
@@ -79,8 +77,8 @@ func (e Entry) Distance(name string, withoutHyphen bool) (int, string) {
 	distance := edlib.LevenshteinDistance(name, e.Name)
 	command := e.Name
 	// TODO shortnameどうする？一番小さいDistanceでいいか？
-	if len(e.shortnames) > 0 {
-		for _, tmp := range e.shortnames {
+	if len(e.definition.shortnames) > 0 {
+		for _, tmp := range e.definition.shortnames {
 			sd := edlib.LevenshteinDistance(name, tmp)
 			if sd < distance {
 				distance = sd

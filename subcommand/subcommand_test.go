@@ -66,7 +66,6 @@ func TestEntry_Distance(t *testing.T) {
 	type fields struct {
 		Name       string
 		definition Definition
-		shortnames []string
 	}
 	type args struct {
 		name          string
@@ -80,16 +79,16 @@ func TestEntry_Distance(t *testing.T) {
 		cmd      string
 	}{
 		{name: "only entity name",
-			fields: fields{Name: "test", definition: Definition{Name: "tess", Description: "description", Factory: NewDummySubcommand}, shortnames: []string{}},
+			fields: fields{Name: "test", definition: Definition{Name: "tess", Description: "description", Factory: NewDummySubcommand, shortnames: []string{}}},
 			args:   args{name: "tess"}, distance: 1, cmd: "test"},
 		{name: "hit shortname",
-			fields: fields{Name: "tesssss", definition: Definition{Name: "tesssss", Description: "description", Factory: NewDummySubcommand}, shortnames: []string{"hoge", "test"}},
+			fields: fields{Name: "tesssss", definition: Definition{Name: "tesssss", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"hoge", "test"}}},
 			args:   args{name: "tess"}, distance: 1, cmd: "test"},
 		{name: "hit entity name without hyphen",
-			fields: fields{Name: "test-cmd", definition: Definition{Name: "test-cmd", Description: "description", Factory: NewDummySubcommand}, shortnames: []string{}},
+			fields: fields{Name: "test-cmd", definition: Definition{Name: "test-cmd", Description: "description", Factory: NewDummySubcommand, shortnames: []string{}}},
 			args:   args{name: "tess cmd", withoutHyphen: true}, distance: 1, cmd: "test cmd"},
 		{name: "hit shortname without hyphen",
-			fields: fields{Name: "tesssss-cmd", definition: Definition{Name: "tesssss-cmd", Description: "description", Factory: NewDummySubcommand}, shortnames: []string{"hoge", "test-cmd"}},
+			fields: fields{Name: "tesssss-cmd", definition: Definition{Name: "tesssss-cmd", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"hoge", "test-cmd"}}},
 			args:   args{name: "tess cmd", withoutHyphen: true}, distance: 1, cmd: "test cmd"},
 	}
 	for _, tt := range tests {
@@ -97,7 +96,6 @@ func TestEntry_Distance(t *testing.T) {
 			e := newEntry(
 				tt.fields.Name,
 				tt.fields.definition,
-				tt.fields.shortnames,
 			)
 			distance, cmd := e.Distance(tt.args.name, tt.args.withoutHyphen)
 			if distance != tt.distance {
@@ -122,8 +120,8 @@ func TestCommands_Help(t *testing.T) {
 		{name: "a and b command help",
 			fields: fields{
 				entries: []Entry{
-					newEntry("a", Definition{Name: "a", Description: "description", Factory: NewDummySubcommand}, []string{}),
-					newEntry("b", Definition{Name: "b", Description: "description", Factory: NewDummySubcommand}, []string{"c"}),
+					newEntry("a", Definition{Name: "a", Description: "description", Factory: NewDummySubcommand}),
+					newEntry("b", Definition{Name: "b", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"c"}}),
 				},
 			},
 			want: "  a : description\n  b [c]: description\n"},
