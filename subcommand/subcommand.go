@@ -131,12 +131,19 @@ type Commands struct {
 }
 
 func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, string, error) {
-	var d Definition
+	var def Definition
 	var args string
 	dymMsg := ""
 	find := false
 	for _, d := range c.definitions {
-		d.Match(name, withoutHyphen)
+		var err error
+		find, args, err = d.Match(name, withoutHyphen)
+		if err != nil {
+			return Definition{}, "", "", err
+		} else if find {
+			def = d
+			break
+		}
 	}
 
 	if find == false {
@@ -144,12 +151,12 @@ func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, str
 		if len(candidates) == 0 {
 			return Definition{}, "", "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", name)
 		} else {
-			d = candidates[0]
+			def = candidates[0]
 			dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
 		}
 	}
 
-	return d, args, dymMsg, nil
+	return def, args, dymMsg, nil
 }
 
 func (c Commands) didYouMean(name string, withoutHyphen bool) ([]Definition, []string) {

@@ -145,3 +145,98 @@ func TestCommands_Help(t *testing.T) {
 		})
 	}
 }
+
+func TestCommands_Find(t *testing.T) {
+	type fields struct {
+		definitions []Definition
+	}
+	type args struct {
+		name          string
+		withoutHyphen bool
+	}
+	tests := []struct {
+		name     string
+		fields   fields
+		args     args
+		def      Definition
+		wantArgs string
+		dymMsg   string
+		wantErr  bool
+	}{
+		{
+			name: "Exact match",
+			fields: fields{
+				[]Definition{
+					Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
+					Definition{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:     args{name: "abc", withoutHyphen: false},
+			def:      Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
+			wantArgs: "",
+			dymMsg:   "",
+			wantErr:  false,
+		},
+		{
+			name: "Exact Match with Args",
+			fields: fields{
+				[]Definition{
+					Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					Definition{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:     args{name: "abc d", withoutHyphen: false},
+			def:      Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+			wantArgs: "d",
+			dymMsg:   "",
+			wantErr:  false,
+		},
+		{
+			name: "Match Did you mean",
+			fields: fields{
+				[]Definition{
+					Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
+					Definition{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:     args{name: "acb", withoutHyphen: false},
+			def:      Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
+			wantArgs: "",
+			dymMsg:   "Did you mean \"abc\"?",
+			wantErr:  false,
+		},
+		{
+			name: "Exact Match with Args",
+			fields: fields{
+				[]Definition{
+					Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					Definition{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:    args{name: "abc", withoutHyphen: false},
+			wantErr: true,
+		},
+		// Error with args
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Commands{
+				definitions: tt.fields.definitions,
+			}
+			got, got1, got2, err := c.Find(tt.args.name, tt.args.withoutHyphen)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Find() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got.Name != tt.def.Name {
+				t.Errorf("Find() def = %v, want %v", got, tt.def)
+			}
+			if got1 != tt.wantArgs {
+				t.Errorf("Find() args = %v, want %v", got1, tt.wantArgs)
+			}
+			if got2 != tt.dymMsg {
+				t.Errorf("Find() dymMsg = %v, want %v", got2, tt.dymMsg)
+			}
+		})
+	}
+}
