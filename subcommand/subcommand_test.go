@@ -104,7 +104,6 @@ func TestDefinition_Distance(t *testing.T) {
 				shortnames:  tt.fields.shortnames,
 				WithArgs:    tt.fields.WithArgs,
 				Factory:     tt.fields.Factory,
-				Match:       tt.fields.Match,
 			}
 			got, got1 := d.Distance(tt.args.name, tt.args.withoutHyphen)
 			if got != tt.distance {
@@ -119,7 +118,7 @@ func TestDefinition_Distance(t *testing.T) {
 
 func TestCommands_Help(t *testing.T) {
 	type fields struct {
-		entries []Entry
+		definitions []Definition
 	}
 	tests := []struct {
 		name   string
@@ -128,9 +127,9 @@ func TestCommands_Help(t *testing.T) {
 	}{
 		{name: "a and b command help",
 			fields: fields{
-				entries: []Entry{
-					newEntry(Definition{Name: "a", Description: "description", Factory: NewDummySubcommand}),
-					newEntry(Definition{Name: "b", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"c"}}),
+				definitions: []Definition{
+					Definition{Name: "a", Description: "description", Factory: NewDummySubcommand},
+					Definition{Name: "b", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"c"}},
 				},
 			},
 			want: "  a : description\n  b [c]: description\n"},
@@ -138,7 +137,7 @@ func TestCommands_Help(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commands{
-				entries: tt.fields.entries,
+				definitions: tt.fields.definitions,
 			}
 			if got := c.Help(); got != tt.want {
 				t.Errorf("Help() = %v, want %v", got, tt.want)

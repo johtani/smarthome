@@ -34,7 +34,6 @@ type Definition struct {
 	shortnames  []string
 	WithArgs    bool
 	Factory     func(Definition, Config) Subcommand
-	Match       func(message string) (bool, string)
 }
 
 func (d Definition) Init(config Config) Subcommand {
@@ -83,28 +82,42 @@ func (d Definition) Distance(name string, withoutHyphen bool) (int, string) {
 	}
 	return distance, command
 }
+
+func (d Definition) Match(message string, withoutHyphen bool) (bool, string, error) {
+	var match bool = false
+	var args string = ""
+	if d.WithArgs {
+		params := strings.SplitN(message, " ", 2)
+		if len(params) < 2 {
+			return match, args, fmt.Errorf("%s is not supported without arguments", message)
+		}
+		if d.IsTarget(params[0], withoutHyphen) {
+			match = true
+			args = params[1]
+		}
+	} else {
+		if d.IsTarget(message, withoutHyphen) {
+			match = true
+			args = ""
+		}
+	}
+	return match, args, nil
+}
+
 func DefaultMatch(message string) (bool, string) {
 	return false, ""
 }
 
-type Entry struct {
-	definition Definition
-}
-
-func newEntry(definition Definition) Entry {
-	return Entry{definition: definition}
-}
-
-func (e Entry) IsTarget(name string, withoutHyphen bool) bool {
+func (d Definition) IsTarget(name string, withoutHyphen bool) bool {
 	if withoutHyphen {
-		return name == e.definition.Name || e.contains(e.definition.shortnames, name) || e.contains(e.definition.noHyphens(), name)
+		return name == d.Name || d.contains(d.shortnames, name) || d.contains(d.noHyphens(), name)
 	} else {
-		return name == e.definition.Name || e.contains(e.definition.shortnames, name)
+		return name == d.Name || d.contains(d.shortnames, name)
 	}
 }
 
 // slices.Contains support >= Go 1.21
-func (e Entry) contains(names []string, target string) bool {
+func (d Definition) contains(names []string, target string) bool {
 	for _, name := range names {
 		if target == name {
 			return true
@@ -114,7 +127,7 @@ func (e Entry) contains(names []string, target string) bool {
 }
 
 type Commands struct {
-	entries []Entry
+	definitions []Definition
 }
 
 func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, string, error) {
@@ -122,26 +135,8 @@ func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, str
 	var args string
 	dymMsg := ""
 	find := false
-	for _, entry := range c.entries {
-		if entry.definition.WithArgs {
-			params := strings.SplitN(name, " ", 2)
-			if len(params) < 2 {
-				return Definition{}, "", "", fmt.Errorf("%s is not supported without arguments", name)
-			}
-			if entry.IsTarget(params[0], withoutHyphen) {
-				d = entry.definition
-				args = params[1]
-				find = true
-				break
-			}
-		} else {
-			if entry.IsTarget(name, withoutHyphen) {
-				d = entry.definition
-				args = ""
-				find = true
-				break
-			}
-		}
+	for _, d := range c.definitions {
+		d.Match(name, withoutHyphen)
 	}
 
 	if find == false {
@@ -160,11 +155,11 @@ func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, str
 func (c Commands) didYouMean(name string, withoutHyphen bool) ([]Definition, []string) {
 	var candidates []Definition
 	var cmds []string
-	for _, entry := range c.entries {
-		d, cmd := entry.definition.Distance(name, withoutHyphen)
+	for _, def := range c.definitions {
+		d, cmd := def.Distance(name, withoutHyphen)
 		// TODO 3にした場合は、candidatesの距離の小さい順で返したほうが便利な気がする
 		if d < 3 {
-			candidates = append(candidates, entry.definition)
+			candidates = append(candidates, def)
 			cmds = append(cmds, cmd)
 		}
 	}
@@ -173,8 +168,8 @@ func (c Commands) didYouMean(name string, withoutHyphen bool) ([]Definition, []s
 
 func (c Commands) Help() string {
 	var builder strings.Builder
-	for _, command := range c.entries {
-		builder.WriteString(command.definition.Help())
+	for _, d := range c.definitions {
+		builder.WriteString(d.Help())
 	}
 	return builder.String()
 }
