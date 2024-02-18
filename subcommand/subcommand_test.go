@@ -128,8 +128,8 @@ func TestCommands_Help(t *testing.T) {
 		{name: "a and b command help",
 			fields: fields{
 				definitions: []Definition{
-					Definition{Name: "a", Description: "description", Factory: NewDummySubcommand},
-					Definition{Name: "b", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"c"}},
+					{Name: "a", Description: "description", Factory: NewDummySubcommand},
+					{Name: "b", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"c"}},
 				},
 			},
 			want: "  a : description\n  b [c]: description\n"},
@@ -166,9 +166,9 @@ func TestCommands_Find(t *testing.T) {
 		{
 			name: "Exact match",
 			fields: fields{
-				[]Definition{
-					Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
-					Definition{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				definitions: []Definition{
+					{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
 				},
 			},
 			args:     args{name: "abc", withoutHyphen: false},
@@ -180,9 +180,9 @@ func TestCommands_Find(t *testing.T) {
 		{
 			name: "Exact Match with Args",
 			fields: fields{
-				[]Definition{
-					Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
-					Definition{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				definitions: []Definition{
+					{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
 				},
 			},
 			args:     args{name: "abc d", withoutHyphen: false},
@@ -194,9 +194,9 @@ func TestCommands_Find(t *testing.T) {
 		{
 			name: "Match Did you mean",
 			fields: fields{
-				[]Definition{
-					Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
-					Definition{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				definitions: []Definition{
+					{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
 				},
 			},
 			args:     args{name: "acb", withoutHyphen: false},
@@ -208,9 +208,9 @@ func TestCommands_Find(t *testing.T) {
 		{
 			name: "Exact Match with Args",
 			fields: fields{
-				[]Definition{
-					Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
-					Definition{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				definitions: []Definition{
+					{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
 				},
 			},
 			args:    args{name: "abc", withoutHyphen: false},
