@@ -62,9 +62,14 @@ func TestSubcommand_Exec(t *testing.T) {
 	}
 }
 
-func TestEntry_Distance(t *testing.T) {
+func TestDefinition_Distance(t *testing.T) {
 	type fields struct {
-		definition Definition
+		Name        string
+		Description string
+		shortnames  []string
+		WithArgs    bool
+		Factory     func(Definition, Config) Subcommand
+		Match       func(message string) (bool, string)
 	}
 	type args struct {
 		name          string
@@ -77,30 +82,36 @@ func TestEntry_Distance(t *testing.T) {
 		distance int
 		cmd      string
 	}{
+		// TODO: Add test cases.
 		{name: "only entity name",
-			fields: fields{definition: Definition{Name: "test", Description: "description", Factory: NewDummySubcommand, shortnames: []string{}}},
+			fields: fields{Name: "test", Description: "description", Factory: NewDummySubcommand, shortnames: []string{}},
 			args:   args{name: "tess"}, distance: 1, cmd: "test"},
 		{name: "hit shortname",
-			fields: fields{definition: Definition{Name: "tesssss", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"hoge", "test"}}},
+			fields: fields{Name: "tesssss", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"hoge", "test"}},
 			args:   args{name: "tess"}, distance: 1, cmd: "test"},
 		{name: "hit entity name without hyphen",
-			fields: fields{definition: Definition{Name: "test-cmd", Description: "description", Factory: NewDummySubcommand, shortnames: []string{}}},
+			fields: fields{Name: "test-cmd", Description: "description", Factory: NewDummySubcommand, shortnames: []string{}},
 			args:   args{name: "tess cmd", withoutHyphen: true}, distance: 1, cmd: "test cmd"},
 		{name: "hit shortname without hyphen",
-			fields: fields{definition: Definition{Name: "tesssss-cmd", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"hoge", "test-cmd"}}},
+			fields: fields{Name: "tesssss-cmd", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"hoge", "test-cmd"}},
 			args:   args{name: "tess cmd", withoutHyphen: true}, distance: 1, cmd: "test cmd"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			e := newEntry(
-				tt.fields.definition,
-			)
-			distance, cmd := e.Distance(tt.args.name, tt.args.withoutHyphen)
-			if distance != tt.distance {
-				t.Errorf("Distance() distance = %v, want %v", distance, tt.distance)
+			d := Definition{
+				Name:        tt.fields.Name,
+				Description: tt.fields.Description,
+				shortnames:  tt.fields.shortnames,
+				WithArgs:    tt.fields.WithArgs,
+				Factory:     tt.fields.Factory,
+				Match:       tt.fields.Match,
 			}
-			if cmd != tt.cmd {
-				t.Errorf("Distance() cmd = %v, want %v", cmd, tt.cmd)
+			got, got1 := d.Distance(tt.args.name, tt.args.withoutHyphen)
+			if got != tt.distance {
+				t.Errorf("Distance() distance = %v, want %v", got, tt.distance)
+			}
+			if got1 != tt.cmd {
+				t.Errorf("Distance() cmd = %v, want %v", got1, tt.cmd)
 			}
 		})
 	}

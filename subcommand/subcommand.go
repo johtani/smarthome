@@ -59,6 +59,30 @@ func (d Definition) noHyphens() []string {
 	return noHyphens
 }
 
+func (d Definition) Distance(name string, withoutHyphen bool) (int, string) {
+	distance := edlib.LevenshteinDistance(name, d.Name)
+	command := d.Name
+	// TODO shortnameどうする？一番小さいDistanceでいいか？
+	if len(d.shortnames) > 0 {
+		for _, tmp := range d.shortnames {
+			sd := edlib.LevenshteinDistance(name, tmp)
+			if sd < distance {
+				distance = sd
+				command = tmp
+			}
+		}
+	}
+	if withoutHyphen && len(d.noHyphens()) > 0 {
+		for _, tmp := range d.noHyphens() {
+			sd := edlib.LevenshteinDistance(name, tmp)
+			if sd < distance {
+				distance = sd
+				command = tmp
+			}
+		}
+	}
+	return distance, command
+}
 func DefaultMatch(message string) (bool, string) {
 	return false, ""
 }
@@ -77,31 +101,6 @@ func (e Entry) IsTarget(name string, withoutHyphen bool) bool {
 	} else {
 		return name == e.definition.Name || e.contains(e.definition.shortnames, name)
 	}
-}
-
-func (e Entry) Distance(name string, withoutHyphen bool) (int, string) {
-	distance := edlib.LevenshteinDistance(name, e.definition.Name)
-	command := e.definition.Name
-	// TODO shortnameどうする？一番小さいDistanceでいいか？
-	if len(e.definition.shortnames) > 0 {
-		for _, tmp := range e.definition.shortnames {
-			sd := edlib.LevenshteinDistance(name, tmp)
-			if sd < distance {
-				distance = sd
-				command = tmp
-			}
-		}
-	}
-	if withoutHyphen && len(e.definition.noHyphens()) > 0 {
-		for _, tmp := range e.definition.noHyphens() {
-			sd := edlib.LevenshteinDistance(name, tmp)
-			if sd < distance {
-				distance = sd
-				command = tmp
-			}
-		}
-	}
-	return distance, command
 }
 
 // slices.Contains support >= Go 1.21
@@ -162,7 +161,7 @@ func (c Commands) didYouMean(name string, withoutHyphen bool) ([]Definition, []s
 	var candidates []Definition
 	var cmds []string
 	for _, entry := range c.entries {
-		d, cmd := entry.Distance(name, withoutHyphen)
+		d, cmd := entry.definition.Distance(name, withoutHyphen)
 		// TODO 3にした場合は、candidatesの距離の小さい順で返したほうが便利な気がする
 		if d < 3 {
 			candidates = append(candidates, entry.definition)
