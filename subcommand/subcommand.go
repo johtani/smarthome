@@ -66,7 +66,7 @@ func (d Definition) Distance(name string) (int, string) {
 	return distance, command
 }
 
-func (d Definition) Match(message string) (bool, string, error) {
+func (d Definition) Match(message string) (bool, string) {
 	var match bool = false
 	var args string = ""
 	idx := d.lastPositionOfName(message)
@@ -76,7 +76,7 @@ func (d Definition) Match(message string) (bool, string, error) {
 			args = message[idx+1:]
 		}
 	}
-	return match, args, nil
+	return match, args
 }
 
 func DefaultMatch(message string) (bool, string) {
@@ -133,11 +133,8 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 	dymMsg := ""
 	find := false
 	for _, d := range c.definitions {
-		var err error
-		find, args, err = d.Match(text)
-		if err != nil {
-			return Definition{}, "", "", err
-		} else if find {
+		find, args = d.Match(text)
+		if find {
 			def = d
 			break
 		}

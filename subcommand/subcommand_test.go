@@ -224,6 +224,19 @@ func TestCommands_Find(t *testing.T) {
 			dymMsg:   "Did you mean \"ab c\"?",
 			wantErr:  false,
 		},
+		{name: "Should be error ...",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:     args{name: "ab cd     e"},
+			def:      Definition{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+			wantArgs: "     e",
+			dymMsg:   "",
+			wantErr:  false,
+		},
 		{name: "Error with multi spaces delimiter",
 			fields: fields{
 				definitions: []Definition{
