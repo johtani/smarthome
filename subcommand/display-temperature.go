@@ -5,8 +5,8 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 )
 
-const DisplayTemperatureCmd = "display-temperature"
-const DispTempCmd = "disp-temp"
+const DisplayTemperatureCmd = "display temperature"
+const DispTempCmd = "disp temp"
 
 func NewDisplayTemperatureDefinition() Definition {
 	return Definition{

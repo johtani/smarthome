@@ -6,7 +6,7 @@ import (
 	switchbotsdk "github.com/nasa9084/go-switchbot/v3"
 )
 
-const LightOffCmd = "light-off"
+const LightOffCmd = "light off"
 
 func NewLightOffDefinition() Definition {
 	return Definition{
