@@ -58,7 +58,7 @@ func (d Definition) noHyphens() []string {
 	return noHyphens
 }
 
-func (d Definition) Distance(name string, withoutHyphen bool) (int, string) {
+func (d Definition) Distance(name string) (int, string) {
 	distance := edlib.LevenshteinDistance(name, d.Name)
 	command := d.Name
 	// TODO shortnameどうする？一番小さいDistanceでいいか？
@@ -71,34 +71,17 @@ func (d Definition) Distance(name string, withoutHyphen bool) (int, string) {
 			}
 		}
 	}
-	if withoutHyphen && len(d.noHyphens()) > 0 {
-		for _, tmp := range d.noHyphens() {
-			sd := edlib.LevenshteinDistance(name, tmp)
-			if sd < distance {
-				distance = sd
-				command = tmp
-			}
-		}
-	}
 	return distance, command
 }
 
-func (d Definition) Match(message string, withoutHyphen bool) (bool, string, error) {
+func (d Definition) Match(message string) (bool, string, error) {
 	var match bool = false
 	var args string = ""
-	if d.WithArgs {
-		params := strings.SplitN(message, " ", 2)
-		if len(params) < 2 {
-			return match, args, fmt.Errorf("%s is not supported without arguments", message)
-		}
-		if d.IsTarget(params[0], withoutHyphen) {
-			match = true
-			args = params[1]
-		}
-	} else {
-		if d.IsTarget(message, withoutHyphen) {
-			match = true
-			args = ""
+	idx := d.lastPositionOfName(message)
+	if idx > -1 {
+		match = true
+		if d.WithArgs && len(message) >= idx+1 {
+			args = message[idx+1:]
 		}
 	}
 	return match, args, nil
@@ -108,22 +91,17 @@ func DefaultMatch(message string) (bool, string) {
 	return false, ""
 }
 
-func (d Definition) IsTarget(name string, withoutHyphen bool) bool {
-	if withoutHyphen {
-		return name == d.Name || d.contains(d.shortnames, name) || d.contains(d.noHyphens(), name)
-	} else {
-		return name == d.Name || d.contains(d.shortnames, name)
+func (d Definition) lastPositionOfName(message string) int {
+	var idx int = -1
+	if strings.HasPrefix(message, d.Name) {
+		return len(d.Name)
 	}
-}
-
-// slices.Contains support >= Go 1.21
-func (d Definition) contains(names []string, target string) bool {
-	for _, name := range names {
-		if target == name {
-			return true
+	for _, shortname := range d.shortnames {
+		if strings.HasPrefix(message, shortname) {
+			return len(shortname)
 		}
 	}
-	return false
+	return idx
 }
 
 type Commands struct {
@@ -157,14 +135,14 @@ func NewCommands() Commands {
 	}
 }
 
-func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, string, error) {
+func (c Commands) Find(text string) (Definition, string, string, error) {
 	var def Definition
 	var args string
 	dymMsg := ""
 	find := false
 	for _, d := range c.definitions {
 		var err error
-		find, args, err = d.Match(name, withoutHyphen)
+		find, args, err = d.Match(text)
 		if err != nil {
 			return Definition{}, "", "", err
 		} else if find {
@@ -174,9 +152,9 @@ func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, str
 	}
 
 	if find == false {
-		candidates, cmds := c.didYouMean(name, true)
+		candidates, cmds := c.didYouMean(text)
 		if len(candidates) == 0 {
-			return Definition{}, "", "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", name)
+			return Definition{}, "", "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", text)
 		} else {
 			def = candidates[0]
 			dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
@@ -186,11 +164,11 @@ func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, str
 	return def, args, dymMsg, nil
 }
 
-func (c Commands) didYouMean(name string, withoutHyphen bool) ([]Definition, []string) {
+func (c Commands) didYouMean(name string) ([]Definition, []string) {
 	var candidates []Definition
 	var cmds []string
 	for _, def := range c.definitions {
-		d, cmd := def.Distance(name, withoutHyphen)
+		d, cmd := def.Distance(name)
 		// TODO 3にした場合は、candidatesの距離の小さい順で返したほうが便利な気がする
 		if d < 3 {
 			candidates = append(candidates, def)

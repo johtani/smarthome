@@ -42,7 +42,7 @@ func runCmd(config subcommand.Config) error {
 		return fmt.Errorf(printHelp(config.Commands.Help()))
 	}
 	name := strings.Join(os.Args[1:], " ")
-	d, args, dymMsg, err := config.Commands.Find(name, false)
+	d, args, dymMsg, err := config.Commands.Find(name)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		printHelp(config.Commands.Help())
