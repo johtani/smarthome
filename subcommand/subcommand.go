@@ -130,6 +130,33 @@ type Commands struct {
 	definitions []Definition
 }
 
+func NewCommands() Commands {
+	return Commands{
+		definitions: []Definition{
+			NewStartMeetingDefinition(),
+			NewFinishMeetingDefinition(),
+			NewStartMusicCmdDefinition(),
+			NewStopMusicDefinition(),
+			NewChangePlaylistCmdDefinition(),
+			NewSwitchBotDeviceListDefinition(),
+			NewSwitchBotDeviceListDefinition(),
+			NewSwitchBotSceneListDefinition(),
+			NewSwitchBotSceneListDefinition(),
+			NewLightOffDefinition(),
+			NewLightOnDefinition(),
+			NewHelpDefinition(),
+			NewStartSwitchDefinition(),
+			NewStartPS5Definition(),
+			NewAirConditionerOnDefinition(),
+			NewAirConditionerOffDefinition(),
+			NewDisplayTemperatureDefinition(),
+			NewTokenizeIpaDefinition(),
+			NewTokenizeUniDefinition(),
+			NewTokenizeNeologdDefinition(),
+		},
+	}
+}
+
 func (c Commands) Find(name string, withoutHyphen bool) (Definition, string, string, error) {
 	var def Definition
 	var args string

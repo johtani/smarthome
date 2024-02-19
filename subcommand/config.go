@@ -57,29 +57,6 @@ func LoadConfig() Config {
 	if err != nil {
 		panic(fmt.Sprintf("Validation エラー: \n%v", err))
 	}
-	config.Commands = Commands{
-		definitions: []Definition{
-			NewStartMeetingDefinition(),
-			NewFinishMeetingDefinition(),
-			NewStartMusicCmdDefinition(),
-			NewStopMusicDefinition(),
-			NewChangePlaylistCmdDefinition(),
-			NewSwitchBotDeviceListDefinition(),
-			NewSwitchBotDeviceListDefinition(),
-			NewSwitchBotSceneListDefinition(),
-			NewSwitchBotSceneListDefinition(),
-			NewLightOffDefinition(),
-			NewLightOnDefinition(),
-			NewHelpDefinition(),
-			NewStartSwitchDefinition(),
-			NewStartPS5Definition(),
-			NewAirConditionerOnDefinition(),
-			NewAirConditionerOffDefinition(),
-			NewDisplayTemperatureDefinition(),
-			NewTokenizeIpaDefinition(),
-			NewTokenizeUniDefinition(),
-			NewTokenizeNeologdDefinition(),
-		},
-	}
+	config.Commands = NewCommands()
 	return config
 }
