@@ -211,7 +211,39 @@ func TestCommands_Find(t *testing.T) {
 			dymMsg:   "",
 			wantErr:  false,
 		},
-		// Error with args
+		{name: "Match with two spaces delimiter, because of DidYouMean",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:     args{name: "ab  c"},
+			def:      Definition{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+			wantArgs: "",
+			dymMsg:   "Did you mean \"ab c\"?",
+			wantErr:  false,
+		},
+		{name: "Error with multi spaces delimiter",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:    args{name: "ab       c"},
+			wantErr: true,
+		},
+		{name: "Error with multi spaces delimiter and Args",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:    args{name: "ab  c d"},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

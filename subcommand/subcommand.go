@@ -50,14 +50,6 @@ func (d Definition) Help() string {
 	return help
 }
 
-func (d Definition) noHyphens() []string {
-	noHyphens := []string{strings.ReplaceAll(d.Name, "-", " ")}
-	for _, shortname := range d.shortnames {
-		noHyphens = append(noHyphens, strings.ReplaceAll(shortname, "-", " "))
-	}
-	return noHyphens
-}
-
 func (d Definition) Distance(name string) (int, string) {
 	distance := edlib.LevenshteinDistance(name, d.Name)
 	command := d.Name
