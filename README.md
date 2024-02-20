@@ -39,10 +39,10 @@ go build
 実行例：
 
 ```
-smarthome start-meeting
+smarthome start meeting
 ```
 
-`start-meeting`がサブコマンド。サブコマンドを指定しない場合は現在利用可能なサブコマンドの一覧が表示される。
+`start meeting`がサブコマンド。サブコマンドを指定しない場合は現在利用可能なサブコマンドの一覧が表示される。
 
 ## subcommand
 
