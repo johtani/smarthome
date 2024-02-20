@@ -5,6 +5,7 @@ import (
 	"github.com/hbollon/go-edlib"
 	"github.com/johtani/smarthome/subcommand/action"
 	"strings"
+	"unicode"
 )
 
 type Subcommand struct {
@@ -67,33 +68,32 @@ func (d Definition) Distance(name string) (int, string) {
 }
 
 func (d Definition) Match(message string) (bool, string) {
-	var match bool = false
-	var args string = ""
-	idx := d.lastPositionOfName(message)
-	if idx > -1 {
-		match = true
-		if d.WithArgs && len(message) >= idx+1 {
-			args = message[idx+1:]
+	var args = ""
+	inputs := strings.Fields(message)
+	for _, cmd := range append([]string{d.Name}, d.shortnames...) {
+		cmds := strings.Fields(cmd)
+		if d.isPrefix(inputs, cmds) {
+			args = message
+			for _, cmd := range cmds {
+				args = strings.Replace(args, cmd, "", 1)
+				args = strings.TrimLeftFunc(args, unicode.IsSpace)
+			}
+			return true, args
 		}
 	}
-	return match, args
+	return false, args
 }
 
-func DefaultMatch(message string) (bool, string) {
-	return false, ""
-}
-
-func (d Definition) lastPositionOfName(message string) int {
-	var idx int = -1
-	if strings.HasPrefix(message, d.Name) {
-		return len(d.Name)
+func (d Definition) isPrefix(inputs []string, cmd []string) bool {
+	if len(inputs) == 0 || len(cmd) == 0 || len(inputs) < len(cmd) {
+		return false
 	}
-	for _, shortname := range d.shortnames {
-		if strings.HasPrefix(message, shortname) {
-			return len(shortname)
+	for i := 0; i < len(cmd); i++ {
+		if cmd[i] != inputs[i] {
+			return false
 		}
 	}
-	return idx
+	return true
 }
 
 type Commands struct {
