@@ -51,17 +51,16 @@ func (d Definition) Help() string {
 	return help
 }
 
-func (d Definition) Distance(name string) (int, string) {
-	distance := edlib.LevenshteinDistance(name, d.Name)
-	command := d.Name
+func (d Definition) Distance(input string) (int, string) {
+	// 対象にならないサイズを初期値として設定
+	distance := dymCandidateDistance + 1
+	command := ""
 	// TODO shortnameどうする？一番小さいDistanceでいいか？
-	if len(d.shortnames) > 0 {
-		for _, tmp := range d.shortnames {
-			sd := edlib.LevenshteinDistance(name, tmp)
-			if sd < distance {
-				distance = sd
-				command = tmp
-			}
+	for _, cmd := range append([]string{d.Name}, d.shortnames...) {
+		sd := edlib.LevenshteinDistance(input, cmd)
+		if sd < distance {
+			distance = sd
+			command = cmd
 		}
 	}
 	return distance, command
@@ -153,13 +152,15 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 	return def, args, dymMsg, nil
 }
 
+const dymCandidateDistance = 3
+
 func (c Commands) didYouMean(name string) ([]Definition, []string) {
 	var candidates []Definition
 	var cmds []string
 	for _, def := range c.definitions {
 		d, cmd := def.Distance(name)
 		// TODO 3にした場合は、candidatesの距離の小さい順で返したほうが便利な気がする
-		if d < 3 {
+		if d < dymCandidateDistance {
 			candidates = append(candidates, def)
 			cmds = append(cmds, cmd)
 		}
