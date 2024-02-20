@@ -1,6 +1,6 @@
 package subcommand
 
-const StartMusicCmd = "start-music"
+const StartMusicCmd = "start music"
 
 func NewStartMusicCmdDefinition() Definition {
 	return Definition{

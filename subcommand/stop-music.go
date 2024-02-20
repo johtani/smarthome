@@ -6,7 +6,7 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
 
-const StopMusicCmd = "stop-music"
+const StopMusicCmd = "stop music"
 
 func NewStopMusicDefinition() Definition {
 	return Definition{

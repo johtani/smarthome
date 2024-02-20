@@ -5,7 +5,7 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 )
 
-const ChangePlaylistCmd = "change-playlist"
+const ChangePlaylistCmd = "change playlist"
 
 func NewChangePlaylistCmdDefinition() Definition {
 	return Definition{

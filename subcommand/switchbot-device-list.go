@@ -13,6 +13,7 @@ func NewSwitchBotDeviceListDefinition() Definition {
 		Name:        SwitchBotDeviceListCmd,
 		Description: "List devices on SwitchBot",
 		Factory:     NewSwitchBotDeviceListSubcommand,
+		shortnames:  []string{DeviceListCmd},
 	}
 }
 

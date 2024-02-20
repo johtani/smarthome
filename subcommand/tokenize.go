@@ -5,7 +5,7 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/kagome"
 )
 
-const TokenizeIpaCmd = "tokenize-ipa"
+const TokenizeIpaCmd = "tokenize ipa"
 
 func NewTokenizeIpaDefinition() Definition {
 	return Definition{
@@ -26,7 +26,7 @@ func NewTokenizeIpaCommand(definition Definition, _ Config) Subcommand {
 	}
 }
 
-const TokenizeUniCmd = "tokenize-uni"
+const TokenizeUniCmd = "tokenize uni"
 
 func NewTokenizeUniDefinition() Definition {
 	return Definition{
@@ -47,11 +47,11 @@ func NewTokenizeUniCommand(definition Definition, _ Config) Subcommand {
 	}
 }
 
-const TokenizeNeologdCmd = "tokenize-neologd"
+const TokenizeNeologdCmd = "tokenize neologd"
 
 func NewTokenizeNeologdDefinition() Definition {
 	return Definition{
-		Name:        TokenizeIpaCmd,
+		Name:        TokenizeNeologdCmd,
 		Description: "Tokenize text by Kagome with Neologd",
 		WithArgs:    true,
 		Factory:     NewTokenizeNeologdCommand,

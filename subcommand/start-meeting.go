@@ -7,7 +7,7 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
 
-const StartMeetingCmd = "start-meeting"
+const StartMeetingCmd = "start meeting"
 
 func NewStartMeetingDefinition() Definition {
 	return Definition{

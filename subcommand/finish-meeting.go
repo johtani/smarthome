@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const FinishMeetingCmd = "finish-meeting"
+const FinishMeetingCmd = "finish meeting"
 
 func NewFinishMeetingDefinition() Definition {
 	return Definition{

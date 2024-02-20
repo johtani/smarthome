@@ -5,14 +5,15 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 )
 
-const SwitchBotSceneListCmd = "switchbot-scene-list"
-const SceneListCmd = "scene-list"
+const SwitchBotSceneListCmd = "switchbot scene list"
+const SceneListCmd = "scene list"
 
 func NewSwitchBotSceneListDefinition() Definition {
 	return Definition{
 		Name:        SwitchBotSceneListCmd,
 		Description: "List scenes on SwitchBot",
 		Factory:     NewSwitchBotSceneListSubcommand,
+		shortnames:  []string{SceneListCmd},
 	}
 }
 

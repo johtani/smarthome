@@ -6,8 +6,8 @@ import (
 	switchbotsdk "github.com/nasa9084/go-switchbot/v3"
 )
 
-const AirConditionerOffCmd = "air-conditioner-off"
-const ACOffCmd = "ac-off"
+const AirConditionerOffCmd = "air conditioner off"
+const ACOffCmd = "ac off"
 
 func NewAirConditionerOffDefinition() Definition {
 	return Definition{

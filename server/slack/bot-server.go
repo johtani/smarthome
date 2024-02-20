@@ -133,7 +133,7 @@ func findAndExec(config subcommand.Config, text string) (string, error) {
 	if len(name) == 0 {
 		return config.Commands.Help(), nil
 	}
-	d, args, dymMsg, err := config.Commands.Find(name, true)
+	d, args, dymMsg, err := config.Commands.Find(name)
 	if err != nil {
 		return "", err
 	}

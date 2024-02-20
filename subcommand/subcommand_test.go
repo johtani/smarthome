@@ -72,8 +72,7 @@ func TestDefinition_Distance(t *testing.T) {
 		Match       func(message string) (bool, string)
 	}
 	type args struct {
-		name          string
-		withoutHyphen bool
+		name string
 	}
 	tests := []struct {
 		name     string
@@ -82,19 +81,12 @@ func TestDefinition_Distance(t *testing.T) {
 		distance int
 		cmd      string
 	}{
-		// TODO: Add test cases.
 		{name: "only entity name",
 			fields: fields{Name: "test", Description: "description", Factory: NewDummySubcommand, shortnames: []string{}},
 			args:   args{name: "tess"}, distance: 1, cmd: "test"},
 		{name: "hit shortname",
 			fields: fields{Name: "tesssss", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"hoge", "test"}},
 			args:   args{name: "tess"}, distance: 1, cmd: "test"},
-		{name: "hit entity name without hyphen",
-			fields: fields{Name: "test-cmd", Description: "description", Factory: NewDummySubcommand, shortnames: []string{}},
-			args:   args{name: "tess cmd", withoutHyphen: true}, distance: 1, cmd: "test cmd"},
-		{name: "hit shortname without hyphen",
-			fields: fields{Name: "tesssss-cmd", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"hoge", "test-cmd"}},
-			args:   args{name: "tess cmd", withoutHyphen: true}, distance: 1, cmd: "test cmd"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -105,7 +97,7 @@ func TestDefinition_Distance(t *testing.T) {
 				WithArgs:    tt.fields.WithArgs,
 				Factory:     tt.fields.Factory,
 			}
-			got, got1 := d.Distance(tt.args.name, tt.args.withoutHyphen)
+			got, got1 := d.Distance(tt.args.name)
 			if got != tt.distance {
 				t.Errorf("Distance() distance = %v, want %v", got, tt.distance)
 			}
@@ -167,12 +159,12 @@ func TestCommands_Find(t *testing.T) {
 			name: "Exact match",
 			fields: fields{
 				definitions: []Definition{
-					{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
 					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
 				},
 			},
-			args:     args{name: "abc", withoutHyphen: false},
-			def:      Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
+			args:     args{name: "ab c", withoutHyphen: false},
+			def:      Definition{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: false},
 			wantArgs: "",
 			dymMsg:   "",
 			wantErr:  false,
@@ -181,12 +173,12 @@ func TestCommands_Find(t *testing.T) {
 			name: "Exact Match with Args",
 			fields: fields{
 				definitions: []Definition{
-					{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
 					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
 				},
 			},
-			args:     args{name: "abc d", withoutHyphen: false},
-			def:      Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+			args:     args{name: "ab c d", withoutHyphen: false},
+			def:      Definition{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
 			wantArgs: "d",
 			dymMsg:   "",
 			wantErr:  false,
@@ -213,17 +205,68 @@ func TestCommands_Find(t *testing.T) {
 					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
 				},
 			},
-			args:    args{name: "abc", withoutHyphen: false},
+			args:     args{name: "abc"},
+			def:      Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+			wantArgs: "",
+			dymMsg:   "",
+			wantErr:  false,
+		},
+		{name: "Exact Match with two spaces delimiter",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:     args{name: "ab  c"},
+			def:      Definition{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+			wantArgs: "",
+			dymMsg:   "",
+			wantErr:  false,
+		},
+		{name: "Exact Match with multi spaces delimiter",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:     args{name: "ab       c"},
+			def:      Definition{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+			wantArgs: "",
+			dymMsg:   "",
+			wantErr:  false,
+		},
+		{name: "Exact Match with multi spaces delimiter and Args",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:     args{name: "ab  c d"},
+			def:      Definition{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+			wantArgs: "d",
+			dymMsg:   "",
+			wantErr:  false,
+		},
+		{name: "No match",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "ab c", Description: "description", Factory: NewDummySubcommand, WithArgs: true},
+					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}, WithArgs: false},
+				},
+			},
+			args:    args{name: "ab cd     e"},
 			wantErr: true,
 		},
-		// Error with args
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commands{
 				definitions: tt.fields.definitions,
 			}
-			got, got1, got2, err := c.Find(tt.args.name, tt.args.withoutHyphen)
+			got, got1, got2, err := c.Find(tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Find() error = %v, wantErr %v", err, tt.wantErr)
 				return

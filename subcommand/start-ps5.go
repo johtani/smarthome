@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const StartPS5Cmd = "start-ps5"
+const StartPS5Cmd = "start ps5"
 
 func NewStartPS5Definition() Definition {
 	return Definition{

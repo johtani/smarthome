@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const StartSwitchCmd = "start-switch"
+const StartSwitchCmd = "start switch"
 
 func NewStartSwitchDefinition() Definition {
 	return Definition{
