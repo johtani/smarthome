@@ -33,7 +33,6 @@ type Definition struct {
 	Name        string
 	Description string
 	shortnames  []string
-	WithArgs    bool
 	Factory     func(Definition, Config) Subcommand
 }
 

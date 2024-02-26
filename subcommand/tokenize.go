@@ -11,7 +11,6 @@ func NewTokenizeIpaDefinition() Definition {
 	return Definition{
 		Name:        TokenizeIpaCmd,
 		Description: "Tokenize text by Kagome w/ IPA dic",
-		WithArgs:    true,
 		Factory:     NewTokenizeIpaCommand,
 	}
 }
@@ -32,7 +31,6 @@ func NewTokenizeUniDefinition() Definition {
 	return Definition{
 		Name:        TokenizeUniCmd,
 		Description: "Tokenize text by Kagome with Uni dic",
-		WithArgs:    true,
 		Factory:     NewTokenizeUniCommand,
 	}
 }
@@ -53,7 +51,6 @@ func NewTokenizeNeologdDefinition() Definition {
 	return Definition{
 		Name:        TokenizeNeologdCmd,
 		Description: "Tokenize text by Kagome with Neologd",
-		WithArgs:    true,
 		Factory:     NewTokenizeNeologdCommand,
 	}
 }
