@@ -106,6 +106,8 @@ func NewCommands() Commands {
 			NewStartMusicCmdDefinition(),
 			NewStopMusicDefinition(),
 			NewChangePlaylistCmdDefinition(),
+			NewSearchMusicCmdDefinition(),
+			NewSearchAndPlayMusicCmdDefinition(),
 			NewSwitchBotDeviceListDefinition(),
 			NewSwitchBotSceneListDefinition(),
 			NewLightOffDefinition(),

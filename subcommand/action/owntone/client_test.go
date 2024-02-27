@@ -357,3 +357,191 @@ func TestClient_ClearQueue(t *testing.T) {
 		})
 	}
 }
+
+func searchSampleJSONResponse() string {
+	return `{
+  "tracks": {
+    "items": [
+      {
+        "id": 35,
+        "title": "Another Love",
+        "artist": "Tom Odell",
+        "artist_sort": "Tom Odell",
+        "album": "Es is was es is",
+        "album_sort": "Es is was es is",
+        "album_id": "6494853621007413058",
+        "album_artist": "Various artists",
+        "album_artist_sort": "Various artists",
+        "album_artist_id": "8395563705718003786",
+        "genre": "Singer/Songwriter",
+        "year": 2013,
+        "track_number": 7,
+        "disc_number": 1,
+        "length_ms": 251030,
+        "play_count": 0,
+        "media_kind": "music",
+        "data_kind": "file",
+        "path": "/music/srv/Compilations/Es is was es is/07 Another Love.m4a",
+        "uri": "library:track:35"
+      },
+      {
+        "id": 215,
+        "title": "Away From the Sun",
+        "artist": "3 Doors Down",
+        "artist_sort": "3 Doors Down",
+        "album": "Away From the Sun",
+        "album_sort": "Away From the Sun",
+        "album_id": "8264078270267374619",
+        "album_artist": "3 Doors Down",
+        "album_artist_sort": "3 Doors Down",
+        "album_artist_id": "5030128490104968038",
+        "genre": "Rock",
+        "year": 2002,
+        "track_number": 2,
+        "disc_number": 1,
+        "length_ms": 233278,
+        "play_count": 0,
+        "media_kind": "music",
+        "data_kind": "file",
+        "path": "/music/srv/Away From the Sun/02 Away From the Sun.mp3",
+        "uri": "library:track:215"
+      }
+    ],
+    "total": 14,
+    "offset": 0,
+    "limit": 2
+  },
+  "artists": {
+    "items": [
+      {
+        "id": "8737690491750445895",
+        "name": "The xx",
+        "name_sort": "xx, The",
+        "album_count": 2,
+        "track_count": 25,
+        "length_ms": 5229196,
+        "uri": "library:artist:8737690491750445895"
+      }
+    ],
+    "total": 1,
+    "offset": 0,
+    "limit": 2
+  },
+  "albums": {
+    "items": [
+      {
+        "id": "8264078270267374619",
+        "name": "Away From the Sun",
+        "name_sort": "Away From the Sun",
+        "artist": "3 Doors Down",
+        "artist_id": "5030128490104968038",
+        "track_count": 12,
+        "length_ms": 2818174,
+        "uri": "library:album:8264078270267374619"
+      },
+      {
+        "id": "6835720495312674468",
+        "name": "The Better Life",
+        "name_sort": "Better Life",
+        "artist": "3 Doors Down",
+        "artist_id": "5030128490104968038",
+        "track_count": 11,
+        "length_ms": 2393332,
+        "uri": "library:album:6835720495312674468"
+      }
+    ],
+    "total": 3,
+    "offset": 0,
+    "limit": 2
+  },
+  "playlists": {
+    "items": [],
+    "total": 0,
+    "offset": 0,
+    "limit": 2
+  }
+}
+`
+}
+
+func TestClient_Search(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+	type args struct {
+		keyword    string
+		resultType []SearchType
+	}
+	path := "/api/search"
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *SearchResult
+		wantErr bool
+	}{
+		{
+			name:   "OK",
+			fields: fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: searchSampleJSONResponse()},
+			args:   args{keyword: "keyword", resultType: []SearchType{track}},
+			want: &SearchResult{
+				Tracks: Items{Items: []SearchItem{
+					{
+						Title:  "Another Love",
+						Uri:    "library:track:35",
+						Name:   "",
+						Artist: "Tom Odell",
+					},
+					{
+						Title:  "Away From the Sun",
+						Uri:    "library:track:215",
+						Name:   "",
+						Artist: "3 Doors Down",
+					}}, Total: 14, Offset: 0, Limit: 2},
+				Artists: Items{Items: []SearchItem{{
+					Title:  "",
+					Uri:    "library:artist:8737690491750445895",
+					Name:   "The xx",
+					Artist: "",
+				}}, Total: 1, Offset: 0, Limit: 2},
+				Albums: Items{Items: []SearchItem{
+					{
+						Title:  "",
+						Uri:    "library:album:8264078270267374619",
+						Name:   "Away From the Sun",
+						Artist: "3 Doors Down",
+					},
+					{
+						Title:  "",
+						Uri:    "library:album:6835720495312674468",
+						Name:   "The Better Life",
+						Artist: "3 Doors Down",
+					},
+				}, Total: 3, Offset: 0, Limit: 2},
+				Playlists: Items{Items: []SearchItem{}, Total: 0, Offset: 0, Limit: 2},
+			},
+			wantErr: false,
+		},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: searchSampleJSONResponse()}, args{keyword: "keyword", resultType: []SearchType{track}}, nil, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
+			defer server.Close()
+			config := Config{Url: server.URL}
+			c := NewClient(config)
+
+			got, err := c.Search(tt.args.keyword, tt.args.resultType)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Search() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Search() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
