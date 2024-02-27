@@ -208,3 +208,66 @@ func (c Client) ClearQueue() error {
 	}
 	return nil
 }
+
+type SearchType string
+
+const (
+	//playlist SearchType = "playlist"
+	artist SearchType = "artist"
+	album  SearchType = "album"
+	track  SearchType = "track"
+	//genre    SearchType = "genre"
+)
+
+type SearchItem struct {
+	Title  string `json:"title"`
+	Uri    string `json:"uri"`
+	Name   string `json:"name"`
+	Artist string `json:"artist"`
+}
+
+type Items struct {
+	Items  []SearchItem `json:"items"`
+	Total  int          `json:"total"`
+	Offset int          `json:"offset"`
+	Limit  int          `json:"limit"`
+}
+
+type SearchResult struct {
+	Tracks    Items `json:"tracks"`
+	Artists   Items `json:"artists"`
+	Albums    Items `json:"albums"`
+	Playlists Items `json:"playlists"`
+}
+
+func (c Client) Search(keyword string, resultType []SearchType) (*SearchResult, error) {
+	params := map[string]string{}
+	params["query"] = keyword
+	params["limit"] = "5"
+	var types []string
+	for _, s := range resultType {
+		types = append(types, string(s))
+	}
+	params["type"] = strings.Join(types, ",")
+	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/search"), params)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+
+	// Decode the JSON response into a Response struct
+	var results SearchResult
+	if err := json.NewDecoder(res.Body).Decode(&results); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %v", err)
+	}
+	return &results, nil
+}
