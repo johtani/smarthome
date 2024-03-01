@@ -11,12 +11,11 @@ type SearchAndPlayAction struct {
 	c    *Client
 }
 
-func appendMessage(items Items, label string, msg []string, uris []string) ([]string, []string) {
+func appendMessage(items Items, label string, msg []string, uris []string, loopFunc func(item SearchItem) ([]string, []string)) ([]string, []string) {
 	if items.Total > 0 {
 		msg = append(msg, fmt.Sprintf("# %s (%d)", label, items.Total))
 		for _, item := range items.Items {
-			msg = append(msg, fmt.Sprintf(" %v", item.Name))
-			uris = append(uris, item.Uri)
+			msg, uris = loopFunc(item)
 		}
 	}
 	return msg, uris
@@ -31,9 +30,21 @@ func (a SearchAndPlayAction) Run(query string) (string, error) {
 		return "Something wrong...", err
 	}
 	var uris []string
-	msg, uris = appendMessage(result.Artists, "Artists", msg, uris)
-	msg, uris = appendMessage(result.Albums, "Albums", msg, uris)
-	msg, uris = appendMessage(result.Tracks, "Tracks", msg, uris)
+	msg, uris = appendMessage(result.Artists, "Artists", msg, uris, func(item SearchItem) ([]string, []string) {
+		msg = append(msg, fmt.Sprintf(" %v", item.Name))
+		uris = append(uris, item.Uri)
+		return msg, uris
+	})
+	msg, uris = appendMessage(result.Albums, "Albums", msg, uris, func(item SearchItem) ([]string, []string) {
+		msg = append(msg, fmt.Sprintf(" %v / %v", item.Name, item.Artist))
+		uris = append(uris, item.Uri)
+		return msg, uris
+	})
+	msg, uris = appendMessage(result.Tracks, "Tracks", msg, uris, func(item SearchItem) ([]string, []string) {
+		msg = append(msg, fmt.Sprintf(" %v / %v ", item.Title, item.Artist))
+		uris = append(uris, item.Uri)
+		return msg, uris
+	})
 
 	if len(uris) > 0 {
 		err := a.c.ClearQueue()
@@ -81,10 +92,18 @@ func (a SearchAndDisplayAction) Run(query string) (string, error) {
 		fmt.Println("error in SearchAndDisplayAction")
 		return "Something wrong...", err
 	}
-	var uris []string
-	msg, uris = appendMessage(result.Artists, "Artists", msg, uris)
-	msg, uris = appendMessage(result.Albums, "Albums", msg, uris)
-	msg, uris = appendMessage(result.Tracks, "Tracks", msg, uris)
+	msg, _ = appendMessage(result.Artists, "Artists", msg, nil, func(item SearchItem) ([]string, []string) {
+		msg = append(msg, fmt.Sprintf(" %v", item.Name))
+		return msg, nil
+	})
+	msg, _ = appendMessage(result.Albums, "Albums", msg, nil, func(item SearchItem) ([]string, []string) {
+		msg = append(msg, fmt.Sprintf(" %v / %v", item.Name, item.Artist))
+		return msg, nil
+	})
+	msg, _ = appendMessage(result.Tracks, "Tracks", msg, nil, func(item SearchItem) ([]string, []string) {
+		msg = append(msg, fmt.Sprintf(" %v / %v ", item.Title, item.Artist))
+		return msg, nil
+	})
 
 	return strings.Join(msg, "\n"), nil
 }
