@@ -474,6 +474,7 @@ func TestClient_Search(t *testing.T) {
 	type args struct {
 		keyword    string
 		resultType []SearchType
+		limit      int
 	}
 	path := "/api/search"
 	tests := []struct {
@@ -534,7 +535,7 @@ func TestClient_Search(t *testing.T) {
 			config := Config{Url: server.URL}
 			c := NewClient(config)
 
-			got, err := c.Search(tt.args.keyword, tt.args.resultType)
+			got, err := c.Search(tt.args.keyword, tt.args.resultType, tt.args.limit)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Search() error = %v, wantErr %v", err, tt.wantErr)
 				return

@@ -211,6 +211,20 @@ func (c Client) ClearQueue() error {
 
 type SearchType string
 
+func SearchTypeFromString(s string) (SearchType, error) {
+
+	switch s {
+	case "artist":
+		return artist, nil
+	case "album":
+		return album, nil
+	case "track":
+		return track, nil
+	default:
+		return artist, fmt.Errorf("not found %v", s)
+	}
+}
+
 const (
 	//playlist SearchType = "playlist"
 	artist SearchType = "artist"
@@ -240,10 +254,14 @@ type SearchResult struct {
 	Playlists Items `json:"playlists"`
 }
 
-func (c Client) Search(keyword string, resultType []SearchType) (*SearchResult, error) {
+func (c Client) Search(keyword string, resultType []SearchType, limit int) (*SearchResult, error) {
 	params := map[string]string{}
 	params["query"] = keyword
-	params["limit"] = "5"
+	l := limit
+	if limit <= 0 {
+		l = 5
+	}
+	params["limit"] = strconv.Itoa(l)
 	var types []string
 	for _, s := range resultType {
 		types = append(types, string(s))

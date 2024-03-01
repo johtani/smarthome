@@ -2,6 +2,7 @@ package owntone
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -10,37 +11,30 @@ type SearchAndPlayAction struct {
 	c    *Client
 }
 
+func appendMessage(items Items, label string, msg []string, uris []string) ([]string, []string) {
+	if items.Total > 0 {
+		msg = append(msg, fmt.Sprintf("# %s (%d)", label, items.Total))
+		for _, item := range items.Items {
+			msg = append(msg, fmt.Sprintf(" %v", item.Name))
+			uris = append(uris, item.Uri)
+		}
+	}
+	return msg, uris
+}
+
 func (a SearchAndPlayAction) Run(query string) (string, error) {
-	//TODO resultTypeを複数選択できるようにする or 引数から割り出す or actionを別にする
 	msg := []string{"Search Results..."}
-	types := []SearchType{track, album, artist}
-	result, err := a.c.Search(query, types)
+	searchQuery := Parse(query)
+	result, err := a.c.Search(strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
 		fmt.Println("error in SearchAndDisplayAction")
 		return "Something wrong...", err
 	}
 	var uris []string
-	if result.Artists.Total > 0 {
-		msg = append(msg, "# Artists")
-		for _, item := range result.Artists.Items {
-			msg = append(msg, fmt.Sprintf(" %v", item.Name))
-			uris = append(uris, item.Uri)
-		}
-	}
-	if result.Albums.Total > 0 {
-		msg = append(msg, "# Albums")
-		for _, item := range result.Albums.Items {
-			msg = append(msg, fmt.Sprintf(" %v / %v", item.Name, item.Artist))
-			uris = append(uris, item.Uri)
-		}
-	}
-	if result.Tracks.Total > 0 {
-		msg = append(msg, "# Tracks")
-		for _, item := range result.Tracks.Items {
-			msg = append(msg, fmt.Sprintf(" %v / %v ", item.Title, item.Artist))
-			uris = append(uris, item.Uri)
-		}
-	}
+	msg, uris = appendMessage(result.Artists, "Artists", msg, uris)
+	msg, uris = appendMessage(result.Albums, "Albums", msg, uris)
+	msg, uris = appendMessage(result.Tracks, "Tracks", msg, uris)
+
 	if len(uris) > 0 {
 		err := a.c.ClearQueue()
 		if err != nil {
@@ -80,30 +74,17 @@ type SearchAndDisplayAction struct {
 
 func (a SearchAndDisplayAction) Run(query string) (string, error) {
 	msg := []string{"Search Results..."}
-	types := []SearchType{track, album, artist}
-	result, err := a.c.Search(query, types)
+	searchQuery := Parse(query)
+	fmt.Println(strings.Join(searchQuery.Terms, " "))
+	result, err := a.c.Search(strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
 		fmt.Println("error in SearchAndDisplayAction")
 		return "Something wrong...", err
 	}
-	if result.Artists.Total > 0 {
-		msg = append(msg, "# Artists")
-		for _, item := range result.Artists.Items {
-			msg = append(msg, fmt.Sprintf(" %v", item.Name))
-		}
-	}
-	if result.Albums.Total > 0 {
-		msg = append(msg, "# Albums")
-		for _, item := range result.Albums.Items {
-			msg = append(msg, fmt.Sprintf(" %v / %v", item.Name, item.Artist))
-		}
-	}
-	if result.Tracks.Total > 0 {
-		msg = append(msg, "# Tracks")
-		for _, item := range result.Tracks.Items {
-			msg = append(msg, fmt.Sprintf(" %v / %v ", item.Title, item.Artist))
-		}
-	}
+	var uris []string
+	msg, uris = appendMessage(result.Artists, "Artists", msg, uris)
+	msg, uris = appendMessage(result.Albums, "Albums", msg, uris)
+	msg, uris = appendMessage(result.Tracks, "Tracks", msg, uris)
 
 	return strings.Join(msg, "\n"), nil
 }
@@ -114,4 +95,60 @@ func NewSearchAndDisplayAction(client *Client) SearchAndDisplayAction {
 		c:    client,
 	}
 
+}
+
+type SearchQuery struct {
+	Terms  []string
+	Types  []SearchType
+	Limit  int
+	Offset int
+}
+
+func (sq SearchQuery) TypeArray() []SearchType {
+	if sq.Types == nil {
+		return []SearchType{artist, album, track}
+	}
+	return sq.Types
+}
+
+const limitPrefix = "limit:"
+const offsetPrefix = "offset:"
+const typePrefix = "type:"
+
+func Parse(target string) *SearchQuery {
+	split := strings.Fields(target)
+	var queries []string
+	var types []SearchType
+	limit := -1
+	offset := -1
+	for _, term := range split {
+		if strings.HasPrefix(term, limitPrefix) {
+			value := term[len(limitPrefix):]
+			i, err := strconv.Atoi(value)
+			if err == nil {
+				limit = i
+			} else {
+				queries = append(queries, term)
+			}
+		} else if strings.HasPrefix(term, offsetPrefix) {
+			value := term[len(offsetPrefix):]
+			i, err := strconv.Atoi(value)
+			if err == nil {
+				offset = i
+			} else {
+				queries = append(queries, term)
+			}
+		} else if strings.HasPrefix(term, typePrefix) {
+			value := term[len(typePrefix):]
+			st, err := SearchTypeFromString(value)
+			if err == nil {
+				types = append(types, st)
+			} else {
+				queries = append(queries, term)
+			}
+		} else {
+			queries = append(queries, term)
+		}
+	}
+	return &SearchQuery{Terms: queries, Limit: limit, Offset: offset, Types: types}
 }
