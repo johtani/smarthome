@@ -28,6 +28,16 @@ SlackのSocket Modeを利用したサーバー機能も用意しています。
 Slackボットに対するメンションのみに対応しています。 
 `@slackbot start music`のようにメンションすることでサブコマンドが実行されます。
 
+#### Slash Command対応
+
+SlackのボットのSlash Commandにも対応しています。
+Subcommand名をもとに、以下のようにSlash Command名として登録することで、Slackでの呼び出しが楽になります。
+
+* 空白を"-"に
+* 先頭に"/"に（Slash Commandが自動的に付与する）
+
+[Slash Commandの詳細についてはSlackの公式ガイドを参考に](https://api.slack.com/interactivity/slash-commands)。
+
 ## ビルド
 
 ```

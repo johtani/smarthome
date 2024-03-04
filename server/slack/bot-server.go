@@ -82,68 +82,11 @@ func Run(config subcommand.Config) error {
 	botUserIdPrefix := fmt.Sprintf("<@%v>", botUserId)
 
 	socketModeHandler := socketmode.NewSocketmodeHandler(client)
-	socketModeHandler.HandleEvents(slackevents.AppMention, func(event *socketmode.Event, client *socketmode.Client) {
-
-		eventPayload, ok := event.Data.(slackevents.EventsAPIEvent)
-		if !ok {
-			client.Debugf("######### : Skipped Envelope: %v", event)
-			return
-		}
-
-		client.Ack(*event.Request)
-
-		payloadEvent, ok := eventPayload.InnerEvent.Data.(*slackevents.AppMentionEvent)
-		if !ok {
-			client.Debugf("######### : Payload Event: %v", payloadEvent)
-			return
-		}
-		var msg string
-
-		// とりあえずBotのUserIDが最初にあるメッセージだけ対象とする
-		if strings.HasPrefix(payloadEvent.Text, botUserIdPrefix) {
-			var err error
-			msg, err = findAndExec(config, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
-			if err != nil {
-				fmt.Printf("######### : Got error %v\n", err)
-				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
-			}
-		} else {
-			fmt.Printf("######### : Skipped message: %v", payloadEvent.Text)
-		}
-
-		if len(msg) == 0 {
-			msg = "Yes, master."
-		}
-
-		_, _, err := client.PostMessage(payloadEvent.Channel, slack.MsgOptionText(msg, false))
-		if err != nil {
-			fmt.Printf("######### : failed posting message: %v\n", err)
-			return
-		}
-	})
+	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(config, botUserIdPrefix))
+	socketModeHandler.Handle(socketmode.EventTypeSlashCommand, newSlashCommandSubcommandHandler(config))
 	err := socketModeHandler.RunEventLoop()
 	if err != nil {
 		return err
 	}
 	return nil
-}
-
-func findAndExec(config subcommand.Config, text string) (string, error) {
-	name := strings.TrimSpace(text)
-	if len(name) == 0 {
-		return config.Commands.Help(), nil
-	}
-	d, args, dymMsg, err := config.Commands.Find(name)
-	if err != nil {
-		return "", err
-	}
-	c := d.Init(config)
-	msg, err := c.Exec(args)
-	if err != nil {
-		return "", err
-	}
-	if len(dymMsg) > 0 {
-		msg = strings.Join([]string{dymMsg, msg}, "\n")
-	}
-	return msg, nil
 }
