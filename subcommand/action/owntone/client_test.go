@@ -297,10 +297,9 @@ func TestClient_GetGetPlayerStatus(t *testing.T) {
 			status, err := c.GetPlayerStatus()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetPlayerStatus() error = %v, wantErr %v", err, tt.wantErr)
-			} else if err == nil {
-				if status == tt.expected {
-					t.Errorf("GetPlayerStatus() status = %v, expected %v", status, tt.expected)
-				}
+			}
+			if !reflect.DeepEqual(status, tt.expected) {
+				t.Errorf("GetPlayerStatus() count = %v, want %v", status, tt.expected)
 			}
 		})
 	}
@@ -542,6 +541,132 @@ func TestClient_Search(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Search() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func countsSampleJSONResponse() string {
+	return `{
+  "songs": 15942,
+  "db_playtime": 3914217,
+  "artists": 767,
+  "albums": 2256,
+  "file_size": 168813164331,
+  "started_at": "2024-02-27T14:51:41Z",
+  "updated_at": "2024-03-05T08:21:35Z",
+  "updating": false,
+  "scanners": [
+    {
+      "name": "files"
+    },
+    {
+      "name": "spotify"
+    },
+    {
+      "name": "rss"
+    }
+  ]
+}
+`
+}
+
+func TestClient_Counts(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+
+	path := "/api/library"
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		expected *Counts
+	}{
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: countsSampleJSONResponse()}, false, &Counts{Songs: 15942, Artists: 767, Albums: 2256}},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: countsSampleJSONResponse()}, true, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
+			defer server.Close()
+			config := Config{Url: server.URL}
+			c := NewClient(config)
+
+			count, err := c.Counts()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("Count() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(count, tt.expected) {
+				t.Errorf("Count() count = %v, want %v", count, tt.expected)
+			}
+		})
+	}
+}
+
+func getArtstsSampleJSONResponse() string {
+	return `{
+  "items": [
+    {
+      "id": "5132191696218976531",
+      "name": "Ace Of Base",
+      "name_sort": "Ace Of Base",
+      "album_count": 4,
+      "track_count": 58,
+      "length_ms": 12800561,
+      "time_played": "2024-02-01T03:09:40Z",
+      "time_added": "2023-02-03T16:04:26Z",
+      "in_progress": false,
+      "media_kind": "music",
+      "data_kind": "file",
+      "uri": "library:artist:5132191696218976531",
+      "artwork_url": ".\/artwork\/group\/708"
+    }
+  ],
+  "total": 767,
+  "offset": 2,
+  "limit": 1
+}
+`
+}
+
+func TestClient_GetArtist(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+	type args struct {
+		offset int
+	}
+	path := "/api/library/artists"
+	tests := []struct {
+		name     string
+		fields   fields
+		args     args
+		wantErr  bool
+		expected *Artist
+	}{
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: getArtstsSampleJSONResponse()}, args{offset: 1}, false, &Artist{Name: "Ace Of Base", Uri: "library:artist:5132191696218976531", TrackCount: 58}},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: getArtstsSampleJSONResponse()}, args{offset: 1}, true, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
+			defer server.Close()
+			config := Config{Url: server.URL}
+			c := NewClient(config)
+
+			artist, err := c.GetArtist(tt.args.offset)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetArtist() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(artist, tt.expected) {
+				t.Errorf("GetArtist() artist = %v, want %v", artist, tt.expected)
 			}
 		})
 	}

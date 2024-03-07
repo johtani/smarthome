@@ -13,20 +13,9 @@ type ChangePlaylistAction struct {
 }
 
 // Run
-// キューに曲が存在する場合は、キューの曲を削除して
+// キューにプレイリストを追加して再生する
 func (a ChangePlaylistAction) Run(_ string) (string, error) {
-	status, err := a.c.GetPlayerStatus()
 	msg := []string{"Change playlist to"}
-	if err != nil {
-		return "", err
-	}
-	if status.ItemID > 0 {
-		err := a.c.ClearQueue()
-		if err != nil {
-			fmt.Println("error in ClearQueue")
-			return "", err
-		}
-	}
 	playlists, err := a.c.GetPlaylists()
 	if err != nil {
 		fmt.Println("error in GetPlaylists")

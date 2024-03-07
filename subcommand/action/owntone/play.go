@@ -13,9 +13,49 @@ type PlayAction struct {
 }
 
 // Run
-// キューに曲がある場合は、そのまま再生
-// キューに曲がない場合は、ランダムにプレイリストを選択してからキューに登録して再生
-func (a PlayAction) Run(_ string) (string, error) {
+
+func (a PlayAction) Run(args string) (string, error) {
+	if strings.HasPrefix(args, "artist") {
+		return a.playRandomArtists()
+	} else {
+		return a.playPlaylist()
+	}
+}
+
+func (a PlayAction) playRandomArtists() (string, error) {
+	msg := []string{"Add"}
+	counts, err := a.c.Counts()
+	if err != nil {
+		return "", err
+	}
+	if counts.Artists > 0 {
+		rand.New(rand.NewSource(time.Now().UnixNano()))
+		offset := rand.Intn(counts.Artists)
+		artist, err := a.c.GetArtist(offset)
+		if err != nil {
+			fmt.Println("error in playRandomArtists")
+			return "", err
+		}
+		msg = append(msg, fmt.Sprintf("Artist : %v", artist.Name))
+		err = a.c.AddItem2Queue(artist.Uri)
+		if err != nil {
+			fmt.Println("error in AddItem2Queue")
+			return "", err
+		}
+	} else {
+		fmt.Println("couldn't get artist")
+	}
+	err = a.c.Play()
+	if err != nil {
+		fmt.Println("error in Play")
+		return "", err
+	}
+	return strings.Join(msg, " "), nil
+}
+
+func (a PlayAction) playPlaylist() (string, error) {
+	// キューに曲がある場合は、そのまま再生
+	// キューに曲がない場合は、ランダムにプレイリストを選択してからキューに登録して再生
 	status, err := a.c.GetPlayerStatus()
 	msg := []string{"Playing music"}
 	if err != nil {
@@ -26,7 +66,7 @@ func (a PlayAction) Run(_ string) (string, error) {
 		fmt.Print("queue is empty, so playing a randomly selected playlist")
 		playlists, err := a.c.GetPlaylists()
 		if err != nil {
-			fmt.Println("error in GetPlaylists")
+			fmt.Println("error in playPlaylist")
 			return "", err
 		}
 		if len(playlists) > 0 {
@@ -43,6 +83,8 @@ func (a PlayAction) Run(_ string) (string, error) {
 		} else {
 			fmt.Println("playlists is empty")
 		}
+	} else {
+		msg = append(msg, " from queue")
 	}
 	err = a.c.Play()
 	if err != nil {

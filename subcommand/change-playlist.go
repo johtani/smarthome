@@ -20,6 +20,7 @@ func NewChangePlaylistSubcommand(definition Definition, config Config) Subcomman
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
+			owntone.NewClearQueueAction(owntoneClient),
 			owntone.NewChangePlaylistAction(owntoneClient),
 		},
 		ignoreError: true,
