@@ -289,3 +289,70 @@ func (c Client) Search(keyword string, resultType []SearchType, limit int) (*Sea
 	}
 	return &results, nil
 }
+
+type Counts struct {
+	Songs   int `json:"songs"`
+	Artists int `json:"artists"`
+	Albums  int `json:"albums"`
+}
+
+func (c Client) Counts() (*Counts, error) {
+	req, err := http.NewRequest(http.MethodGet, c.buildUrl("api/library"), nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+	var p Counts
+	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %v", err)
+	}
+	return &p, nil
+}
+
+type Artists struct {
+	Items []Artist `json:"items"`
+}
+
+type Artist struct {
+	Name       string `json:"name"`
+	Uri        string `json:"uri"`
+	TrackCount int    `json:"track_count"`
+}
+
+func (c Client) GetArtist(offset int) (*Artist, error) {
+
+	params := map[string]string{}
+	params["offset"] = strconv.Itoa(offset)
+	params["limit"] = strconv.Itoa(1)
+	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/library/artists"), params)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+
+	// Decode the JSON response into a Response struct
+	var results Artists
+	if err := json.NewDecoder(res.Body).Decode(&results); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %v", err)
+	}
+	//
+	return &results.Items[0], nil
+}
