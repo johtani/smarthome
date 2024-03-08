@@ -11,7 +11,7 @@ const StartMusicCmd = "start music"
 func NewStartMusicCmdDefinition() Definition {
 	return Definition{
 		Name:        StartMusicCmd,
-		Description: "Start Music",
+		Description: "Start Music from playlist or by artist",
 		Factory:     NewStartMusicSubcommand,
 	}
 }
