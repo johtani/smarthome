@@ -17,9 +17,31 @@ type PlayAction struct {
 func (a PlayAction) Run(args string) (string, error) {
 	if strings.HasPrefix(args, "artist") {
 		return a.playRandomArtists()
+	} else if strings.HasPrefix(args, "genre") {
+		return a.playRandomGenre()
 	} else {
 		return a.playPlaylist()
 	}
+}
+
+func (a PlayAction) playRandomGenre() (string, error) {
+	msg := []string{"Add"}
+	rand.New(rand.NewSource(time.Now().UnixNano()))
+	genres, err := a.c.GetGenres()
+	if err != nil {
+		fmt.Println("error in playRandomGenre")
+		return "", err
+	}
+	index := rand.Intn(len(genres))
+	genre := genres[index]
+	msg = append(msg, fmt.Sprintf("Genre : %v", genre.Name))
+	expression := fmt.Sprintf("genre is \"%s\"", genre.Name)
+	err = a.c.AddItem2QueueAndPlay("", expression)
+	if err != nil {
+		fmt.Println("error in AddItem2QueueAndPlay")
+		return "", err
+	}
+	return strings.Join(msg, " "), nil
 }
 
 func (a PlayAction) playRandomArtists() (string, error) {
@@ -37,18 +59,13 @@ func (a PlayAction) playRandomArtists() (string, error) {
 			return "", err
 		}
 		msg = append(msg, fmt.Sprintf("Artist : %v", artist.Name))
-		err = a.c.AddItem2Queue(artist.Uri)
+		err = a.c.AddItem2QueueAndPlay(artist.Uri, "")
 		if err != nil {
-			fmt.Println("error in AddItem2Queue")
+			fmt.Println("error in AddItem2QueueAndPlay")
 			return "", err
 		}
 	} else {
 		fmt.Println("couldn't get artist")
-	}
-	err = a.c.Play()
-	if err != nil {
-		fmt.Println("error in Play")
-		return "", err
 	}
 	return strings.Join(msg, " "), nil
 }
@@ -75,9 +92,9 @@ func (a PlayAction) playPlaylist() (string, error) {
 			target := playlists[index]
 			fmt.Printf("[%v]\n", target.Name)
 			msg = append(msg, fmt.Sprintf("from %v.", target.Name))
-			err := a.c.AddItem2Queue(target.Uri)
+			err := a.c.AddItem2QueueAndPlay(target.Uri, "")
 			if err != nil {
-				fmt.Println("error in AddItem2Queue")
+				fmt.Println("error in AddItem2QueueAndPlay")
 				return "", err
 			}
 		} else {
@@ -85,11 +102,11 @@ func (a PlayAction) playPlaylist() (string, error) {
 		}
 	} else {
 		msg = append(msg, " from queue")
-	}
-	err = a.c.Play()
-	if err != nil {
-		fmt.Println("error in Play")
-		return "", err
+		err = a.c.Play()
+		if err != nil {
+			fmt.Println("error in Play")
+			return "", err
+		}
 	}
 	return strings.Join(msg, " "), nil
 }
