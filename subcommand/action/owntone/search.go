@@ -52,14 +52,9 @@ func (a SearchAndPlayAction) Run(query string) (string, error) {
 			fmt.Println("error in ClearQueue")
 			return "", err
 		}
-		err = a.c.AddItem2Queue(strings.Join(uris, ","))
+		err = a.c.AddItem2QueueAndPlay(strings.Join(uris, ","), "")
 		if err != nil {
-			fmt.Println("error calling AddItem2Queue")
-			return "", err
-		}
-		err = a.c.Play()
-		if err != nil {
-			fmt.Println("error in Play")
+			fmt.Println("error calling AddItem2QueueAndPlay")
 			return "", err
 		}
 	}

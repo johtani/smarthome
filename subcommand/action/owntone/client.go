@@ -138,9 +138,13 @@ func (c Client) GetPlaylists() ([]Playlist, error) {
 	return lists, nil
 }
 
-func (c Client) AddItem2Queue(uri string) error {
-	params := map[string]string{}
-	params["uris"] = uri
+func (c Client) AddItem2QueueAndPlay(uri string, expression string) error {
+	params := map[string]string{"playback": "start"}
+	if len(uri) > 0 {
+		params["uris"] = uri
+	} else if len(expression) > 0 {
+		params["expression"] = expression
+	}
 	req, err := internal.BuildHttpRequestWithParams(http.MethodPost, c.buildUrl("api/queue/items/add"), params)
 	if err != nil {
 		return err
@@ -355,4 +359,38 @@ func (c Client) GetArtist(offset int) (*Artist, error) {
 	}
 	//
 	return &results.Items[0], nil
+}
+
+type Genres struct {
+	Items []Genre `json:"items"`
+}
+type Genre struct {
+	Name       string `json:"name"`
+	TrackCount int    `json:"track_count"`
+}
+
+func (c Client) GetGenres() ([]Genre, error) {
+	params := map[string]string{}
+	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/library/genres"), params)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+
+	// Decode the JSON response into a Response struct
+	var results Genres
+	if err := json.NewDecoder(res.Body).Decode(&results); err != nil {
+		return nil, fmt.Errorf("failed to decode response: %v", err)
+	}
+	//
+	return results.Items, nil
 }

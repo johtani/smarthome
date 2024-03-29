@@ -27,19 +27,13 @@ func (a ChangePlaylistAction) Run(_ string) (string, error) {
 		target := playlists[index]
 		fmt.Printf("[%v]\n", target.Name)
 		msg = append(msg, fmt.Sprintf("%v.", target.Name))
-		err := a.c.AddItem2Queue(target.Uri)
+		err := a.c.AddItem2QueueAndPlay(target.Uri, "")
 		if err != nil {
-			fmt.Println("error in AddItem2Queue")
+			fmt.Println("error in AddItem2QueueAndPlay")
 			return "", err
 		}
 	} else {
 		fmt.Println("playlists is empty")
-	}
-
-	err = a.c.Play()
-	if err != nil {
-		fmt.Println("error in Play")
-		return "", err
 	}
 	return strings.Join(msg, " "), nil
 }

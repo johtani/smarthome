@@ -161,31 +161,34 @@ func TestClient_SetVolume(t *testing.T) {
 	}
 }
 
-func TestClient_AddItem2Queue(t *testing.T) {
+func TestClient_AddItem2QueueAndPlay(t *testing.T) {
 	type fields struct {
 		statusCode int
 		method     string
 		path       string
-		item       string
+		uris       string
+		expression string
 	}
 	path := "/api/queue/items/add"
 	tests := []struct {
-		name    string
-		fields  fields
-		wantErr bool
+		name           string
+		fields         fields
+		expectedParams map[string][]string
+		wantErr        bool
 	}{
-		{"OK", fields{statusCode: http.StatusOK, method: http.MethodPost, path: path, item: "playlist"}, false},
-		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodPost, path: path, item: "playlist"}, true},
+		{"uris OK", fields{statusCode: http.StatusOK, method: http.MethodPost, path: path, uris: "playlist", expression: ""}, map[string][]string{"uris": {"playlist"}, "playback": {"start"}}, false},
+		{"expression OK", fields{statusCode: http.StatusOK, method: http.MethodPost, path: path, uris: "", expression: "expression"}, map[string][]string{"expression": {"expression"}, "playback": {"start"}}, false},
+		{"uris and expressions OK", fields{statusCode: http.StatusOK, method: http.MethodPost, path: path, uris: "playlist", expression: "expression"}, map[string][]string{"uris": {"playlist"}, "playback": {"start"}}, false},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodPost, path: path, uris: "playlist", expression: ""}, map[string][]string{"uris": {"playlist"}, "playback": {"start"}}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			reqParams := map[string][]string{"uris": {tt.fields.item}}
-			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
+			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, tt.expectedParams)
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.AddItem2Queue(tt.fields.item); (err != nil) != tt.wantErr {
-				t.Errorf("AddItem2Queue() error = %v, wantErr %v", err, tt.wantErr)
+			if err := c.AddItem2QueueAndPlay(tt.fields.uris, tt.fields.expression); (err != nil) != tt.wantErr {
+				t.Errorf("AddItem2QueueAndPlay() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
@@ -667,6 +670,80 @@ func TestClient_GetArtist(t *testing.T) {
 			}
 			if !reflect.DeepEqual(artist, tt.expected) {
 				t.Errorf("GetArtist() artist = %v, want %v", artist, tt.expected)
+			}
+		})
+	}
+}
+
+func getGenresSampleJSONResponse() string {
+	return `{
+  "items": [
+    {
+      "name": "Abstract",
+      "name_sort": "Abstract",
+      "track_count": 3,
+      "album_count": 1,
+      "artist_count": 1,
+      "length_ms": 938426,
+      "time_added": "2022-11-17T09:28:08Z",
+      "in_progress": false,
+      "media_kind": "music",
+      "data_kind": "file",
+      "year": 0
+    },
+    {
+      "name": "Alternative",
+      "name_sort": "Alternative",
+      "track_count": 261,
+      "album_count": 27,
+      "artist_count": 17,
+      "length_ms": 61207056,
+      "time_played": "2024-02-22T03:13:27Z",
+      "time_added": "2022-11-17T09:28:18Z",
+      "in_progress": false,
+      "media_kind": "music",
+      "data_kind": "file",
+      "date_released": "2018-01-01",
+      "year": 2018
+    }
+  ],
+  "total": 2,
+  "offset": 0,
+  "limit": 2
+}
+`
+}
+
+func TestClient_GetGenres(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+	path := "/api/library/genres"
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		expected []Genre
+	}{
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: getGenresSampleJSONResponse()}, false, []Genre{{Name: "Abstract", TrackCount: 3}, {Name: "Alternative", TrackCount: 261}}},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: getGenresSampleJSONResponse()}, true, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
+			defer server.Close()
+			config := Config{Url: server.URL}
+			c := NewClient(config)
+
+			genres, err := c.GetGenres()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetGenres() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(genres, tt.expected) {
+				t.Errorf("GetGenres() genres = %v, want %v", genres, tt.expected)
 			}
 		})
 	}
