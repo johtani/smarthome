@@ -456,6 +456,41 @@ func searchSampleJSONResponse() string {
     "offset": 0,
     "limit": 2
   },
+  "genres": {
+    "items": [
+      {
+        "name": "Abstract",
+        "name_sort": "Abstract",
+        "track_count": 3,
+        "album_count": 1,
+        "artist_count": 1,
+        "length_ms": 938426,
+        "time_added": "2022-11-17T09:28:08Z",
+        "in_progress": false,
+        "media_kind": "music",
+        "data_kind": "file",
+        "year": 0
+      },
+      {
+        "name": "Alternative",
+        "name_sort": "Alternative",
+        "track_count": 261,
+        "album_count": 27,
+        "artist_count": 17,
+        "length_ms": 61207056,
+        "time_played": "2024-02-22T03:13:27Z",
+        "time_added": "2022-11-17T09:28:18Z",
+        "in_progress": false,
+        "media_kind": "music",
+        "data_kind": "file",
+        "date_released": "2018-01-01",
+        "year": 2018
+      }
+    ],
+    "total": 182,
+    "offset": 0,
+    "limit": 2
+  },
   "playlists": {
     "items": [],
     "total": 0,
@@ -524,6 +559,20 @@ func TestClient_Search(t *testing.T) {
 						Artist: "3 Doors Down",
 					},
 				}, Total: 3, Offset: 0, Limit: 2},
+				Genres: Items{Items: []SearchItem{
+					{
+						Title:  "",
+						Uri:    "",
+						Name:   "Abstract",
+						Artist: "",
+					},
+					{
+						Title:  "",
+						Uri:    "",
+						Name:   "Alternative",
+						Artist: "",
+					},
+				}, Total: 182, Offset: 0, Limit: 2},
 				Playlists: Items{Items: []SearchItem{}, Total: 0, Offset: 0, Limit: 2},
 			},
 			wantErr: false,
