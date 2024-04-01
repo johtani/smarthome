@@ -224,6 +224,8 @@ func SearchTypeFromString(s string) (SearchType, error) {
 		return album, nil
 	case "track":
 		return track, nil
+	case "genre":
+		return genre, nil
 	default:
 		return artist, fmt.Errorf("not found %v", s)
 	}
@@ -234,7 +236,7 @@ const (
 	artist SearchType = "artist"
 	album  SearchType = "album"
 	track  SearchType = "track"
-	//genre    SearchType = "genre"
+	genre  SearchType = "genre" // after https://github.com/owntone/owntone-server/commit/3e7e03b4c18b091b01b66e62467067e7cbf50da4
 )
 
 type SearchItem struct {
@@ -255,6 +257,7 @@ type SearchResult struct {
 	Tracks    Items `json:"tracks"`
 	Artists   Items `json:"artists"`
 	Albums    Items `json:"albums"`
+	Genres    Items `json:"genres"`
 	Playlists Items `json:"playlists"`
 }
 

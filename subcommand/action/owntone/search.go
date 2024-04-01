@@ -80,8 +80,9 @@ type SearchAndDisplayAction struct {
 
 func (a SearchAndDisplayAction) Run(query string) (string, error) {
 	msg := []string{"Search Results..."}
+	fmt.Println("original query... " + query)
 	searchQuery := Parse(query)
-	fmt.Println(strings.Join(searchQuery.Terms, " "))
+	fmt.Println("Terms... " + strings.Join(searchQuery.Terms, " "))
 	result, err := a.c.Search(strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
 		fmt.Println("error in SearchAndDisplayAction")
@@ -97,6 +98,10 @@ func (a SearchAndDisplayAction) Run(query string) (string, error) {
 	})
 	msg, _ = appendMessage(result.Tracks, "Tracks", msg, nil, func(item SearchItem, msg []string) ([]string, []string) {
 		msg = append(msg, fmt.Sprintf(" %v / %v ", item.Title, item.Artist))
+		return msg, nil
+	})
+	msg, _ = appendMessage(result.Genres, "Genres", msg, nil, func(item SearchItem, msg []string) ([]string, []string) {
+		msg = append(msg, fmt.Sprintf(" %v ", item.Name))
 		return msg, nil
 	})
 
@@ -120,7 +125,7 @@ type SearchQuery struct {
 
 func (sq SearchQuery) TypeArray() []SearchType {
 	if sq.Types == nil {
-		return []SearchType{artist, album, track}
+		return []SearchType{artist, album, track, genre}
 	}
 	return sq.Types
 }
