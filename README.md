@@ -15,6 +15,18 @@
 * switchbot.secret : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started)
 * yamaha.url : 例："http://IPアドレス"
 
+### SwitchbotのデバイスのID
+
+いくつかのデバイスのIDを指定するコマンドを用意しています。
+それらのIDは以下のコマンドを実行すると一覧で取得できるので、必要なデバイスのIDをconfigに設定します。
+
+```shell
+smarthome device list
+```
+
+※デバイスの追加や家電の買い替えの後にIDの追加や入れ替えが必要になります。
+
+
 ### SlackのSocket Mode
 
 SlackのSocket Modeを利用したサーバー機能も用意しています。
