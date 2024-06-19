@@ -236,7 +236,7 @@ func TestClient_GetPlaylists(t *testing.T) {
 		wantErr  bool
 		expected []Playlist
 	}{
-		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: playlistsSampleJSONResponse()}, false, []Playlist{{"library:playlist:1", "radio", 491}}},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: playlistsSampleJSONResponse()}, false, []Playlist{{"library:playlist:1", "radio", 491, "/music/srv/radio.m3u"}}},
 		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: playlistsSampleJSONResponse()}, true, nil},
 	}
 	for _, tt := range tests {
