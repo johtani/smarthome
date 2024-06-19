@@ -103,6 +103,7 @@ type Playlist struct {
 	Uri       string `json:"uri"`
 	Name      string `json:"name"`
 	ItemCount int    `json:"item_count"`
+	Path      string `json:"path"`
 }
 
 func (c Client) GetPlaylists() ([]Playlist, error) {
