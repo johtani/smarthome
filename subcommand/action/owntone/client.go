@@ -398,3 +398,21 @@ func (c Client) GetGenres() ([]Genre, error) {
 	//
 	return results.Items, nil
 }
+
+func (c Client) UpdateLibrary() error {
+	req, err := internal.BuildHttpRequestWithParams(http.MethodPut, c.buildUrl("api/update"), nil)
+	if err != nil {
+		return err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+	return nil
+}
