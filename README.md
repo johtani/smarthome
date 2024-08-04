@@ -64,7 +64,7 @@ go build
 smarthome start meeting
 ```
 
-`start meeting`がサブコマンド。サブコマンドを指定しない場合は現在利用可能なサブコマンドの一覧が表示される。
+`start meeting`がサブコマンド。サブコマンドを指定しない（もしくは`help`サブコマンドを指定した）場合は現在利用可能なサブコマンドの一覧が表示される。
 
 ## subcommand
 
