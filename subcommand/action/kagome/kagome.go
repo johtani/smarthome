@@ -25,7 +25,6 @@ type KagomeAction struct {
 }
 
 func (a KagomeAction) Run(args string) (string, error) {
-	// TODO argsのパース
 	var dict *dict.Dict
 	if a.dictionary == UNI {
 		dict = uni.Dict()
@@ -34,13 +33,15 @@ func (a KagomeAction) Run(args string) (string, error) {
 	} else {
 		dict = ipa.Dict()
 	}
+	parsedArgs := a.parseArgs(args)
+
 	t, err := tokenizer.New(dict)
 	if err != nil {
 		return "", fmt.Errorf("tokenizer initialization failed, %w", err)
 	}
 	// TODO Slack用の返信をできるようにしたい
 
-	tokens := t.Tokenize(args)
+	tokens := t.Analyze(parsedArgs.text, parsedArgs.mode)
 	var buf bytes.Buffer
 	for _, token := range tokens {
 		if token.Class == tokenizer.DUMMY {
@@ -49,6 +50,36 @@ func (a KagomeAction) Run(args string) (string, error) {
 		fmt.Fprintf(&buf, "%s\t%s\n", token.Surface, strings.Join(token.Features(), ","))
 	}
 	return "```\n" + buf.String() + "```", nil
+}
+
+type Args struct {
+	mode tokenizer.TokenizeMode
+	text string
+}
+
+func (a KagomeAction) parseArgs(args string) Args {
+	inputs := strings.Fields(args)
+	var text string
+	mode := tokenizer.Normal
+	if len(inputs) == 0 {
+		text = ""
+	} else if len(inputs) == 1 {
+		text = inputs[0]
+	} else {
+		if inputs[0] == tokenizer.Search.String() {
+			mode = tokenizer.Search
+			text = strings.Join(inputs[1:], " ")
+		} else if inputs[0] == tokenizer.Extended.String() {
+			mode = tokenizer.Extended
+			text = strings.Join(inputs[1:], " ")
+		} else {
+			text = args
+		}
+	}
+	return Args{
+		mode: mode,
+		text: text,
+	}
 }
 
 func NewKagomeAction(dict Dict) KagomeAction {
