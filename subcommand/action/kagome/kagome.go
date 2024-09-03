@@ -7,6 +7,7 @@ import (
 	"github.com/ikawaha/kagome-dict/dict"
 	"github.com/ikawaha/kagome-dict/ipa"
 	"github.com/ikawaha/kagome-dict/uni"
+	"github.com/ikawaha/kagome/v2/filter/ja"
 	"github.com/ikawaha/kagome/v2/tokenizer"
 	"strings"
 )
@@ -43,6 +44,14 @@ func (a KagomeAction) Run(args string) (string, error) {
 
 	tokens := t.Analyze(parsedArgs.text, parsedArgs.mode)
 	var buf bytes.Buffer
+	if parsedArgs.filter {
+		f, err := ja.NewFilter()
+		if err != nil {
+			return "", fmt.Errorf("filter initialization failed, %w", err)
+		} else {
+			f.Drop(&tokens)
+		}
+	}
 	for _, token := range tokens {
 		if token.Class == tokenizer.DUMMY {
 			continue
@@ -53,38 +62,50 @@ func (a KagomeAction) Run(args string) (string, error) {
 }
 
 type Args struct {
-	mode tokenizer.TokenizeMode
-	text string
+	mode   tokenizer.TokenizeMode
+	text   string
+	filter bool
 }
 
 func (a KagomeAction) parseArgs(args string) Args {
 	inputs := strings.Fields(args)
 	var text string
+	filter := false
 	mode := tokenizer.Normal
 	if len(inputs) == 0 {
 		text = ""
 	} else if len(inputs) == 1 {
 		text = inputs[0]
 	} else {
-		if inputs[0] == tokenizer.Search.String() {
-			mode = tokenizer.Search
-			text = strings.Join(inputs[1:], " ")
-		} else if inputs[0] == tokenizer.Extended.String() {
-			mode = tokenizer.Extended
-			text = strings.Join(inputs[1:], " ")
-		} else {
-			text = args
+		var tmp []string
+		for _, input := range inputs {
+			if strings.HasPrefix(input, "-") {
+				input = input[1:]
+				if input == tokenizer.Search.String() {
+					mode = tokenizer.Search
+				} else if input == tokenizer.Extended.String() {
+					mode = tokenizer.Extended
+				} else if input == "filter" {
+					filter = true
+				} else {
+					tmp = append(tmp, input)
+				}
+			} else {
+				tmp = append(tmp, input)
+			}
 		}
+		text = strings.Join(tmp, " ")
 	}
 	return Args{
-		mode: mode,
-		text: text,
+		mode:   mode,
+		text:   text,
+		filter: filter,
 	}
 }
 
 func NewKagomeAction(dict Dict) KagomeAction {
 	return KagomeAction{
-		name:       "Tokenize by Kagome with IPA Dic",
+		name:       "Tokenize by Kagome with some Dictionaries",
 		dictionary: dict,
 	}
 }

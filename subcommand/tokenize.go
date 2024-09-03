@@ -10,7 +10,7 @@ const TokenizeIpaCmd = "tokenize ipa"
 func NewTokenizeIpaDefinition() Definition {
 	return Definition{
 		Name:        TokenizeIpaCmd,
-		Description: "Tokenize text by Kagome w/ IPA dic",
+		Description: "Tokenize text by Kagome with IPA dic",
 		Factory:     NewTokenizeIpaCommand,
 	}
 }
