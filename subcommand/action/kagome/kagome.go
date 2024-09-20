@@ -80,12 +80,12 @@ func (a KagomeAction) parseArgs(args string) Args {
 		var tmp []string
 		for _, input := range inputs {
 			if strings.HasPrefix(input, "-") {
-				input = input[1:]
-				if input == tokenizer.Search.String() {
+				option := input[1:]
+				if option == tokenizer.Search.String() {
 					mode = tokenizer.Search
-				} else if input == tokenizer.Extended.String() {
+				} else if option == tokenizer.Extended.String() {
 					mode = tokenizer.Extended
-				} else if input == "filter" {
+				} else if option == "filter" {
 					filter = true
 				} else {
 					tmp = append(tmp, input)
