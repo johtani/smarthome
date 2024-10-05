@@ -3,6 +3,7 @@ package subcommand
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/johtani/smarthome/server/cron/influxdb"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
@@ -14,6 +15,7 @@ type Config struct {
 	Owntone   owntone.Config   `json:"Owntone"`
 	Switchbot switchbot.Config `json:"Switchbot"`
 	Yamaha    yamaha.Config    `json:"Yamaha"`
+	Influxdb  influxdb.Config  `json:"Influxdb"`
 	Commands  Commands
 }
 
