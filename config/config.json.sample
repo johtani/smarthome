@@ -11,5 +11,10 @@
   },
   "yamaha": {
     "url": ""
+  },
+  "influxdb": {
+    "token": "",
+    "url": "",
+    "bucket": ""
   }
 }

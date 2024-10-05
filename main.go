@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/johtani/smarthome/server/cron"
 	"github.com/johtani/smarthome/server/slack"
 	"github.com/johtani/smarthome/subcommand"
 	"os"
@@ -31,6 +32,7 @@ func run() error {
 	flag.Parse()
 	if serverFlag {
 		_, _ = fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
+		go cron.Run(config)
 		return slack.Run(config)
 	} else {
 		return runCmd(config)

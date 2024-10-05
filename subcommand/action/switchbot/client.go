@@ -77,3 +77,12 @@ func (c CachedClient) GetDeviceName(id string) (string, error) {
 	}
 	return c.deviceNameCache[id], nil
 }
+
+func IsTargetDevice(deviceTypes []string, target string) bool {
+	for _, item := range deviceTypes {
+		if target == item {
+			return true
+		}
+	}
+	return false
+}
