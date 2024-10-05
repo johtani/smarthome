@@ -1,6 +1,7 @@
 package cron
 
 import (
+	"fmt"
 	"github.com/go-co-op/gocron/v2"
 	"github.com/johtani/smarthome/subcommand"
 	"time"
@@ -16,7 +17,7 @@ func Run(config subcommand.Config) {
 		panic(err)
 	}
 	_, err = s.NewJob(
-		gocron.CronJob("0,10 * * * *", false),
+		gocron.CronJob("*/10 * * * *", false),
 		gocron.NewTask(
 			RecordTemp,
 			config.Influxdb,
@@ -27,5 +28,6 @@ func Run(config subcommand.Config) {
 		panic(err)
 	}
 	s.Start()
+	fmt.Println("Start cron service...")
 	select {}
 }
