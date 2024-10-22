@@ -2,16 +2,16 @@ package influxdb
 
 import (
 	"context"
+	"fmt"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
-	"log"
 	"time"
 )
 
 type Config struct {
-	Token  string `json:token`
-	Url    string `json:url`
-	Bucket string `json:bucket`
+	Token  string `json:"token"`
+	Url    string `json:"url"`
+	Bucket string `json:"bucket"`
 }
 
 type Client struct {
@@ -48,7 +48,7 @@ func (c Client) WriteTemperature(data Temperature) {
 	point := write.NewPoint("temperature", tags, fields, time.Now())
 
 	if err := writeAPI.WritePoint(context.Background(), point); err != nil {
-		log.Fatal(err)
+		fmt.Printf("Error for writing data... / %v\n", err)
 	}
 }
 
