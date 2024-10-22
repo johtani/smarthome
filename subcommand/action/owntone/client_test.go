@@ -659,7 +659,7 @@ func TestClient_Counts(t *testing.T) {
 	}
 }
 
-func getArtstsSampleJSONResponse() string {
+func getArtistsSampleJSONResponse() string {
 	return `{
   "items": [
     {
@@ -703,8 +703,8 @@ func TestClient_GetArtist(t *testing.T) {
 		wantErr  bool
 		expected *Artist
 	}{
-		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: getArtstsSampleJSONResponse()}, args{offset: 1}, false, &Artist{Name: "Ace Of Base", Uri: "library:artist:5132191696218976531", TrackCount: 58}},
-		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: getArtstsSampleJSONResponse()}, args{offset: 1}, true, nil},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: getArtistsSampleJSONResponse()}, args{offset: 1}, false, &Artist{Name: "Ace Of Base", Uri: "library:artist:5132191696218976531", TrackCount: 58}},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: getArtistsSampleJSONResponse()}, args{offset: 1}, true, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -11,6 +11,7 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 	targetTypes := []string{"Meter", "WoIOSensor", "MeterPlus"}
 	sCli := switchbot.NewClient(switchbotConfig)
 	iCli := influxdb.NewClient(influxdbConfig)
+	defer iCli.Close()
 
 	pdev, vdev, err := sCli.Device().List(context.Background())
 	if err != nil {
