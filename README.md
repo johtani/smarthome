@@ -14,6 +14,10 @@
 * switchbot.token : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started) 
 * switchbot.secret : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started)
 * yamaha.url : 例："http://IPアドレス"
+* influxdb
+  * url : 例: "http://IPアドレス:ポート"
+  * token : [See detail on API doc](https://docs.influxdata.com/influxdb/v2/admin/tokens/)
+  * bucket : 例："バケット名"
 
 ### SwitchbotのデバイスのID
 
@@ -71,6 +75,11 @@ smarthome start meeting
 サブコマンド単位で、いくつかの操作をまとめて実行することを想定しています。
 利用できるサブコマンド一覧は`smarthome help`で表示されます。
 サブコマンドは完全に自分好みに実装しています。。。
+
+## 定期実行処理
+
+Switchbotの温湿度計のデータを取得し、10分おきにInfluxDBに保存します。
+対象となる機器は[record-temperature.go](https://github.com/johtani/smarthome/blob/master/server/cron/record-temperature.go#L11)で指定しています。
 
 ## ライセンス
 
