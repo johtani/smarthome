@@ -52,6 +52,7 @@ func (c Client) Pause() error {
 		return err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusNoContent {
@@ -70,6 +71,7 @@ func (c Client) Play() error {
 		return err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusNoContent {
@@ -120,6 +122,7 @@ func (c Client) GetPlaylists() ([]Playlist, error) {
 		return nil, err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
@@ -155,6 +158,7 @@ func (c Client) AddItem2QueueAndPlay(uri string, expression string) error {
 		return err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
@@ -184,6 +188,7 @@ func (c Client) GetPlayerStatus() (*PlayerStatus, error) {
 		return nil, err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
@@ -206,6 +211,7 @@ func (c Client) ClearQueue() error {
 		return err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusNoContent {
@@ -284,6 +290,7 @@ func (c Client) Search(keyword string, resultType []SearchType, limit int) (*Sea
 		return nil, err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
@@ -314,6 +321,7 @@ func (c Client) Counts() (*Counts, error) {
 		return nil, err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
@@ -350,6 +358,7 @@ func (c Client) GetArtist(offset int) (*Artist, error) {
 		return nil, err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
@@ -384,6 +393,7 @@ func (c Client) GetGenres() ([]Genre, error) {
 		return nil, err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusOK {
@@ -409,6 +419,7 @@ func (c Client) UpdateLibrary() error {
 		return err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	if res.StatusCode != http.StatusNoContent {

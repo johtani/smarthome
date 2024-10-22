@@ -74,6 +74,7 @@ func (c Client) SetScene(scene int) error {
 		return err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	err = parseHttpResponse(res, "SetScene")
@@ -95,6 +96,7 @@ func (c Client) SetVolume(volume int) error {
 		return err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	err = parseHttpResponse(res, "SetVolume")
@@ -116,6 +118,7 @@ func (c Client) PowerOff() error {
 		return err
 	}
 	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
 		_ = Body.Close()
 	}(res.Body)
 	err = parseHttpResponse(res, "PowerOff")
