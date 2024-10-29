@@ -27,7 +27,7 @@ func (a GetTemperatureAndHumidityAction) Run(_ string) (string, error) {
 				return "", err
 			}
 			if string(d.Type) == "MeterPro(CO2)" {
-				msg[d.Name] = fmt.Sprintf("%.1f℃ \t%d％ / %s(🔋%d) / CO2: %d", status.Temperature, status.Humidity, d.Name, status.Battery, status.CO2)
+				msg[d.Name] = fmt.Sprintf("%.1f℃ \t%d％ / %s(🔋%d) / CO2: %dppm", status.Temperature, status.Humidity, d.Name, status.Battery, status.CO2)
 			} else {
 				msg[d.Name] = fmt.Sprintf("%.1f℃ \t%d％ / %s(🔋%d)", status.Temperature, status.Humidity, d.Name, status.Battery)
 			}
