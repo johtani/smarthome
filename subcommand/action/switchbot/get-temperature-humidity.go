@@ -26,7 +26,7 @@ func (a GetTemperatureAndHumidityAction) Run(_ string) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			msg[d.Name] = fmt.Sprintf("%.1f℃ \t%d％ / %s(🔋%d)", status.Temperature, status.Humidity, d.Name, status.Battery)
+			msg[d.Name] = fmt.Sprintf("%.1f℃ \t%d％ / %s(🔋%d) / %d", status.Temperature, status.Humidity, d.Name, status.Battery, status.CO2)
 		}
 	}
 	for _, d := range vdev {
@@ -35,7 +35,7 @@ func (a GetTemperatureAndHumidityAction) Run(_ string) (string, error) {
 			if err != nil {
 				return "", err
 			}
-			msg[d.Name] = fmt.Sprintf("%.1f℃ \t%d％ / %s(🔋%d)", status.Temperature, status.Humidity, d.Name, status.Battery)
+			msg[d.Name] = fmt.Sprintf("%.1f℃ \t%d％ / %s(🔋%d) / %d", status.Temperature, status.Humidity, d.Name, status.Battery, status.CO2)
 		}
 	}
 	// sort by keys

@@ -29,7 +29,7 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 				Temperature: status.Temperature,
 				Humidity:    status.Humidity,
 				Battery:     status.Battery,
-				Co2:         -1,
+				Co2:         status.CO2,
 			}
 			iCli.WriteTemperature(data)
 		}
@@ -46,7 +46,7 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 				Temperature: status.Temperature,
 				Humidity:    status.Humidity,
 				Battery:     status.Battery,
-				Co2:         -1,
+				Co2:         status.CO2,
 			}
 			iCli.WriteTemperature(data)
 		}
