@@ -1,6 +1,6 @@
 module github.com/johtani/smarthome
 
-go 1.20
+go 1.22.0
 
 require (
 	github.com/go-co-op/gocron/v2 v2.12.1
