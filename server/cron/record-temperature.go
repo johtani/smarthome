@@ -8,7 +8,7 @@ import (
 )
 
 func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config) {
-	targetTypes := []string{"Meter", "WoIOSensor", "MeterPlus"}
+	targetTypes := []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"}
 	sCli := switchbot.NewClient(switchbotConfig)
 	iCli := influxdb.NewClient(influxdbConfig)
 	defer iCli.Close()
