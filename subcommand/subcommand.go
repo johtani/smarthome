@@ -19,8 +19,10 @@ func (s Subcommand) Exec(args string) (string, error) {
 	for i := range s.actions {
 		msg, err := s.actions[i].Run(args)
 		if s.ignoreError && err != nil {
-			fmt.Printf("skip error\t %v\n", err)
+			//fmt.Printf("skip error\t %v\n", err)
+			msg = fmt.Sprintf("skip error\t %v\n", err)
 			//TODO msgsにエラーを追加する？
+
 		} else if err != nil {
 			return "", err
 		}
@@ -34,6 +36,13 @@ type Definition struct {
 	Description string
 	shortnames  []string
 	Factory     func(Definition, Config) Subcommand
+	Args        []Arg
+}
+
+type Arg struct {
+	Name        string
+	Description string
+	Required    bool
 }
 
 func (d Definition) Init(config Config) Subcommand {
@@ -95,12 +104,12 @@ func (d Definition) isPrefix(inputs []string, cmd []string) bool {
 }
 
 type Commands struct {
-	definitions []Definition
+	Definitions []Definition
 }
 
 func NewCommands() Commands {
 	return Commands{
-		definitions: []Definition{
+		Definitions: []Definition{
 			NewStartMeetingDefinition(),
 			NewFinishMeetingDefinition(),
 			NewStartMusicCmdDefinition(),
@@ -132,7 +141,7 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 	var args string
 	dymMsg := ""
 	find := false
-	for _, d := range c.definitions {
+	for _, d := range c.Definitions {
 		find, args = d.Match(text)
 		if find {
 			def = d
@@ -158,7 +167,7 @@ const dymCandidateDistance = 3
 func (c Commands) didYouMean(name string) ([]Definition, []string) {
 	var candidates []Definition
 	var cmds []string
-	for _, def := range c.definitions {
+	for _, def := range c.Definitions {
 		d, cmd := def.Distance(name)
 		// TODO 3にした場合は、candidatesの距離の小さい順で返したほうが便利な気がする
 		if d < dymCandidateDistance {
@@ -171,7 +180,7 @@ func (c Commands) didYouMean(name string) ([]Definition, []string) {
 
 func (c Commands) Help() string {
 	var builder strings.Builder
-	for _, d := range c.definitions {
+	for _, d := range c.Definitions {
 		builder.WriteString(d.Help())
 	}
 	return builder.String()

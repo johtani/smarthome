@@ -128,7 +128,7 @@ func TestCommands_Help(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commands{
-				definitions: tt.fields.definitions,
+				Definitions: tt.fields.definitions,
 			}
 			if got := c.Help(); got != tt.want {
 				t.Errorf("Help() = %v, want %v", got, tt.want)
@@ -263,7 +263,7 @@ func TestCommands_Find(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Commands{
-				definitions: tt.fields.definitions,
+				Definitions: tt.fields.definitions,
 			}
 			got, got1, got2, err := c.Find(tt.args.name)
 			if (err != nil) != tt.wantErr {

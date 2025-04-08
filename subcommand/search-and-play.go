@@ -15,6 +15,7 @@ func NewSearchAndPlayMusicCmdDefinition() Definition {
 		Description: "Search Music by keyword And play",
 		Factory:     NewSearchAndPlayMusicSubcommand,
 		shortnames:  []string{SearchPlayCmd},
+		Args:        []Arg{{"keyword", "search phrase or keyword", true}},
 	}
 }
 

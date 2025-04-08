@@ -12,6 +12,7 @@ func NewSearchMusicCmdDefinition() Definition {
 		Name:        SearchMusicCmd,
 		Description: "Search Music by keyword",
 		Factory:     NewSearchMusicSubcommand,
+		Args:        []Arg{{"keyword", "search phrase or keyword", true}},
 	}
 }
 

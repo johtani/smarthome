@@ -10,8 +10,7 @@ type ClearQueueAction struct {
 func (a ClearQueueAction) Run(_ string) (string, error) {
 	err := a.c.ClearQueue()
 	if err != nil {
-		fmt.Println("error in ClearQueue")
-		return "", err
+		return "", fmt.Errorf("error in ClearQueue(%v)\n %v", a.c.config.Url, err)
 	}
 	return "Cleared queue", nil
 }
