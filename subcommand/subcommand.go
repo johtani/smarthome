@@ -43,6 +43,7 @@ type Arg struct {
 	Name        string
 	Description string
 	Required    bool
+	Enum        []string
 }
 
 func (d Definition) Init(config Config) Subcommand {

@@ -3,6 +3,7 @@ package mcp
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -32,7 +33,8 @@ func NewMCPServer() *server.MCPServer {
 
 func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp.Tool, server.ToolHandlerFunc) {
 	if definition.Args == nil {
-		return mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description)),
+		tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description))
+		return tmp,
 			func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				msg, err := definition.Init(config).Exec("")
 				if err != nil {
@@ -41,11 +43,40 @@ func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp
 				return mcp.NewToolResultText(msg), nil
 			}
 	} else {
-		// TODO Definition.ArgsをmcpのArgのリストに変換する
-		return mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description)),
+		args := []mcp.ToolOption{mcp.WithDescription(definition.Description)}
+		for _, arg := range definition.Args {
+
+			opts := []mcp.PropertyOption{mcp.Description(arg.Description)}
+
+			if arg.Required {
+				opts = append(opts, mcp.Required())
+			}
+			if len(arg.Enum) > 0 {
+				opts = append(opts, mcp.Enum(arg.Enum...))
+			}
+			args = append(args,
+				mcp.WithString(
+					arg.Name,
+					opts...,
+				))
+
+		}
+		var tmp mcp.Tool
+		tmp = mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), args...)
+		return tmp,
 			func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				// TODO Definition.Argsをもとにrequest.paramsから入力を取り出して、文字列連結する
-				msg, err := definition.Init(config).Exec("")
+				params := []string{}
+				for _, arg := range definition.Args {
+					if p, ok := request.Params.Arguments[arg.Name]; ok {
+						//TODO 特殊処理になってるけど、もうちょっと別のやり方ができそう
+						if arg.Name == "type" {
+							params = append(params, fmt.Sprint("type:", p))
+						} else {
+							params = append(params, fmt.Sprint(p))
+						}
+					}
+				}
+				msg, err := definition.Init(config).Exec(strings.Join(params, " "))
 				if err != nil {
 					return nil, errors.New(definition.Name + ": " + err.Error())
 				}
