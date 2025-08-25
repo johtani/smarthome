@@ -1,9 +1,10 @@
 package subcommand
 
 import (
+	"time"
+
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
-	"time"
 )
 
 const SearchAndPlayMusicCmd = "search and play"
@@ -30,6 +31,7 @@ func NewSearchAndPlayMusicSubcommand(definition Definition, config Config) Subco
 			owntone.NewSearchAndPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
 			owntone.NewSetVolumeAction(owntoneClient),
+			owntone.NewDisplayOutputsAction(owntoneClient, true),
 		},
 		ignoreError: true,
 	}

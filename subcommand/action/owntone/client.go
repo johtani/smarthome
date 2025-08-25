@@ -409,6 +409,56 @@ func (c Client) GetGenres() ([]Genre, error) {
 	return results.Items, nil
 }
 
+type Output struct {
+	ID           int    `json:"id"`
+	Name         string `json:"name"`
+	Type         string `json:"type"`
+	Selected     bool   `json:"selected"`
+	Volume       int    `json:"volume"`
+	RequiresAuth bool   `json:"requires_auth"`
+}
+
+// GetOutputs fetches the list of audio outputs (speakers) from Owntone.
+// It supports both response shapes:
+// 1) {"outputs": [...], "total": N}
+// 2) [...]
+func (c Client) GetOutputs() ([]Output, error) {
+	req, err := http.NewRequest(http.MethodGet, c.buildUrl("api/outputs"), nil)
+	if err != nil {
+		return nil, err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer func(Body io.ReadCloser) {
+		_, _ = io.Copy(io.Discard, Body)
+		_ = Body.Close()
+	}(res.Body)
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
+	}
+	// Read entire body to allow trying multiple unmarshal shapes
+	b, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response: %v", err)
+	}
+	// First try { outputs: [...] }
+	var wrap struct {
+		Outputs []Output `json:"outputs"`
+		Total   int      `json:"total"`
+	}
+	if err := json.Unmarshal(b, &wrap); err == nil && len(wrap.Outputs) > 0 {
+		return wrap.Outputs, nil
+	}
+	// Fallback to raw array
+	var arr []Output
+	if err := json.Unmarshal(b, &arr); err == nil {
+		return arr, nil
+	}
+	return nil, fmt.Errorf("failed to decode response: unexpected shape")
+}
+
 func (c Client) UpdateLibrary() error {
 	req, err := internal.BuildHttpRequestWithParams(http.MethodPut, c.buildUrl("api/update"), nil)
 	if err != nil {

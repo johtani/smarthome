@@ -797,3 +797,48 @@ func TestClient_GetGenres(t *testing.T) {
 		})
 	}
 }
+
+func outputsSampleJSONResponse() string {
+	return `{
+  "outputs": [
+    {"id": 123, "name": "Living Room", "type": "airplay", "selected": true, "volume": 40, "requires_auth": false},
+    {"id": 456, "name": "Kitchen", "type": "chromecast", "selected": false, "volume": 0, "requires_auth": false}
+  ],
+  "total": 2
+}`
+}
+
+func TestClient_GetOutputs(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+	path := "/api/outputs"
+	tests := []struct {
+		name     string
+		fields   fields
+		wantErr  bool
+		expected []Output
+	}{
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: outputsSampleJSONResponse()}, false, []Output{{ID: 123, Name: "Living Room", Type: "airplay", Selected: true, Volume: 40, RequiresAuth: false}, {ID: 456, Name: "Kitchen", Type: "chromecast", Selected: false, Volume: 0, RequiresAuth: false}}},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: outputsSampleJSONResponse()}, true, nil},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
+			defer server.Close()
+			config := Config{Url: server.URL}
+			c := NewClient(config)
+
+			outputs, err := c.GetOutputs()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetOutputs() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !reflect.DeepEqual(outputs, tt.expected) {
+				t.Errorf("GetOutputs() outputs = %v, want %v", outputs, tt.expected)
+			}
+		})
+	}
+}
