@@ -801,8 +801,8 @@ func TestClient_GetGenres(t *testing.T) {
 func outputsSampleJSONResponse() string {
 	return `{
   "outputs": [
-    {"id": 123, "name": "Living Room", "type": "airplay", "selected": true, "volume": 40},
-    {"id": 456, "name": "Kitchen", "type": "chromecast", "selected": false, "volume": 0}
+    {"id": "123", "name": "Living Room", "type": "airplay", "selected": true, "volume": 40},
+    {"id": "456", "name": "Kitchen", "type": "chromecast", "selected": false, "volume": 0}
   ]
 }`
 }
@@ -821,7 +821,7 @@ func TestClient_GetOutputs(t *testing.T) {
 		wantErr  bool
 		expected []Output
 	}{
-		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: outputsSampleJSONResponse()}, false, []Output{{ID: 123, Name: "Living Room", Type: "airplay", Selected: true, Volume: 40}, {ID: 456, Name: "Kitchen", Type: "chromecast", Selected: false, Volume: 0}}},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: outputsSampleJSONResponse()}, false, []Output{{ID: "123", Name: "Living Room", Type: "airplay", Selected: true, Volume: 40}, {ID: "456", Name: "Kitchen", Type: "chromecast", Selected: false, Volume: 0}}},
 		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: outputsSampleJSONResponse()}, true, nil},
 	}
 	for _, tt := range tests {

@@ -411,7 +411,7 @@ func (c Client) GetGenres() ([]Genre, error) {
 }
 
 type Output struct {
-	ID       int    `json:"id"`
+	ID       string `json:"id"`
 	Name     string `json:"name"`
 	Type     string `json:"type"`
 	Selected bool   `json:"selected"`
