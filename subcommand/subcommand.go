@@ -2,10 +2,11 @@ package subcommand
 
 import (
 	"fmt"
-	"github.com/hbollon/go-edlib"
-	"github.com/johtani/smarthome/subcommand/action"
 	"strings"
 	"unicode"
+
+	"github.com/hbollon/go-edlib"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 type Subcommand struct {
@@ -117,6 +118,7 @@ func NewCommands() Commands {
 			NewStopMusicDefinition(),
 			NewChangePlaylistCmdDefinition(),
 			NewDisplayPalylistCmdDefinition(),
+			NewDisplayOutputsCmdDefinition(),
 			NewUpdateLibraryCmdDefinition(),
 			NewSearchMusicCmdDefinition(),
 			NewSearchAndPlayMusicCmdDefinition(),
