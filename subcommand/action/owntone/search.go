@@ -26,8 +26,7 @@ func (a SearchAndPlayAction) Run(query string) (string, error) {
 	searchQuery := Parse(query)
 	result, err := a.c.Search(strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
-		fmt.Println("error in SearchAndDisplayAction")
-		return "Something wrong...", err
+		return "Something wrong...", fmt.Errorf("error in SearchAndDisplayAction\n %v", err)
 	}
 	var uris []string
 	msg, uris = appendMessage(result.Artists, "Artists", msg, uris, func(item SearchItem, msg []string) ([]string, []string) {
@@ -53,24 +52,21 @@ func (a SearchAndPlayAction) Run(query string) (string, error) {
 	if len(uris) > 0 || len(result.Genres.Items) > 0 {
 		err := a.c.ClearQueue()
 		if err != nil {
-			fmt.Println("error in ClearQueue")
-			return "", err
+			return "", fmt.Errorf("error in ClearQueue\n %v", err)
 		}
 	}
 
 	if len(uris) > 0 {
 		err = a.c.AddItem2QueueAndPlay(strings.Join(uris, ","), "")
 		if err != nil {
-			fmt.Println("error calling AddItem2QueueAndPlay")
-			return "", err
+			return "", fmt.Errorf("error calling AddItem2QueueAndPlay\n %v", err)
 		}
 	}
 
 	if len(result.Genres.Items) > 0 {
 		err = a.c.AddItem2QueueAndPlay("", fmt.Sprintf("genre is \"%s\"", strings.Join(searchQuery.Terms, " ")))
 		if err != nil {
-			fmt.Println("error calling AddItem2QueueAndPlay with expression")
-			return "", err
+			return "", fmt.Errorf("error calling AddItem2QueueAndPlay with expression\n %v", err)
 		}
 	}
 
@@ -96,13 +92,12 @@ type SearchAndDisplayAction struct {
 
 func (a SearchAndDisplayAction) Run(query string) (string, error) {
 	msg := []string{"Search Results..."}
-	fmt.Println("original query... " + query)
+	//fmt.Println("original query... " + query)
 	searchQuery := Parse(query)
-	fmt.Println("Terms... " + strings.Join(searchQuery.Terms, " "))
+	//fmt.Println("Terms... " + strings.Join(searchQuery.Terms, " "))
 	result, err := a.c.Search(strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
-		fmt.Println("error in SearchAndDisplayAction")
-		return "Something wrong...", err
+		return "Something wrong...", fmt.Errorf("error in SearchAndDisplayAction(terms=%v)\n %v", strings.Join(searchQuery.Terms, " "), err)
 	}
 	msg, _ = appendMessage(result.Artists, "Artists", msg, nil, func(item SearchItem, msg []string) ([]string, []string) {
 		msg = append(msg, fmt.Sprintf(" %v", item.Name))

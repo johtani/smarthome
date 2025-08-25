@@ -10,8 +10,7 @@ type UpdateLibraryAction struct {
 func (a UpdateLibraryAction) Run(_ string) (string, error) {
 	err := a.c.UpdateLibrary()
 	if err != nil {
-		fmt.Println("error in ClearQueue")
-		return "", err
+		return "", fmt.Errorf("error in ClearQueue\n %v", err)
 	}
 	return "Updated library", nil
 }

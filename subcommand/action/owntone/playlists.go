@@ -17,8 +17,7 @@ func (a DisplayPlaylistsAction) Run(category string) (string, error) {
 	flg := onlySpotify(category)
 	playlists, err := a.c.GetPlaylists()
 	if err != nil {
-		fmt.Println("error in GetPlaylists")
-		return "", err
+		return "", fmt.Errorf("error in GetPlaylists\n %v", err)
 	}
 	for _, playlist := range playlists {
 		if strings.HasPrefix(playlist.Path, "spotify:") {

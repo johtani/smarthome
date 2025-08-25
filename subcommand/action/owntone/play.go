@@ -29,8 +29,7 @@ func (a PlayAction) playRandomGenre() (string, error) {
 	rand.New(rand.NewSource(time.Now().UnixNano()))
 	genres, err := a.c.GetGenres()
 	if err != nil {
-		fmt.Println("error in playRandomGenre")
-		return "", err
+		return "", fmt.Errorf("error in playRandomGenre\n %v", err)
 	}
 	index := rand.Intn(len(genres))
 	genre := genres[index]
@@ -38,8 +37,7 @@ func (a PlayAction) playRandomGenre() (string, error) {
 	expression := fmt.Sprintf("genre is \"%s\"", genre.Name)
 	err = a.c.AddItem2QueueAndPlay("", expression)
 	if err != nil {
-		fmt.Println("error in AddItem2QueueAndPlay")
-		return "", err
+		return "", fmt.Errorf("error in AddItem2QueueAndPlay\n %v", err)
 	}
 	return strings.Join(msg, " "), nil
 }
@@ -55,17 +53,15 @@ func (a PlayAction) playRandomArtists() (string, error) {
 		offset := rand.Intn(counts.Artists)
 		artist, err := a.c.GetArtist(offset)
 		if err != nil {
-			fmt.Println("error in playRandomArtists")
-			return "", err
+			return "", fmt.Errorf("error in playRandomArtists\n %v", err)
 		}
 		msg = append(msg, fmt.Sprintf("Artist : %v", artist.Name))
 		err = a.c.AddItem2QueueAndPlay(artist.Uri, "")
 		if err != nil {
-			fmt.Println("error in AddItem2QueueAndPlay")
-			return "", err
+			return "", fmt.Errorf("error in AddItem2QueueAndPlay\n %v", err)
 		}
 	} else {
-		fmt.Println("couldn't get artist")
+		msg = append(msg, fmt.Sprintf("couldn't get artist"))
 	}
 	return strings.Join(msg, " "), nil
 }
@@ -80,32 +76,28 @@ func (a PlayAction) playPlaylist() (string, error) {
 	}
 	if status.ItemID == 0 {
 		//プレイヤーのキューに曲が入っていない状態
-		fmt.Print("queue is empty, so playing a randomly selected playlist")
+		//fmt.Print("queue is empty, so playing a randomly selected playlist")
 		playlists, err := a.c.GetPlaylists()
 		if err != nil {
-			fmt.Println("error in playPlaylist")
-			return "", err
+			return "", fmt.Errorf("error in playPlaylist\n %v", err)
 		}
 		if len(playlists) > 0 {
 			rand.New(rand.NewSource(time.Now().UnixNano()))
 			index := rand.Intn(len(playlists))
 			target := playlists[index]
-			fmt.Printf("[%v]\n", target.Name)
 			msg = append(msg, fmt.Sprintf("from %v.", target.Name))
 			err := a.c.AddItem2QueueAndPlay(target.Uri, "")
 			if err != nil {
-				fmt.Println("error in AddItem2QueueAndPlay")
-				return "", err
+				return "", fmt.Errorf("error in AddItem2QueueAndPlay(%v)\n %v", target.Name, err)
 			}
 		} else {
-			fmt.Println("playlists is empty")
+			msg = append(msg, fmt.Sprintf("playlists is empty"))
 		}
 	} else {
 		msg = append(msg, " from queue")
 		err = a.c.Play()
 		if err != nil {
-			fmt.Println("error in Play")
-			return "", err
+			return "", fmt.Errorf("error in Play\n %v", err)
 		}
 	}
 	return strings.Join(msg, " "), nil

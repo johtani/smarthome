@@ -44,7 +44,11 @@ func (c Config) validate() error {
 }
 
 func LoadConfig() Config {
-	file, err := os.Open(ConfigFileName)
+	return LoadConfigWithPath(ConfigFileName)
+}
+
+func LoadConfigWithPath(configFile string) Config {
+	file, err := os.Open(configFile)
 	if err != nil {
 		panic(fmt.Sprintf("ファイルの読み込みエラー: %v", err))
 	}

@@ -12,6 +12,10 @@ func NewTokenizeIpaDefinition() Definition {
 		Name:        TokenizeIpaCmd,
 		Description: "Tokenize text by Kagome with IPA dic",
 		Factory:     NewTokenizeIpaCommand,
+		Args: []Arg{
+			{"text", "text / sentence for tokenizer input", true, []string{}},
+			{"mode", "search mode", false, []string{"-search", "-extended"}},
+		},
 	}
 }
 
@@ -32,6 +36,9 @@ func NewTokenizeUniDefinition() Definition {
 		Name:        TokenizeUniCmd,
 		Description: "Tokenize text by Kagome with Uni dic",
 		Factory:     NewTokenizeUniCommand,
+		Args: []Arg{
+			{"text", "text / sentence for tokenizer input", true, []string{}},
+		},
 	}
 }
 
@@ -52,6 +59,9 @@ func NewTokenizeNeologdDefinition() Definition {
 		Name:        TokenizeNeologdCmd,
 		Description: "Tokenize text by Kagome with Neologd",
 		Factory:     NewTokenizeNeologdCommand,
+		Args: []Arg{
+			{"text", "text / sentence for tokenizer input", true, []string{}},
+		},
 	}
 }
 
