@@ -30,25 +30,16 @@ func NewDisplayOutputsAction(client *Client, opts ...bool) DisplayOutputsAction 
 }
 
 // Run fetches outputs and returns a formatted string.
-// Args example:
-//
-//	"selected" or "only selected" -> show only Selected=true outputs
-//
-// Default (no args) shows both selected and unselected.
+// Note: arg is currently ignored; behavior is controlled by defaultOnlySelected.
+// Default (no args) shows both selected and unselected unless defaultOnlySelected is true.
 func (a DisplayOutputsAction) Run(arg string) (string, error) {
 	outputs, err := a.c.GetOutputs()
 	if err != nil {
 		return "", fmt.Errorf("error in GetOutputs\n %v", err)
 	}
 
-	// Determine if we should show only selected outputs based on arg or default setting.
-	trimmed := strings.TrimSpace(arg)
-	onlySelected := false
-	if trimmed == "" {
-		onlySelected = a.defaultOnlySelected
-	} else {
-		onlySelected = wantsOnlySelected(trimmed)
-	}
+	// Determine if we should show only selected outputs based on default setting.
+	onlySelected := a.defaultOnlySelected
 	if onlySelected {
 		var filtered []Output
 		for _, o := range outputs {
@@ -80,17 +71,4 @@ func (a DisplayOutputsAction) Run(arg string) (string, error) {
 		}
 	}
 	return strings.Join(lines, " \n"), nil
-}
-
-// wantsOnlySelected checks if the argument requests only selected outputs.
-func wantsOnlySelected(arg string) bool {
-	s := strings.ToLower(strings.TrimSpace(arg))
-	s = strings.ReplaceAll(s, "  ", " ")
-	s = strings.TrimSpace(s)
-	switch s {
-	case "selected", "only selected", "selected-only", "selected=true", "true":
-		return true
-	default:
-		return false
-	}
 }
