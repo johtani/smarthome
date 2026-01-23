@@ -24,7 +24,7 @@ func (c Config) Validate() error {
 		errs = append(errs, fmt.Sprintf("not found \"switchbot.Secret\". Please check config file."))
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, "\n"))
+		return fmt.Errorf("%s", strings.Join(errs, "\n"))
 	}
 	return nil
 }
