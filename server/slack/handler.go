@@ -1,11 +1,13 @@
 package slack
 
 import (
+	"context"
 	"fmt"
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
+	"go.opentelemetry.io/otel"
 	"os"
 	"strings"
 )
@@ -17,6 +19,9 @@ func defaultHandler(event *socketmode.Event, client *socketmode.Client) {
 
 func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix string) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
+		_, span := otel.Tracer("slack").Start(context.Background(), "AppMention")
+		defer span.End()
+
 		eventPayload, ok := event.Data.(slackevents.EventsAPIEvent)
 		if !ok {
 			client.Debugf("######### : Skipped Envelope: %v", event)
@@ -78,6 +83,8 @@ func findAndExec(config subcommand.Config, text string) (string, error) {
 
 func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
+		_, span := otel.Tracer("slack").Start(context.Background(), "SlashCommand")
+		defer span.End()
 
 		ev, ok := event.Data.(slack.SlashCommand)
 		if !ok {

@@ -5,22 +5,26 @@ import (
 	"fmt"
 	"github.com/johtani/smarthome/server/cron/influxdb"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
+	"go.opentelemetry.io/otel"
 )
 
 func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config) {
+	ctx, span := otel.Tracer("cron").Start(context.Background(), "RecordTemp")
+	defer span.End()
+
 	targetTypes := []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"}
 	sCli := switchbot.NewClient(switchbotConfig)
 	iCli := influxdb.NewClient(influxdbConfig)
 	defer iCli.Close()
 
-	pdev, vdev, err := sCli.Device().List(context.Background())
+	pdev, vdev, err := sCli.Device().List(ctx)
 	if err != nil {
 		fmt.Printf("Cannot get device list / %v\n", err)
 		return
 	}
 	for _, d := range pdev {
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
-			status, err := sCli.Device().Status(context.Background(), d.ID)
+			status, err := sCli.Device().Status(ctx, d.ID)
 			if err != nil {
 				fmt.Printf("Something wrong on [%s] / %v\n", d.Name, err)
 			}
@@ -36,7 +40,7 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 	}
 	for _, d := range vdev {
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
-			status, err := sCli.Device().Status(context.Background(), d.ID)
+			status, err := sCli.Device().Status(ctx, d.ID)
 			if err != nil {
 				fmt.Printf("Something wrong on [%s] / %v\n", d.Name, err)
 			}

@@ -81,6 +81,15 @@ smarthome start meeting
 Switchbotの温湿度計のデータを取得し、10分おきにInfluxDBに保存します。
 対象となる機器は[record-temperature.go](https://github.com/johtani/smarthome/blob/master/server/cron/record-temperature.go#L11)で指定しています。
 
+## OpenTelemetry
+
+本ツールはOpenTelemetryに対応しています。トレースデータを送信するには、以下の環境変数を設定してください。
+
+* `OTEL_EXPORTER_OTLP_ENDPOINT` : OTLPコレクターのエンドポイント（例: `http://localhost:4318`）
+* `OTEL_SERVICE_NAME` : サービス名（デフォルト: `smarthome`）
+
+現在は OTLP/HTTP エクスポーターを使用しています。
+
 ## ライセンス
 
 MITライセンス

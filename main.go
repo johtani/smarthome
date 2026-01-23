@@ -1,14 +1,17 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"os"
+	"strings"
+
+	"github.com/johtani/smarthome/internal/otel"
 	"github.com/johtani/smarthome/server/cron"
 	"github.com/johtani/smarthome/server/mcp"
 	"github.com/johtani/smarthome/server/slack"
 	"github.com/johtani/smarthome/subcommand"
-	"os"
-	"strings"
 )
 
 func printHelp(commandsHelp string) string {
@@ -35,6 +38,15 @@ func run() error {
 	flag.BoolVar(&mcpFlag, "mcp", false, "MCPServerとして起動するかどうか")
 	flag.StringVar(&configPath, "config", subcommand.ConfigFileName, "MCPServerの時の設定ファイルのパス")
 	flag.Parse()
+
+	ctx := context.Background()
+	shutdown, err := otel.SetupOTEL(ctx, "smarthome")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = shutdown(ctx)
+	}()
 
 	if serverFlag {
 		config := subcommand.LoadConfig()

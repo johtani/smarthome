@@ -1,9 +1,10 @@
 package subcommand
 
 import (
+	"time"
+
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
-	"time"
 )
 
 const StartSwitchCmd = "start switch"

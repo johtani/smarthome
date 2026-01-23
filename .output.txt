@@ -1,0 +1,486 @@
+diff --git a/README.md b/README.md
+index 5805a46..c997158 100644
+--- a/README.md
++++ b/README.md
+@@ -81,6 +81,15 @@ smarthome start meeting
+ Switchbotの温湿度計のデータを取得し、10分おきにInfluxDBに保存します。
+ 対象となる機器は[record-temperature.go](https://github.com/johtani/smarthome/blob/master/server/cron/record-temperature.go#L11)で指定しています。
+
++## OpenTelemetry
++
++本ツールはOpenTelemetryに対応しています。トレースデータを送信するには、以下の環境変数を設定してください。
++
++* `OTEL_EXPORTER_OTLP_ENDPOINT` : OTLPコレクターのエンドポイント（例: `http://localhost:4318`）
++* `OTEL_SERVICE_NAME` : サービス名（デフォルト: `smarthome`）
++
++現在は OTLP/HTTP エクスポーターを使用しています。
++
+ ## ライセンス
+
+ MITライセンス
+\ No newline at end of file
+diff --git a/go.mod b/go.mod
+index 95a0f8e..ac1e003 100644
+--- a/go.mod
++++ b/go.mod
+@@ -1,8 +1,8 @@
+ module github.com/johtani/smarthome
+
+-go 1.23
++go 1.24.0
+
+-toolchain go1.23.3
++toolchain go1.24.12
+
+ require (
+        github.com/go-co-op/gocron/v2 v2.12.1
+@@ -16,18 +16,39 @@ require (
+        github.com/mark3labs/mcp-go v0.18.0
+        github.com/nasa9084/go-switchbot/v3 v3.2.0
+        github.com/slack-go/slack v0.15.0
++       go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.64.0
++       go.opentelemetry.io/otel v1.39.0
++       go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.39.0
++       go.opentelemetry.io/otel/sdk v1.39.0
+
+ )
+
+ require (
+        github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
++       github.com/cenkalti/backoff/v5 v5.0.3 // indirect
++       github.com/cespare/xxhash/v2 v2.3.0 // indirect
++       github.com/felixge/httpsnoop v1.0.4 // indirect
++       github.com/go-logr/logr v1.4.3 // indirect
++       github.com/go-logr/stdr v1.2.2 // indirect
+        github.com/google/uuid v1.6.0 // indirect
+        github.com/gorilla/websocket v1.5.3 // indirect
++       github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 // indirect
+        github.com/influxdata/line-protocol v0.0.0-20210922203350-b1ad95c89adf // indirect
+        github.com/jonboulle/clockwork v0.4.0 // indirect
+        github.com/oapi-codegen/runtime v1.1.1 // indirect
+        github.com/robfig/cron/v3 v3.0.1 // indirect
+        github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
++       go.opentelemetry.io/auto/sdk v1.2.1 // indirect
++       go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.39.0 // indirect
++       go.opentelemetry.io/otel/metric v1.39.0 // indirect
++       go.opentelemetry.io/otel/trace v1.39.0 // indirect
++       go.opentelemetry.io/proto/otlp v1.9.0 // indirect
+        golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
+-       golang.org/x/net v0.30.0 // indirect
++       golang.org/x/net v0.47.0 // indirect
++       golang.org/x/sys v0.39.0 // indirect
++       golang.org/x/text v0.31.0 // indirect
++       google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 // indirect
++       google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 // indirect
++       google.golang.org/grpc v1.77.0 // indirect
++       google.golang.org/protobuf v1.36.10 // indirect
+ )
+diff --git a/go.sum b/go.sum
+index 09f76a9..5be744e 100644
+--- a/go.sum
++++ b/go.sum
+@@ -2,21 +2,36 @@ github.com/RaveNoX/go-jsoncommentstrip v1.0.0/go.mod h1:78ihd09MekBnJnxpICcwzCMz
+ github.com/apapsch/go-jsonmerge/v2 v2.0.0 h1:axGnT1gRIfimI7gJifB699GoE/oq+F2MU7Dml6nw9rQ=
+ github.com/apapsch/go-jsonmerge/v2 v2.0.0/go.mod h1:lvDnEdqiQrp0O42VQGgmlKpxL1AP2+08jFMw88y4klk=
+ github.com/bmatcuk/doublestar v1.1.1/go.mod h1:UD6OnuiIn0yFxxA2le/rnRU1G4RaI4UvFv1sNto9p6w=
++github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
++github.com/cenkalti/backoff/v5 v5.0.3/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
++github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
++github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
+ github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
+ github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
++github.com/felixge/httpsnoop v1.0.4 h1:NFTV2Zj1bL4mc9sqWACXbQFVBBg2W3GPvqp8/ESS2Wg=
++github.com/felixge/httpsnoop v1.0.4/go.mod h1:m8KPJKqk1gH5J9DgRY2ASl2lWCfGKXixSwevea8zH2U=
+ github.com/go-co-op/gocron/v2 v2.12.1 h1:dCIIBFbzhWKdgXeEifBjHPzgQ1hoWhjS4289Hjjy1uw=
+ github.com/go-co-op/gocron/v2 v2.12.1/go.mod h1:xY7bJxGazKam1cz04EebrlP4S9q4iWdiAylMGP3jY9w=
++github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
++github.com/go-logr/logr v1.4.3 h1:CjnDlHq8ikf6E492q6eKboGOC0T8CDaOvkHCIg8idEI=
++github.com/go-logr/logr v1.4.3/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
++github.com/go-logr/stdr v1.2.2 h1:hSWxHoqTgW2S2qGc0LTAI563KZ5YKYRhT3MFKZMbjag=
++github.com/go-logr/stdr v1.2.2/go.mod h1:mMo/vtBO5dYbehREoey6XUKy/eSumjCCveDpRre4VKE=
+ github.com/go-test/deep v1.0.4 h1:u2CU3YKy9I2pmu9pX0eq50wCgjfGIt539SqR7FbHiho=
+ github.com/go-test/deep v1.0.4/go.mod h1:wGDj63lr65AM2AQyKZd/NYHGb0R+1RLqB8NKt3aSFNA=
++github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=
++github.com/golang/protobuf v1.5.4/go.mod h1:lnTiLA8Wa4RWRcIUkrtSVa5nRhsEGBg48fD6rSs7xps=
+ github.com/google/go-cmp v0.5.7/go.mod h1:n+brtR0CgQNWTVd5ZUFpTBC8YFBDLK/h/bpaJ8/DtOE=
+-github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
+-github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
++github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
++github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
+ github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
+ github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+ github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+ github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
+ github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
++github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3 h1:NmZ1PKzSTQbuGHw9DGPFomqkkLWMC+vZCkfs+FHv1Vg=
++github.com/grpc-ecosystem/grpc-gateway/v2 v2.27.3/go.mod h1:zQrxl1YP88HQlA6i9c63DSVPFklWpGX4OWAc9bFuaH4=
+ github.com/hbollon/go-edlib v1.6.0 h1:ga7AwwVIvP8mHm9GsPueC0d71cfRU/52hmPJ7Tprv4E=
+ github.com/hbollon/go-edlib v1.6.0/go.mod h1:wnt6o6EIVEzUfgbUZY7BerzQ2uvzp354qmS2xaLkrhM=
+ github.com/ikawaha/kagome-dict v1.1.0 h1:ePU16KkyonhYLo4YDf/UExmZJBhY/6C946T1SOg1TI4=
+@@ -52,16 +67,50 @@ github.com/spkg/bom v0.0.0-20160624110644-59b7046e48ad/go.mod h1:qLr4V1qq6nMqFKk
+ github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXfy6kDkUVs=
+ github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
+-github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
+-github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
++github.com/stretchr/testify v1.11.1 h1:7s2iGBzp5EwR7/aIZr8ao5+dra3wiQyKjjFuvgVKu7U=
++github.com/stretchr/testify v1.11.1/go.mod h1:wZwfW3scLgRK+23gO65QZefKpKQRnfz6sD981Nm4B6U=
+ github.com/yosida95/uritemplate/v3 v3.0.2 h1:Ed3Oyj9yrmi9087+NczuL5BwkIc4wvTb5zIM+UJPGz4=
+ github.com/yosida95/uritemplate/v3 v3.0.2/go.mod h1:ILOh0sOhIJR3+L/8afwt/kE++YT040gmv5BQTMR2HP4=
++go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
++go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
++go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.64.0 h1:ssfIgGNANqpVFCndZvcuyKbl0g+UAVcbBcqGkG28H0Y=
++go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.64.0/go.mod h1:GQ/474YrbE4Jx8gZ4q5I4hrhUzM6UPzyrqJYV2AqPoQ=
++go.opentelemetry.io/otel v1.39.0 h1:8yPrr/S0ND9QEfTfdP9V+SiwT4E0G7Y5MO7p85nis48=
++go.opentelemetry.io/otel v1.39.0/go.mod h1:kLlFTywNWrFyEdH0oj2xK0bFYZtHRYUdv1NklR/tgc8=
++go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.39.0 h1:f0cb2XPmrqn4XMy9PNliTgRKJgS5WcL/u0/WRYGz4t0=
++go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.39.0/go.mod h1:vnakAaFckOMiMtOIhFI2MNH4FYrZzXCYxmb1LlhoGz8=
++go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.39.0 h1:Ckwye2FpXkYgiHX7fyVrN1uA/UYd9ounqqTuSNAv0k4=
++go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.39.0/go.mod h1:teIFJh5pW2y+AN7riv6IBPX2DuesS3HgP39mwOspKwU=
++go.opentelemetry.io/otel/metric v1.39.0 h1:d1UzonvEZriVfpNKEVmHXbdf909uGTOQjA0HF0Ls5Q0=
++go.opentelemetry.io/otel/metric v1.39.0/go.mod h1:jrZSWL33sD7bBxg1xjrqyDjnuzTUB0x1nBERXd7Ftcs=
++go.opentelemetry.io/otel/sdk v1.39.0 h1:nMLYcjVsvdui1B/4FRkwjzoRVsMK8uL/cj0OyhKzt18=
++go.opentelemetry.io/otel/sdk v1.39.0/go.mod h1:vDojkC4/jsTJsE+kh+LXYQlbL8CgrEcwmt1ENZszdJE=
++go.opentelemetry.io/otel/sdk/metric v1.39.0 h1:cXMVVFVgsIf2YL6QkRF4Urbr/aMInf+2WKg+sEJTtB8=
++go.opentelemetry.io/otel/sdk/metric v1.39.0/go.mod h1:xq9HEVH7qeX69/JnwEfp6fVq5wosJsY1mt4lLfYdVew=
++go.opentelemetry.io/otel/trace v1.39.0 h1:2d2vfpEDmCJ5zVYz7ijaJdOF59xLomrvj7bjt6/qCJI=
++go.opentelemetry.io/otel/trace v1.39.0/go.mod h1:88w4/PnZSazkGzz/w84VHpQafiU4EtqqlVdxWy+rNOA=
++go.opentelemetry.io/proto/otlp v1.9.0 h1:l706jCMITVouPOqEnii2fIAuO3IVGBRPV5ICjceRb/A=
++go.opentelemetry.io/proto/otlp v1.9.0/go.mod h1:xE+Cx5E/eEHw+ISFkwPLwCZefwVjY+pqKg1qcK03+/4=
+ go.uber.org/goleak v1.3.0 h1:2K3zAYmnTNqV73imy9J1T3WC+gmCePx2hEGkimedGto=
+ go.uber.org/goleak v1.3.0/go.mod h1:CoHD4mav9JJNrW/WLlf7HGZPjdw8EucARQHekz1X6bE=
+ golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c h1:7dEasQXItcW1xKJ2+gg5VOiBnqWrJc+rq0DPKyvvdbY=
+ golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c/go.mod h1:NQtJDoLvd6faHhE7m4T/1IY708gDefGGjR/iUW8yQQ8=
+-golang.org/x/net v0.30.0 h1:AcW1SDZMkb8IpzCdQUaIq2sP4sZ4zw+55h6ynffypl4=
+-golang.org/x/net v0.30.0/go.mod h1:2wGyMJ5iFasEhkwi13ChkO/t1ECNC4X4eBKkVFyYFlU=
++golang.org/x/net v0.47.0 h1:Mx+4dIFzqraBXUugkia1OOvlD6LemFo1ALMHjrXDOhY=
++golang.org/x/net v0.47.0/go.mod h1:/jNxtkgq5yWUGYkaZGqo27cfGZ1c5Nen03aYrrKpVRU=
++golang.org/x/sys v0.39.0 h1:CvCKL8MeisomCi6qNZ+wbb0DN9E5AATixKsvNtMoMFk=
++golang.org/x/sys v0.39.0/go.mod h1:OgkHotnGiDImocRcuBABYBEXf8A9a87e/uXjp9XT3ks=
++golang.org/x/text v0.31.0 h1:aC8ghyu4JhP8VojJ2lEHBnochRno1sgL6nEi9WGFGMM=
++golang.org/x/text v0.31.0/go.mod h1:tKRAlv61yKIjGGHX/4tP1LTbc13YSec1pxVEWXzfoeM=
+ golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
++gonum.org/v1/gonum v0.16.0 h1:5+ul4Swaf3ESvrOnidPp4GZbzf0mxVQpDCYUQE7OJfk=
++gonum.org/v1/gonum v0.16.0/go.mod h1:fef3am4MQ93R2HHpKnLk4/Tbh/s0+wqD5nfa6Pnwy4E=
++google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217 h1:fCvbg86sFXwdrl5LgVcTEvNC+2txB5mgROGmRL5mrls=
++google.golang.org/genproto/googleapis/api v0.0.0-20251202230838-ff82c1b0f217/go.mod h1:+rXWjjaukWZun3mLfjmVnQi18E1AsFbDN9QdJ5YXLto=
++google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217 h1:gRkg/vSppuSQoDjxyiGfN4Upv/h/DQmIR10ZU8dh4Ww=
++google.golang.org/genproto/googleapis/rpc v0.0.0-20251202230838-ff82c1b0f217/go.mod h1:7i2o+ce6H/6BluujYR+kqX3GKH+dChPTQU19wjRPiGk=
++google.golang.org/grpc v1.77.0 h1:wVVY6/8cGA6vvffn+wWK5ToddbgdU3d8MNENr4evgXM=
++google.golang.org/grpc v1.77.0/go.mod h1:z0BY1iVj0q8E1uSQCjL9cppRj+gnZjzDnzV0dHhrNig=
++google.golang.org/protobuf v1.36.10 h1:AYd7cD/uASjIL6Q9LiTjz8JLcrh/88q5UObnmY3aOOE=
++google.golang.org/protobuf v1.36.10/go.mod h1:HTf+CrKn2C3g5S8VImy6tdcUvCska2kB7j23XfzDpco=
+ gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+ gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+diff --git a/main.go b/main.go
+index 9437fe9..8256e23 100644
+--- a/main.go
++++ b/main.go
+@@ -1,14 +1,17 @@
+ package main
+
+ import (
++       "context"
+        "flag"
+        "fmt"
++       "os"
++       "strings"
++
++       "github.com/johtani/smarthome/internal/otel"
+        "github.com/johtani/smarthome/server/cron"
+        "github.com/johtani/smarthome/server/mcp"
+        "github.com/johtani/smarthome/server/slack"
+        "github.com/johtani/smarthome/subcommand"
+-       "os"
+-       "strings"
+ )
+
+ func printHelp(commandsHelp string) string {
+@@ -36,6 +39,15 @@ func run() error {
+        flag.StringVar(&configPath, "config", subcommand.ConfigFileName, "MCPServerの時の設定ファイルのパス")
+        flag.Parse()
+
++       ctx := context.Background()
++       shutdown, err := otel.SetupOTEL(ctx, "smarthome")
++       if err != nil {
++               return err
++       }
++       defer func() {
++               _ = shutdown(ctx)
++       }()
++
+        if serverFlag {
+                config := subcommand.LoadConfig()
+                _, _ = fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
+diff --git a/server/cron/record-temperature.go b/server/cron/record-temperature.go
+index 1faa232..b3f3500 100644
+--- a/server/cron/record-temperature.go
++++ b/server/cron/record-temperature.go
+@@ -5,22 +5,26 @@ import (
+        "fmt"
+        "github.com/johtani/smarthome/server/cron/influxdb"
+        "github.com/johtani/smarthome/subcommand/action/switchbot"
++       "go.opentelemetry.io/otel"
+ )
+
+ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config) {
++       ctx, span := otel.Tracer("cron").Start(context.Background(), "RecordTemp")
++       defer span.End()
++
+        targetTypes := []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"}
+        sCli := switchbot.NewClient(switchbotConfig)
+        iCli := influxdb.NewClient(influxdbConfig)
+        defer iCli.Close()
+
+-       pdev, vdev, err := sCli.Device().List(context.Background())
++       pdev, vdev, err := sCli.Device().List(ctx)
+        if err != nil {
+                fmt.Printf("Cannot get device list / %v\n", err)
+                return
+        }
+        for _, d := range pdev {
+                if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
+-                       status, err := sCli.Device().Status(context.Background(), d.ID)
++                       status, err := sCli.Device().Status(ctx, d.ID)
+                        if err != nil {
+                                fmt.Printf("Something wrong on [%s] / %v\n", d.Name, err)
+                        }
+@@ -36,7 +40,7 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
+        }
+        for _, d := range vdev {
+                if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
+-                       status, err := sCli.Device().Status(context.Background(), d.ID)
++                       status, err := sCli.Device().Status(ctx, d.ID)
+                        if err != nil {
+                                fmt.Printf("Something wrong on [%s] / %v\n", d.Name, err)
+                        }
+diff --git a/server/slack/handler.go b/server/slack/handler.go
+index a3b5513..8533697 100644
+--- a/server/slack/handler.go
++++ b/server/slack/handler.go
+@@ -1,11 +1,13 @@
+ package slack
+
+ import (
++       "context"
+        "fmt"
+        "github.com/johtani/smarthome/subcommand"
+        "github.com/slack-go/slack"
+        "github.com/slack-go/slack/slackevents"
+        "github.com/slack-go/slack/socketmode"
++       "go.opentelemetry.io/otel"
+        "os"
+        "strings"
+ )
+@@ -17,6 +19,9 @@ func defaultHandler(event *socketmode.Event, client *socketmode.Client) {
+
+ func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix string) socketmode.SocketmodeHandlerFunc {
+        return func(event *socketmode.Event, client *socketmode.Client) {
++               _, span := otel.Tracer("slack").Start(context.Background(), "AppMention")
++               defer span.End()
++
+                eventPayload, ok := event.Data.(slackevents.EventsAPIEvent)
+                if !ok {
+                        client.Debugf("######### : Skipped Envelope: %v", event)
+@@ -78,6 +83,8 @@ func findAndExec(config subcommand.Config, text string) (string, error) {
+
+ func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.SocketmodeHandlerFunc {
+        return func(event *socketmode.Event, client *socketmode.Client) {
++               _, span := otel.Tracer("slack").Start(context.Background(), "SlashCommand")
++               defer span.End()
+
+                ev, ok := event.Data.(slack.SlashCommand)
+                if !ok {
+diff --git a/subcommand/action/internal/http-action.go b/subcommand/action/internal/http-action.go
+index be60d4c..d45c2c2 100644
+--- a/subcommand/action/internal/http-action.go
++++ b/subcommand/action/internal/http-action.go
+@@ -1,9 +1,12 @@
+ package internal
+
+-import "net/http"
++import (
++       "context"
++       "net/http"
++)
+
+-func BuildHttpRequestWithParams(method string, url string, params map[string]string) (*http.Request, error) {
+-       req, err := http.NewRequest(method, url, nil)
++func BuildHttpRequestWithParams(ctx context.Context, method string, url string, params map[string]string) (*http.Request, error) {
++       req, err := http.NewRequestWithContext(ctx, method, url, nil)
+        if err != nil {
+                return nil, err
+        }
+diff --git a/subcommand/action/owntone/client.go b/subcommand/action/owntone/client.go
+index 2b9ad63..2ad2e41 100644
+--- a/subcommand/action/owntone/client.go
++++ b/subcommand/action/owntone/client.go
+@@ -1,6 +1,7 @@
+ package owntone
+
+ import (
++       "context"
+        "encoding/json"
+        "fmt"
+        "io"
+@@ -10,6 +11,7 @@ import (
+        "time"
+
+        "github.com/johtani/smarthome/subcommand/action/internal"
++       "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+ )
+
+ type Client struct {
+@@ -39,12 +41,15 @@ func (c Client) buildUrl(path string) string {
+ func NewClient(config Config) *Client {
+        return &Client{
+                config: config,
+-               Client: http.Client{Timeout: 10 * time.Second},
++               Client: http.Client{
++                       Timeout:   10 * time.Second,
++                       Transport: otelhttp.NewTransport(http.DefaultTransport),
++               },
+        }
+ }
+
+ func (c Client) Pause() error {
+-       req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/player/pause"), nil)
++       req, err := http.NewRequestWithContext(context.Background(), http.MethodPut, c.buildUrl("api/player/pause"), nil)
+        if err != nil {
+                return err
+        }
+@@ -63,7 +68,7 @@ func (c Client) Pause() error {
+ }
+
+ func (c Client) Play() error {
+-       req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/player/play"), nil)
++       req, err := http.NewRequestWithContext(context.Background(), http.MethodPut, c.buildUrl("api/player/play"), nil)
+        if err != nil {
+                return err
+        }
+@@ -84,7 +89,7 @@ func (c Client) Play() error {
+ func (c Client) SetVolume(volume int) error {
+        params := map[string]string{}
+        params["volume"] = strconv.Itoa(volume)
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodPut, c.buildUrl("api/player/volume"), params)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPut, c.buildUrl("api/player/volume"), params)
+        if err != nil {
+                return err
+        }
+@@ -150,7 +155,7 @@ func (c Client) AddItem2QueueAndPlay(uri string, expression string) error {
+        } else if len(expression) > 0 {
+                params["expression"] = expression
+        }
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodPost, c.buildUrl("api/queue/items/add"), params)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPost, c.buildUrl("api/queue/items/add"), params)
+        if err != nil {
+                return err
+        }
+@@ -282,7 +287,7 @@ func (c Client) Search(keyword string, resultType []SearchType, limit int) (*Sea
+                types = append(types, string(s))
+        }
+        params["type"] = strings.Join(types, ",")
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/search"), params)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/search"), params)
+        if err != nil {
+                return nil, err
+        }
+@@ -350,7 +355,7 @@ func (c Client) GetArtist(offset int) (*Artist, error) {
+        params := map[string]string{}
+        params["offset"] = strconv.Itoa(offset)
+        params["limit"] = strconv.Itoa(1)
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/library/artists"), params)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/library/artists"), params)
+        if err != nil {
+                return nil, err
+        }
+@@ -385,7 +390,7 @@ type Genre struct {
+
+ func (c Client) GetGenres() ([]Genre, error) {
+        params := map[string]string{}
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/library/genres"), params)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/library/genres"), params)
+        if err != nil {
+                return nil, err
+        }
+@@ -448,7 +453,7 @@ func (c Client) GetOutputs() ([]Output, error) {
+ }
+
+ func (c Client) UpdateLibrary() error {
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodPut, c.buildUrl("api/update"), nil)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPut, c.buildUrl("api/update"), nil)
+        if err != nil {
+                return err
+        }
+diff --git a/subcommand/action/yamaha/client.go b/subcommand/action/yamaha/client.go
+index efbae83..7da798d 100644
+--- a/subcommand/action/yamaha/client.go
++++ b/subcommand/action/yamaha/client.go
+@@ -1,9 +1,11 @@
+ package yamaha
+
+ import (
++       "context"
+        "encoding/json"
+        "fmt"
+        "github.com/johtani/smarthome/subcommand/action/internal"
++       "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+        "io"
+        "net/http"
+        "strconv"
+@@ -40,7 +42,10 @@ func (c Client) buildUrl(path string) string {
+ func NewClient(config Config) *Client {
+        return &Client{
+                config: config,
+-               Client: http.Client{Timeout: 10 * time.Second},
++               Client: http.Client{
++                       Timeout:   10 * time.Second,
++                       Transport: otelhttp.NewTransport(http.DefaultTransport),
++               },
+        }
+ }
+
+@@ -65,7 +70,7 @@ func parseHttpResponse(res *http.Response, caller string) error {
+ func (c Client) SetScene(scene int) error {
+        params := map[string]string{}
+        params["num"] = strconv.Itoa(scene)
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("recallScene"), params)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("recallScene"), params)
+        if err != nil {
+                return err
+        }
+@@ -87,7 +92,7 @@ func (c Client) SetScene(scene int) error {
+ func (c Client) SetVolume(volume int) error {
+        params := map[string]string{}
+        params["volume"] = strconv.Itoa(volume)
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("setVolume"), params)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("setVolume"), params)
+        if err != nil {
+                return err
+        }
+@@ -109,7 +114,7 @@ func (c Client) SetVolume(volume int) error {
+ func (c Client) PowerOff() error {
+        params := map[string]string{}
+        params["power"] = "standby"
+-       req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("setPower"), params)
++       req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("setPower"), params)
+        if err != nil {
+                return err
+        }
+diff --git a/subcommand/start-switch.go b/subcommand/start-switch.go
+index 33bd858..f5e86e7 100644
+--- a/subcommand/start-switch.go
++++ b/subcommand/start-switch.go
+@@ -1,9 +1,10 @@
+ package subcommand
+
+ import (
++       "time"
++
+        "github.com/johtani/smarthome/subcommand/action"
+        "github.com/johtani/smarthome/subcommand/action/yamaha"
+-       "time"
+ )
+
+ const StartSwitchCmd = "start switch"
