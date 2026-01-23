@@ -1,9 +1,11 @@
 package yamaha
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/johtani/smarthome/subcommand/action/internal"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"io"
 	"net/http"
 	"strconv"
@@ -40,7 +42,10 @@ func (c Client) buildUrl(path string) string {
 func NewClient(config Config) *Client {
 	return &Client{
 		config: config,
-		Client: http.Client{Timeout: 10 * time.Second},
+		Client: http.Client{
+			Timeout:   10 * time.Second,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+		},
 	}
 }
 
@@ -65,7 +70,7 @@ func parseHttpResponse(res *http.Response, caller string) error {
 func (c Client) SetScene(scene int) error {
 	params := map[string]string{}
 	params["num"] = strconv.Itoa(scene)
-	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("recallScene"), params)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("recallScene"), params)
 	if err != nil {
 		return err
 	}
@@ -87,7 +92,7 @@ func (c Client) SetScene(scene int) error {
 func (c Client) SetVolume(volume int) error {
 	params := map[string]string{}
 	params["volume"] = strconv.Itoa(volume)
-	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("setVolume"), params)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("setVolume"), params)
 	if err != nil {
 		return err
 	}
@@ -109,7 +114,7 @@ func (c Client) SetVolume(volume int) error {
 func (c Client) PowerOff() error {
 	params := map[string]string{}
 	params["power"] = "standby"
-	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("setPower"), params)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("setPower"), params)
 	if err != nil {
 		return err
 	}

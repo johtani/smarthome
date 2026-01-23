@@ -1,6 +1,7 @@
 package owntone
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/johtani/smarthome/subcommand/action/internal"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Client struct {
@@ -39,12 +41,15 @@ func (c Client) buildUrl(path string) string {
 func NewClient(config Config) *Client {
 	return &Client{
 		config: config,
-		Client: http.Client{Timeout: 10 * time.Second},
+		Client: http.Client{
+			Timeout:   10 * time.Second,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+		},
 	}
 }
 
 func (c Client) Pause() error {
-	req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/player/pause"), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPut, c.buildUrl("api/player/pause"), nil)
 	if err != nil {
 		return err
 	}
@@ -63,7 +68,7 @@ func (c Client) Pause() error {
 }
 
 func (c Client) Play() error {
-	req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/player/play"), nil)
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodPut, c.buildUrl("api/player/play"), nil)
 	if err != nil {
 		return err
 	}
@@ -84,7 +89,7 @@ func (c Client) Play() error {
 func (c Client) SetVolume(volume int) error {
 	params := map[string]string{}
 	params["volume"] = strconv.Itoa(volume)
-	req, err := internal.BuildHttpRequestWithParams(http.MethodPut, c.buildUrl("api/player/volume"), params)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPut, c.buildUrl("api/player/volume"), params)
 	if err != nil {
 		return err
 	}
@@ -150,7 +155,7 @@ func (c Client) AddItem2QueueAndPlay(uri string, expression string) error {
 	} else if len(expression) > 0 {
 		params["expression"] = expression
 	}
-	req, err := internal.BuildHttpRequestWithParams(http.MethodPost, c.buildUrl("api/queue/items/add"), params)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPost, c.buildUrl("api/queue/items/add"), params)
 	if err != nil {
 		return err
 	}
@@ -282,7 +287,7 @@ func (c Client) Search(keyword string, resultType []SearchType, limit int) (*Sea
 		types = append(types, string(s))
 	}
 	params["type"] = strings.Join(types, ",")
-	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/search"), params)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/search"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -350,7 +355,7 @@ func (c Client) GetArtist(offset int) (*Artist, error) {
 	params := map[string]string{}
 	params["offset"] = strconv.Itoa(offset)
 	params["limit"] = strconv.Itoa(1)
-	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/library/artists"), params)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/library/artists"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -385,7 +390,7 @@ type Genre struct {
 
 func (c Client) GetGenres() ([]Genre, error) {
 	params := map[string]string{}
-	req, err := internal.BuildHttpRequestWithParams(http.MethodGet, c.buildUrl("api/library/genres"), params)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/library/genres"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -448,7 +453,7 @@ func (c Client) GetOutputs() ([]Output, error) {
 }
 
 func (c Client) UpdateLibrary() error {
-	req, err := internal.BuildHttpRequestWithParams(http.MethodPut, c.buildUrl("api/update"), nil)
+	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPut, c.buildUrl("api/update"), nil)
 	if err != nil {
 		return err
 	}

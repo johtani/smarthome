@@ -36,7 +36,7 @@ func (c Config) validate() error {
 		errs = append(errs, fmt.Sprintf("bot_token must have the prefix \"xoxb-\"."))
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf(strings.Join(errs, "\n"))
+		return fmt.Errorf("%s", strings.Join(errs, "\n"))
 	}
 	return nil
 }

@@ -1,21 +1,24 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"os"
+	"strings"
+
+	"github.com/johtani/smarthome/internal/otel"
 	"github.com/johtani/smarthome/server/cron"
 	"github.com/johtani/smarthome/server/mcp"
 	"github.com/johtani/smarthome/server/slack"
 	"github.com/johtani/smarthome/subcommand"
-	"os"
-	"strings"
 )
 
 func printHelp(commandsHelp string) string {
 	fmt.Println("SlackBot用Serverを起動する場合は-serverオプションをつけてください")
 	fmt.Println("MCPServerとして起動する場合は-mcpオプションをつけてください")
 	fmt.Println("コマンドモードで利用可能なコマンドは次の通りです。")
-	fmt.Printf(commandsHelp)
+	fmt.Print(commandsHelp)
 	return `コマンドを指定してください。
 smarthome <コマンド名>`
 }
@@ -36,6 +39,15 @@ func run() error {
 	flag.StringVar(&configPath, "config", subcommand.ConfigFileName, "MCPServerの時の設定ファイルのパス")
 	flag.Parse()
 
+	ctx := context.Background()
+	shutdown, err := otel.SetupOTEL(ctx, "smarthome")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = shutdown(ctx)
+	}()
+
 	if serverFlag {
 		config := subcommand.LoadConfig()
 		_, _ = fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
@@ -53,7 +65,7 @@ func run() error {
 
 func runCmd(config subcommand.Config, cmdArgs []string) error {
 	if len(cmdArgs) < 2 {
-		return fmt.Errorf(printHelp(config.Commands.Help()))
+		return fmt.Errorf("%s", printHelp(config.Commands.Help()))
 	}
 	name := strings.Join(cmdArgs, " ")
 	d, args, dymMsg, err := config.Commands.Find(name)
