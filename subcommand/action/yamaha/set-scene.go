@@ -3,6 +3,7 @@ package yamaha
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel"
 )
 
 type SetSceneAction struct {
@@ -12,6 +13,8 @@ type SetSceneAction struct {
 }
 
 func (a SetSceneAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("yamaha").Start(ctx, "SetSceneAction.Run")
+	defer span.End()
 	err := a.c.SetScene(ctx, a.scene)
 	if err != nil {
 		return "", err

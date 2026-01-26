@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 type SearchAndPlayAction struct {
@@ -23,6 +25,8 @@ func appendMessage(items Items, label string, msg []string, uris []string, loopF
 }
 
 func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, error) {
+	ctx, span := otel.Tracer("owntone").Start(ctx, "SearchAndPlayAction.Run")
+	defer span.End()
 	msg := []string{"Search Results..."}
 	searchQuery := Parse(query)
 	result, err := a.c.Search(ctx, strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
@@ -92,6 +96,8 @@ type SearchAndDisplayAction struct {
 }
 
 func (a SearchAndDisplayAction) Run(ctx context.Context, query string) (string, error) {
+	ctx, span := otel.Tracer("owntone").Start(ctx, "SearchAndDisplayAction.Run")
+	defer span.End()
 	msg := []string{"Search Results..."}
 	//fmt.Println("original query... " + query)
 	searchQuery := Parse(query)

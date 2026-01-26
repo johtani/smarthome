@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/nasa9084/go-switchbot/v3"
+	"go.opentelemetry.io/otel"
 )
 
 type SendCommandAction struct {
@@ -14,6 +15,8 @@ type SendCommandAction struct {
 }
 
 func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("switchbot").Start(ctx, "SendCommandAction.Run")
+	defer span.End()
 	err := a.Device().Command(ctx, a.deviceId, a.command)
 	if err != nil {
 		return "", err

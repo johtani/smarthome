@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 type GetTemperatureAndHumidityAction struct {
@@ -14,6 +16,8 @@ type GetTemperatureAndHumidityAction struct {
 }
 
 func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("switchbot").Start(ctx, "GetTemperatureAndHumidityAction.Run")
+	defer span.End()
 	msg := map[string]string{}
 	//goland:noinspection SpellCheckingInspection
 	pdev, vdev, err := a.Device().List(ctx)

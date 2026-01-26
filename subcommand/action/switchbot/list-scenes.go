@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 type ListScenesAction struct {
@@ -12,6 +14,8 @@ type ListScenesAction struct {
 }
 
 func (a ListScenesAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListScenesAction.Run")
+	defer span.End()
 	scenes, err := a.Scene().List(ctx)
 	var msg []string
 	if err != nil {

@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel"
 )
 
 type ChangePlaylistAction struct {
@@ -16,6 +18,8 @@ type ChangePlaylistAction struct {
 // Run
 // キューにプレイリストを追加して再生する
 func (a ChangePlaylistAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("owntone").Start(ctx, "ChangePlaylistAction.Run")
+	defer span.End()
 	msg := []string{"Change playlist to"}
 	playlists, err := a.c.GetPlaylists(ctx)
 	if err != nil {

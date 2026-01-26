@@ -6,6 +6,8 @@ import (
 	"math/rand"
 	"strings"
 	"time"
+
+	"go.opentelemetry.io/otel"
 )
 
 type PlayAction struct {
@@ -16,6 +18,8 @@ type PlayAction struct {
 // Run
 
 func (a PlayAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := otel.Tracer("owntone").Start(ctx, "PlayAction.Run")
+	defer span.End()
 	if strings.HasPrefix(args, "artist") {
 		return a.playRandomArtists(ctx)
 	} else if strings.HasPrefix(args, "genre") {

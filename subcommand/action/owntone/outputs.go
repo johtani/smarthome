@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 // DisplayOutputsAction lists Owntone outputs ordered by Selected=true first, then false.
@@ -34,6 +36,8 @@ func NewDisplayOutputsAction(client *Client, opts ...bool) DisplayOutputsAction 
 // Note: arg is currently ignored; behavior is controlled by defaultOnlySelected.
 // Default (no args) shows both selected and unselected unless defaultOnlySelected is true.
 func (a DisplayOutputsAction) Run(ctx context.Context, arg string) (string, error) {
+	ctx, span := otel.Tracer("owntone").Start(ctx, "DisplayOutputsAction.Run")
+	defer span.End()
 	outputs, err := a.c.GetOutputs(ctx)
 	if err != nil {
 		return "", fmt.Errorf("error in GetOutputs\n %v", err)

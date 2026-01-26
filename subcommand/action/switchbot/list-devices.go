@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 type ListDevicesAction struct {
@@ -12,6 +14,8 @@ type ListDevicesAction struct {
 }
 
 func (a ListDevicesAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListDevicesAction.Run")
+	defer span.End()
 	var msg []string
 	pdev, vdev, err := a.Device().List(ctx)
 	if err != nil {
