@@ -1,6 +1,7 @@
 package owntone
 
 import (
+	"context"
 	"fmt"
 	"strings"
 )
@@ -12,10 +13,10 @@ type DisplayPlaylistsAction struct {
 
 // Run
 // Playlistの一覧を取得して文字列として返す
-func (a DisplayPlaylistsAction) Run(category string) (string, error) {
+func (a DisplayPlaylistsAction) Run(ctx context.Context, category string) (string, error) {
 	msg := []string{"Playlists are..."}
 	flg := onlySpotify(category)
-	playlists, err := a.c.GetPlaylists()
+	playlists, err := a.c.GetPlaylists(ctx)
 	if err != nil {
 		return "", fmt.Errorf("error in GetPlaylists\n %v", err)
 	}

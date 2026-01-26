@@ -1,6 +1,9 @@
 package yamaha
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type SetSceneAction struct {
 	name  string
@@ -8,8 +11,8 @@ type SetSceneAction struct {
 	c     *Client
 }
 
-func (a SetSceneAction) Run(_ string) (string, error) {
-	err := a.c.SetScene(a.scene)
+func (a SetSceneAction) Run(ctx context.Context, _ string) (string, error) {
+	err := a.c.SetScene(ctx, a.scene)
 	if err != nil {
 		return "", err
 	}

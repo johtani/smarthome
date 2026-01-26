@@ -48,8 +48,8 @@ func NewClient(config Config) *Client {
 	}
 }
 
-func (c Client) Pause() error {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPut, c.buildUrl("api/player/pause"), nil)
+func (c Client) Pause(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildUrl("api/player/pause"), nil)
 	if err != nil {
 		return err
 	}
@@ -67,8 +67,8 @@ func (c Client) Pause() error {
 	return nil
 }
 
-func (c Client) Play() error {
-	req, err := http.NewRequestWithContext(context.Background(), http.MethodPut, c.buildUrl("api/player/play"), nil)
+func (c Client) Play(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildUrl("api/player/play"), nil)
 	if err != nil {
 		return err
 	}
@@ -86,10 +86,10 @@ func (c Client) Play() error {
 	return nil
 }
 
-func (c Client) SetVolume(volume int) error {
+func (c Client) SetVolume(ctx context.Context, volume int) error {
 	params := map[string]string{}
 	params["volume"] = strconv.Itoa(volume)
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPut, c.buildUrl("api/player/volume"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPut, c.buildUrl("api/player/volume"), params)
 	if err != nil {
 		return err
 	}
@@ -114,12 +114,12 @@ type Playlist struct {
 	Path      string `json:"path"`
 }
 
-func (c Client) GetPlaylists() ([]Playlist, error) {
+func (c Client) GetPlaylists(ctx context.Context) ([]Playlist, error) {
 	type Playlists struct {
 		Items []Playlist `json:"items"`
 		Total int        `json:"total"`
 	}
-	req, err := http.NewRequest(http.MethodGet, c.buildUrl("api/library/playlists"), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl("api/library/playlists"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -148,14 +148,14 @@ func (c Client) GetPlaylists() ([]Playlist, error) {
 	return lists, nil
 }
 
-func (c Client) AddItem2QueueAndPlay(uri string, expression string) error {
+func (c Client) AddItem2QueueAndPlay(ctx context.Context, uri string, expression string) error {
 	params := map[string]string{"playback": "start"}
 	if len(uri) > 0 {
 		params["uris"] = uri
 	} else if len(expression) > 0 {
 		params["expression"] = expression
 	}
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPost, c.buildUrl("api/queue/items/add"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPost, c.buildUrl("api/queue/items/add"), params)
 	if err != nil {
 		return err
 	}
@@ -184,8 +184,8 @@ type PlayerStatus struct {
 	ItemProgressMS int    `json:"item_progress_ms"`
 }
 
-func (c Client) GetPlayerStatus() (*PlayerStatus, error) {
-	req, err := http.NewRequest(http.MethodGet, c.buildUrl("api/player"), nil)
+func (c Client) GetPlayerStatus(ctx context.Context) (*PlayerStatus, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl("api/player"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -207,8 +207,8 @@ func (c Client) GetPlayerStatus() (*PlayerStatus, error) {
 	return &p, nil
 }
 
-func (c Client) ClearQueue() error {
-	req, err := http.NewRequest(http.MethodPut, c.buildUrl("api/queue/clear"), nil)
+func (c Client) ClearQueue(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildUrl("api/queue/clear"), nil)
 	if err != nil {
 		return err
 	}
@@ -274,7 +274,7 @@ type SearchResult struct {
 	Playlists Items `json:"playlists"`
 }
 
-func (c Client) Search(keyword string, resultType []SearchType, limit int) (*SearchResult, error) {
+func (c Client) Search(ctx context.Context, keyword string, resultType []SearchType, limit int) (*SearchResult, error) {
 	params := map[string]string{}
 	params["query"] = keyword
 	l := limit
@@ -287,7 +287,7 @@ func (c Client) Search(keyword string, resultType []SearchType, limit int) (*Sea
 		types = append(types, string(s))
 	}
 	params["type"] = strings.Join(types, ",")
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/search"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("api/search"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -317,8 +317,8 @@ type Counts struct {
 	Albums  int `json:"albums"`
 }
 
-func (c Client) Counts() (*Counts, error) {
-	req, err := http.NewRequest(http.MethodGet, c.buildUrl("api/library"), nil)
+func (c Client) Counts(ctx context.Context) (*Counts, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl("api/library"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -350,12 +350,12 @@ type Artist struct {
 	TrackCount int    `json:"track_count"`
 }
 
-func (c Client) GetArtist(offset int) (*Artist, error) {
+func (c Client) GetArtist(ctx context.Context, offset int) (*Artist, error) {
 
 	params := map[string]string{}
 	params["offset"] = strconv.Itoa(offset)
 	params["limit"] = strconv.Itoa(1)
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/library/artists"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("api/library/artists"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -388,9 +388,9 @@ type Genre struct {
 	TrackCount int    `json:"track_count"`
 }
 
-func (c Client) GetGenres() ([]Genre, error) {
+func (c Client) GetGenres(ctx context.Context) ([]Genre, error) {
 	params := map[string]string{}
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("api/library/genres"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("api/library/genres"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -428,8 +428,8 @@ type Outputs struct {
 }
 
 // GetOutputs fetches the list of audio outputs (speakers) from Owntone.
-func (c Client) GetOutputs() ([]Output, error) {
-	req, err := http.NewRequest(http.MethodGet, c.buildUrl("api/outputs"), nil)
+func (c Client) GetOutputs(ctx context.Context) ([]Output, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl("api/outputs"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -452,8 +452,8 @@ func (c Client) GetOutputs() ([]Output, error) {
 	return results.Outputs, nil
 }
 
-func (c Client) UpdateLibrary() error {
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodPut, c.buildUrl("api/update"), nil)
+func (c Client) UpdateLibrary(ctx context.Context) error {
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPut, c.buildUrl("api/update"), nil)
 	if err != nil {
 		return err
 	}

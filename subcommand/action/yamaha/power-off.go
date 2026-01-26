@@ -1,14 +1,17 @@
 package yamaha
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type PowerOffAction struct {
 	name string
 	c    *Client
 }
 
-func (a PowerOffAction) Run(_ string) (string, error) {
-	err := a.c.PowerOff()
+func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
+	err := a.c.PowerOff(ctx)
 	if err != nil {
 		return "", err
 	}

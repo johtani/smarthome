@@ -1,6 +1,7 @@
 package yamaha
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -109,7 +110,7 @@ func TestClient_SetScene(t *testing.T) {
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.SetScene(tt.fields.scene); (err != nil) != tt.wantErr {
+			if err := c.SetScene(context.Background(), tt.fields.scene); (err != nil) != tt.wantErr {
 				t.Errorf("SetScene() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -141,7 +142,7 @@ func TestClient_SetVolume(t *testing.T) {
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.SetVolume(tt.fields.volume); (err != nil) != tt.wantErr {
+			if err := c.SetVolume(context.Background(), tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -196,7 +197,7 @@ func TestClient_PowerOff(t *testing.T) {
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.PowerOff(); (err != nil) != tt.wantErr {
+			if err := c.PowerOff(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("PowerOff() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

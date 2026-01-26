@@ -36,7 +36,7 @@ func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp
 		tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description))
 		return tmp,
 			func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				msg, err := definition.Init(config).Exec("")
+				msg, err := definition.Init(config).Exec(ctx, "")
 				if err != nil {
 					return nil, errors.New(definition.Name + ": " + err.Error())
 				}
@@ -76,7 +76,7 @@ func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp
 						}
 					}
 				}
-				msg, err := definition.Init(config).Exec(strings.Join(params, " "))
+				msg, err := definition.Init(config).Exec(ctx, strings.Join(params, " "))
 				if err != nil {
 					return nil, errors.New(definition.Name + ": " + err.Error())
 				}

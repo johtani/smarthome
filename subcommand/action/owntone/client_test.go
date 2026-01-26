@@ -1,6 +1,7 @@
 package owntone
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -96,7 +97,7 @@ func TestClient_Pause(t *testing.T) {
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.Pause(); (err != nil) != tt.wantErr {
+			if err := c.Pause(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Pause() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -124,7 +125,7 @@ func TestClient_Play(t *testing.T) {
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.Play(); (err != nil) != tt.wantErr {
+			if err := c.Play(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Play() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -154,7 +155,7 @@ func TestClient_SetVolume(t *testing.T) {
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.SetVolume(tt.fields.volume); (err != nil) != tt.wantErr {
+			if err := c.SetVolume(context.Background(), tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -187,7 +188,7 @@ func TestClient_AddItem2QueueAndPlay(t *testing.T) {
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.AddItem2QueueAndPlay(tt.fields.uris, tt.fields.expression); (err != nil) != tt.wantErr {
+			if err := c.AddItem2QueueAndPlay(context.Background(), tt.fields.uris, tt.fields.expression); (err != nil) != tt.wantErr {
 				t.Errorf("AddItem2QueueAndPlay() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -246,7 +247,7 @@ func TestClient_GetPlaylists(t *testing.T) {
 			config := Config{Url: server.URL}
 			c := NewClient(config)
 
-			playlists, err := c.GetPlaylists()
+			playlists, err := c.GetPlaylists(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetPlaylists() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -297,7 +298,7 @@ func TestClient_GetGetPlayerStatus(t *testing.T) {
 			config := Config{Url: server.URL}
 			c := NewClient(config)
 
-			status, err := c.GetPlayerStatus()
+			status, err := c.GetPlayerStatus(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetPlayerStatus() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -353,7 +354,7 @@ func TestClient_ClearQueue(t *testing.T) {
 			defer server.Close()
 			config := Config{Url: server.URL}
 			c := NewClient(config)
-			if err := c.ClearQueue(); (err != nil) != tt.wantErr {
+			if err := c.ClearQueue(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("ClearQueue() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -586,7 +587,7 @@ func TestClient_Search(t *testing.T) {
 			config := Config{Url: server.URL}
 			c := NewClient(config)
 
-			got, err := c.Search(tt.args.keyword, tt.args.resultType, tt.args.limit)
+			got, err := c.Search(context.Background(), tt.args.keyword, tt.args.resultType, tt.args.limit)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Search() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -648,7 +649,7 @@ func TestClient_Counts(t *testing.T) {
 			config := Config{Url: server.URL}
 			c := NewClient(config)
 
-			count, err := c.Counts()
+			count, err := c.Counts(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Count() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -713,7 +714,7 @@ func TestClient_GetArtist(t *testing.T) {
 			config := Config{Url: server.URL}
 			c := NewClient(config)
 
-			artist, err := c.GetArtist(tt.args.offset)
+			artist, err := c.GetArtist(context.Background(), tt.args.offset)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetArtist() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -787,7 +788,7 @@ func TestClient_GetGenres(t *testing.T) {
 			config := Config{Url: server.URL}
 			c := NewClient(config)
 
-			genres, err := c.GetGenres()
+			genres, err := c.GetGenres(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetGenres() error = %v, wantErr %v", err, tt.wantErr)
 			}
@@ -831,7 +832,7 @@ func TestClient_GetOutputs(t *testing.T) {
 			config := Config{Url: server.URL}
 			c := NewClient(config)
 
-			outputs, err := c.GetOutputs()
+			outputs, err := c.GetOutputs(context.Background())
 			if (err != nil) != tt.wantErr {
 				t.Errorf("GetOutputs() error = %v, wantErr %v", err, tt.wantErr)
 			}

@@ -1,6 +1,7 @@
 package subcommand
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"unicode"
@@ -15,10 +16,10 @@ type Subcommand struct {
 	ignoreError bool
 }
 
-func (s Subcommand) Exec(args string) (string, error) {
+func (s Subcommand) Exec(ctx context.Context, args string) (string, error) {
 	var msgs []string
 	for i := range s.actions {
-		msg, err := s.actions[i].Run(args)
+		msg, err := s.actions[i].Run(ctx, args)
 		if s.ignoreError && err != nil {
 			//fmt.Printf("skip error\t %v\n", err)
 			msg = fmt.Sprintf("skip error\t %v\n", err)

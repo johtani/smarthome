@@ -1,6 +1,7 @@
 package subcommand
 
 import (
+	"context"
 	"fmt"
 	"github.com/johtani/smarthome/subcommand/action"
 	"testing"
@@ -8,13 +9,13 @@ import (
 
 type okAction struct{}
 
-func (a okAction) Run(_ string) (string, error) {
+func (a okAction) Run(_ context.Context, _ string) (string, error) {
 	return "", nil
 }
 
 type ngAction struct{}
 
-func (a ngAction) Run(_ string) (string, error) {
+func (a ngAction) Run(_ context.Context, _ string) (string, error) {
 	return "", fmt.Errorf("something wrong")
 }
 
@@ -55,7 +56,7 @@ func TestSubcommand_Exec(t *testing.T) {
 				actions:     tt.fields.actions,
 				ignoreError: tt.fields.ignoreError,
 			}
-			if _, err := s.Exec(""); (err != nil) != tt.wantErr {
+			if _, err := s.Exec(context.Background(), ""); (err != nil) != tt.wantErr {
 				t.Errorf("Exec() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

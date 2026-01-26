@@ -1,5 +1,7 @@
 package action
 
+import "context"
+
 type Action interface {
-	Run(args string) (string, error)
+	Run(ctx context.Context, args string) (string, error)
 }

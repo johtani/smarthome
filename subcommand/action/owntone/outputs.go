@@ -1,6 +1,7 @@
 package owntone
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"strings"
@@ -32,8 +33,8 @@ func NewDisplayOutputsAction(client *Client, opts ...bool) DisplayOutputsAction 
 // Run fetches outputs and returns a formatted string.
 // Note: arg is currently ignored; behavior is controlled by defaultOnlySelected.
 // Default (no args) shows both selected and unselected unless defaultOnlySelected is true.
-func (a DisplayOutputsAction) Run(arg string) (string, error) {
-	outputs, err := a.c.GetOutputs()
+func (a DisplayOutputsAction) Run(ctx context.Context, arg string) (string, error) {
+	outputs, err := a.c.GetOutputs(ctx)
 	if err != nil {
 		return "", fmt.Errorf("error in GetOutputs\n %v", err)
 	}

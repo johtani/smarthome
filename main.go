@@ -59,11 +59,11 @@ func run() error {
 		return nil
 	} else {
 		config := subcommand.LoadConfigWithPath(configPath)
-		return runCmd(config, flag.Args())
+		return runCmd(ctx, config, flag.Args())
 	}
 }
 
-func runCmd(config subcommand.Config, cmdArgs []string) error {
+func runCmd(ctx context.Context, config subcommand.Config, cmdArgs []string) error {
 	if len(cmdArgs) < 2 {
 		return fmt.Errorf("%s", printHelp(config.Commands.Help()))
 	}
@@ -75,7 +75,7 @@ func runCmd(config subcommand.Config, cmdArgs []string) error {
 		return nil
 	}
 	c := d.Init(config)
-	msg, err := c.Exec(args)
+	msg, err := c.Exec(ctx, args)
 	if err != nil {
 		return err
 	}

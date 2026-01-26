@@ -2,6 +2,7 @@ package kagome
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"github.com/ikawaha/kagome-dict-ipa-neologd"
 	"github.com/ikawaha/kagome-dict/dict"
@@ -25,7 +26,7 @@ type KagomeAction struct {
 	dictionary Dict
 }
 
-func (a KagomeAction) Run(args string) (string, error) {
+func (a KagomeAction) Run(_ context.Context, args string) (string, error) {
 	var dict *dict.Dict
 	if a.dictionary == UNI {
 		dict = uni.Dict()
