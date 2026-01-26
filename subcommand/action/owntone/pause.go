@@ -1,12 +1,14 @@
 package owntone
 
+import "context"
+
 type PauseAction struct {
 	name string
 	c    *Client
 }
 
-func (a PauseAction) Run(_ string) (string, error) {
-	err := a.c.Pause()
+func (a PauseAction) Run(ctx context.Context, _ string) (string, error) {
+	err := a.c.Pause(ctx)
 	if err != nil {
 		return "", err
 	}

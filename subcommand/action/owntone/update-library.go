@@ -1,14 +1,17 @@
 package owntone
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type UpdateLibraryAction struct {
 	name string
 	c    *Client
 }
 
-func (a UpdateLibraryAction) Run(_ string) (string, error) {
-	err := a.c.UpdateLibrary()
+func (a UpdateLibraryAction) Run(ctx context.Context, _ string) (string, error) {
+	err := a.c.UpdateLibrary(ctx)
 	if err != nil {
 		return "", fmt.Errorf("error in ClearQueue\n %v", err)
 	}

@@ -11,12 +11,12 @@ type ExecuteSceneAction struct {
 	CachedClient
 }
 
-func (a ExecuteSceneAction) Run(_ string) (string, error) {
-	err := a.Scene().Execute(context.Background(), a.sceneId)
+func (a ExecuteSceneAction) Run(ctx context.Context, _ string) (string, error) {
+	err := a.Scene().Execute(ctx, a.sceneId)
 	if err != nil {
 		return "", err
 	}
-	name, err := a.GetSceneName(a.sceneId)
+	name, err := a.GetSceneName(ctx, a.sceneId)
 	if err != nil {
 		return "", err
 	}

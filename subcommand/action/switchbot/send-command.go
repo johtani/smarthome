@@ -13,16 +13,16 @@ type SendCommandAction struct {
 	CachedClient
 }
 
-func (a SendCommandAction) Run(_ string) (string, error) {
-	err := a.Device().Command(context.Background(), a.deviceId, a.command)
+func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
+	err := a.Device().Command(ctx, a.deviceId, a.command)
 	if err != nil {
 		return "", err
 	}
-	name, err := a.GetDeviceName(a.deviceId)
+	name, err := a.GetDeviceName(ctx, a.deviceId)
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Sned the command(%v) to the device(%v)", a.command, name), nil
+	return fmt.Sprintf("Send the command(%v) to the device(%v)", a.command, name), nil
 }
 
 func NewSendCommandAction(client CachedClient, deviceId string, command switchbot.Command) SendCommandAction {

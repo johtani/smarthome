@@ -1,6 +1,7 @@
 package kagome
 
 import (
+	"context"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func TestKagomeAction_Run(t *testing.T) {
 				name:       tt.fields.name,
 				dictionary: tt.fields.dictionary,
 			}
-			got, err := a.Run(tt.args.args)
+			got, err := a.Run(context.Background(), tt.args.args)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 				return

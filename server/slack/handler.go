@@ -19,7 +19,7 @@ func defaultHandler(event *socketmode.Event, client *socketmode.Client) {
 
 func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix string) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
-		_, span := otel.Tracer("slack").Start(context.Background(), "AppMention")
+		ctx, span := otel.Tracer("slack").Start(context.Background(), "AppMention")
 		defer span.End()
 
 		eventPayload, ok := event.Data.(slackevents.EventsAPIEvent)
@@ -40,7 +40,7 @@ func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix strin
 		// とりあえずBotのUserIDが最初にあるメッセージだけ対象とする
 		if strings.HasPrefix(payloadEvent.Text, botUserIdPrefix) {
 			var err error
-			msg, err = findAndExec(config, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
+			msg, err = findAndExec(ctx, config, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
 			if err != nil {
 				fmt.Printf("######### : Got error %v\n", err)
 				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
@@ -61,7 +61,7 @@ func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix strin
 	}
 }
 
-func findAndExec(config subcommand.Config, text string) (string, error) {
+func findAndExec(ctx context.Context, config subcommand.Config, text string) (string, error) {
 	name := strings.TrimSpace(text)
 	if len(name) == 0 {
 		return config.Commands.Help(), nil
@@ -71,7 +71,7 @@ func findAndExec(config subcommand.Config, text string) (string, error) {
 		return "", err
 	}
 	c := d.Init(config)
-	msg, err := c.Exec(args)
+	msg, err := c.Exec(ctx, args)
 	if err != nil {
 		return "", err
 	}
@@ -83,7 +83,7 @@ func findAndExec(config subcommand.Config, text string) (string, error) {
 
 func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
-		_, span := otel.Tracer("slack").Start(context.Background(), "SlashCommand")
+		ctx, span := otel.Tracer("slack").Start(context.Background(), "SlashCommand")
 		defer span.End()
 
 		ev, ok := event.Data.(slack.SlashCommand)
@@ -100,7 +100,7 @@ func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.Socke
 
 		escaped := strings.TrimLeft(ev.Command, "/")
 		escaped = strings.ReplaceAll(escaped, "-", " ")
-		msg, err := findAndExec(config, escaped+" "+ev.Text)
+		msg, err := findAndExec(ctx, config, escaped+" "+ev.Text)
 
 		if err != nil {
 			fmt.Printf("######### : Got error %v\n", err)

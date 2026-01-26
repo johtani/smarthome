@@ -1,6 +1,7 @@
 package owntone
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -14,20 +15,20 @@ type PlayAction struct {
 
 // Run
 
-func (a PlayAction) Run(args string) (string, error) {
+func (a PlayAction) Run(ctx context.Context, args string) (string, error) {
 	if strings.HasPrefix(args, "artist") {
-		return a.playRandomArtists()
+		return a.playRandomArtists(ctx)
 	} else if strings.HasPrefix(args, "genre") {
-		return a.playRandomGenre()
+		return a.playRandomGenre(ctx)
 	} else {
-		return a.playPlaylist()
+		return a.playPlaylist(ctx)
 	}
 }
 
-func (a PlayAction) playRandomGenre() (string, error) {
+func (a PlayAction) playRandomGenre(ctx context.Context) (string, error) {
 	msg := []string{"Add"}
 	rand.New(rand.NewSource(time.Now().UnixNano()))
-	genres, err := a.c.GetGenres()
+	genres, err := a.c.GetGenres(ctx)
 	if err != nil {
 		return "", fmt.Errorf("error in playRandomGenre\n %v", err)
 	}
@@ -35,28 +36,28 @@ func (a PlayAction) playRandomGenre() (string, error) {
 	genre := genres[index]
 	msg = append(msg, fmt.Sprintf("Genre : %v", genre.Name))
 	expression := fmt.Sprintf("genre is \"%s\"", genre.Name)
-	err = a.c.AddItem2QueueAndPlay("", expression)
+	err = a.c.AddItem2QueueAndPlay(ctx, "", expression)
 	if err != nil {
 		return "", fmt.Errorf("error in AddItem2QueueAndPlay\n %v", err)
 	}
 	return strings.Join(msg, " "), nil
 }
 
-func (a PlayAction) playRandomArtists() (string, error) {
+func (a PlayAction) playRandomArtists(ctx context.Context) (string, error) {
 	msg := []string{"Add"}
-	counts, err := a.c.Counts()
+	counts, err := a.c.Counts(ctx)
 	if err != nil {
 		return "", err
 	}
 	if counts.Artists > 0 {
 		rand.New(rand.NewSource(time.Now().UnixNano()))
 		offset := rand.Intn(counts.Artists)
-		artist, err := a.c.GetArtist(offset)
+		artist, err := a.c.GetArtist(ctx, offset)
 		if err != nil {
 			return "", fmt.Errorf("error in playRandomArtists\n %v", err)
 		}
 		msg = append(msg, fmt.Sprintf("Artist : %v", artist.Name))
-		err = a.c.AddItem2QueueAndPlay(artist.Uri, "")
+		err = a.c.AddItem2QueueAndPlay(ctx, artist.Uri, "")
 		if err != nil {
 			return "", fmt.Errorf("error in AddItem2QueueAndPlay\n %v", err)
 		}
@@ -66,10 +67,10 @@ func (a PlayAction) playRandomArtists() (string, error) {
 	return strings.Join(msg, " "), nil
 }
 
-func (a PlayAction) playPlaylist() (string, error) {
+func (a PlayAction) playPlaylist(ctx context.Context) (string, error) {
 	// キューに曲がある場合は、そのまま再生
 	// キューに曲がない場合は、ランダムにプレイリストを選択してからキューに登録して再生
-	status, err := a.c.GetPlayerStatus()
+	status, err := a.c.GetPlayerStatus(ctx)
 	msg := []string{"Playing music"}
 	if err != nil {
 		return "", err
@@ -77,7 +78,7 @@ func (a PlayAction) playPlaylist() (string, error) {
 	if status.ItemID == 0 {
 		//プレイヤーのキューに曲が入っていない状態
 		//fmt.Print("queue is empty, so playing a randomly selected playlist")
-		playlists, err := a.c.GetPlaylists()
+		playlists, err := a.c.GetPlaylists(ctx)
 		if err != nil {
 			return "", fmt.Errorf("error in playPlaylist\n %v", err)
 		}
@@ -86,7 +87,7 @@ func (a PlayAction) playPlaylist() (string, error) {
 			index := rand.Intn(len(playlists))
 			target := playlists[index]
 			msg = append(msg, fmt.Sprintf("from %v.", target.Name))
-			err := a.c.AddItem2QueueAndPlay(target.Uri, "")
+			err := a.c.AddItem2QueueAndPlay(ctx, target.Uri, "")
 			if err != nil {
 				return "", fmt.Errorf("error in AddItem2QueueAndPlay(%v)\n %v", target.Name, err)
 			}
@@ -95,7 +96,7 @@ func (a PlayAction) playPlaylist() (string, error) {
 		}
 	} else {
 		msg = append(msg, " from queue")
-		err = a.c.Play()
+		err = a.c.Play(ctx)
 		if err != nil {
 			return "", fmt.Errorf("error in Play\n %v", err)
 		}

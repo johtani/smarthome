@@ -43,12 +43,12 @@ func NewClient(config Config) CachedClient {
 	}
 }
 
-func (c CachedClient) GetSceneName(id string) (string, error) {
+func (c CachedClient) GetSceneName(ctx context.Context, id string) (string, error) {
 	name, ok := c.sceneNameCache[id]
 	if ok {
 		return name, nil
 	}
-	scenes, err := c.Scene().List(context.Background())
+	scenes, err := c.Scene().List(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -59,12 +59,12 @@ func (c CachedClient) GetSceneName(id string) (string, error) {
 	return c.sceneNameCache[id], nil
 }
 
-func (c CachedClient) GetDeviceName(id string) (string, error) {
+func (c CachedClient) GetDeviceName(ctx context.Context, id string) (string, error) {
 	name, ok := c.deviceNameCache[id]
 	if ok {
 		return name, nil
 	}
-	pDevices, vDevices, err := c.Device().List(context.Background())
+	pDevices, vDevices, err := c.Device().List(ctx)
 	if err != nil {
 		return "", err
 	}

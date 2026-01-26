@@ -67,10 +67,10 @@ func parseHttpResponse(res *http.Response, caller string) error {
 	return nil
 }
 
-func (c Client) SetScene(scene int) error {
+func (c Client) SetScene(ctx context.Context, scene int) error {
 	params := map[string]string{}
 	params["num"] = strconv.Itoa(scene)
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("recallScene"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("recallScene"), params)
 	if err != nil {
 		return err
 	}
@@ -89,10 +89,10 @@ func (c Client) SetScene(scene int) error {
 	return nil
 }
 
-func (c Client) SetVolume(volume int) error {
+func (c Client) SetVolume(ctx context.Context, volume int) error {
 	params := map[string]string{}
 	params["volume"] = strconv.Itoa(volume)
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("setVolume"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("setVolume"), params)
 	if err != nil {
 		return err
 	}
@@ -111,10 +111,10 @@ func (c Client) SetVolume(volume int) error {
 	return nil
 }
 
-func (c Client) PowerOff() error {
+func (c Client) PowerOff(ctx context.Context) error {
 	params := map[string]string{}
 	params["power"] = "standby"
-	req, err := internal.BuildHttpRequestWithParams(context.Background(), http.MethodGet, c.buildUrl("setPower"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("setPower"), params)
 	if err != nil {
 		return err
 	}

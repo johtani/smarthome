@@ -1,6 +1,7 @@
 package owntone
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -21,10 +22,10 @@ func appendMessage(items Items, label string, msg []string, uris []string, loopF
 	return msg, uris
 }
 
-func (a SearchAndPlayAction) Run(query string) (string, error) {
+func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, error) {
 	msg := []string{"Search Results..."}
 	searchQuery := Parse(query)
-	result, err := a.c.Search(strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
+	result, err := a.c.Search(ctx, strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
 		return "Something wrong...", fmt.Errorf("error in SearchAndDisplayAction\n %v", err)
 	}
@@ -50,21 +51,21 @@ func (a SearchAndPlayAction) Run(query string) (string, error) {
 	})
 
 	if len(uris) > 0 || len(result.Genres.Items) > 0 {
-		err := a.c.ClearQueue()
+		err := a.c.ClearQueue(ctx)
 		if err != nil {
 			return "", fmt.Errorf("error in ClearQueue\n %v", err)
 		}
 	}
 
 	if len(uris) > 0 {
-		err = a.c.AddItem2QueueAndPlay(strings.Join(uris, ","), "")
+		err = a.c.AddItem2QueueAndPlay(ctx, strings.Join(uris, ","), "")
 		if err != nil {
 			return "", fmt.Errorf("error calling AddItem2QueueAndPlay\n %v", err)
 		}
 	}
 
 	if len(result.Genres.Items) > 0 {
-		err = a.c.AddItem2QueueAndPlay("", fmt.Sprintf("genre is \"%s\"", strings.Join(searchQuery.Terms, " ")))
+		err = a.c.AddItem2QueueAndPlay(ctx, "", fmt.Sprintf("genre is \"%s\"", strings.Join(searchQuery.Terms, " ")))
 		if err != nil {
 			return "", fmt.Errorf("error calling AddItem2QueueAndPlay with expression\n %v", err)
 		}
@@ -90,12 +91,12 @@ type SearchAndDisplayAction struct {
 	c    *Client
 }
 
-func (a SearchAndDisplayAction) Run(query string) (string, error) {
+func (a SearchAndDisplayAction) Run(ctx context.Context, query string) (string, error) {
 	msg := []string{"Search Results..."}
 	//fmt.Println("original query... " + query)
 	searchQuery := Parse(query)
 	//fmt.Println("Terms... " + strings.Join(searchQuery.Terms, " "))
-	result, err := a.c.Search(strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
+	result, err := a.c.Search(ctx, strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
 		return "Something wrong...", fmt.Errorf("error in SearchAndDisplayAction(terms=%v)\n %v", strings.Join(searchQuery.Terms, " "), err)
 	}

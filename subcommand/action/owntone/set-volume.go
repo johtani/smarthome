@@ -1,6 +1,9 @@
 package owntone
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 type SetVolumeAction struct {
 	name   string
@@ -8,8 +11,8 @@ type SetVolumeAction struct {
 	c      *Client
 }
 
-func (a SetVolumeAction) Run(_ string) (string, error) {
-	err := a.c.SetVolume(a.volume)
+func (a SetVolumeAction) Run(ctx context.Context, _ string) (string, error) {
+	err := a.c.SetVolume(ctx, a.volume)
 	if err != nil {
 		return "", err
 	}
