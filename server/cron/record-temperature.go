@@ -17,14 +17,14 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 	iCli := influxdb.NewClient(influxdbConfig)
 	defer iCli.Close()
 
-	pdev, vdev, err := sCli.Device().List(ctx)
+	pdev, vdev, err := sCli.DeviceAPI.List(ctx)
 	if err != nil {
 		fmt.Printf("Cannot get device list / %v\n", err)
 		return
 	}
 	for _, d := range pdev {
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
-			status, err := sCli.Device().Status(ctx, d.ID)
+			status, err := sCli.DeviceAPI.Status(ctx, d.ID)
 			if err != nil {
 				fmt.Printf("Something wrong on [%s] / %v\n", d.Name, err)
 			}
@@ -40,7 +40,7 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 	}
 	for _, d := range vdev {
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
-			status, err := sCli.Device().Status(ctx, d.ID)
+			status, err := sCli.DeviceAPI.Status(ctx, d.ID)
 			if err != nil {
 				fmt.Printf("Something wrong on [%s] / %v\n", d.Name, err)
 			}

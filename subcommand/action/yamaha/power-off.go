@@ -8,7 +8,7 @@ import (
 
 type PowerOffAction struct {
 	name string
-	c    *Client
+	c    YamahaAPI
 }
 
 func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
@@ -21,7 +21,7 @@ func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Amplifier Power off."), nil
 }
 
-func NewPowerOffAction(client *Client) PowerOffAction {
+func NewPowerOffAction(client YamahaAPI) PowerOffAction {
 	return PowerOffAction{
 		name: "Power off Yamaha Amplifier",
 		c:    client,
