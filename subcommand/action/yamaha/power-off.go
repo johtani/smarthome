@@ -3,6 +3,7 @@ package yamaha
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel"
 )
 
 type PowerOffAction struct {
@@ -11,6 +12,8 @@ type PowerOffAction struct {
 }
 
 func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("yamaha").Start(ctx, "PowerOffAction.Run")
+	defer span.End()
 	err := a.c.PowerOff(ctx)
 	if err != nil {
 		return "", err

@@ -1,12 +1,17 @@
 package action
 
-import "context"
+import (
+	"context"
+	"go.opentelemetry.io/otel"
+)
 
 type HelpAction struct {
 	help string
 }
 
-func (a HelpAction) Run(_ context.Context, _ string) (string, error) {
+func (a HelpAction) Run(ctx context.Context, _ string) (string, error) {
+	_, span := otel.Tracer("action").Start(ctx, "HelpAction.Run")
+	defer span.End()
 	return a.help, nil
 }
 

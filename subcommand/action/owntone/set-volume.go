@@ -3,6 +3,8 @@ package owntone
 import (
 	"context"
 	"fmt"
+
+	"go.opentelemetry.io/otel"
 )
 
 type SetVolumeAction struct {
@@ -12,6 +14,8 @@ type SetVolumeAction struct {
 }
 
 func (a SetVolumeAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("owntone").Start(ctx, "SetVolumeAction.Run")
+	defer span.End()
 	err := a.c.SetVolume(ctx, a.volume)
 	if err != nil {
 		return "", err

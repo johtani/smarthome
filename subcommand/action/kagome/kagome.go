@@ -11,6 +11,8 @@ import (
 	"github.com/ikawaha/kagome/v2/filter/ja"
 	"github.com/ikawaha/kagome/v2/tokenizer"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 type Dict string
@@ -26,7 +28,9 @@ type KagomeAction struct {
 	dictionary Dict
 }
 
-func (a KagomeAction) Run(_ context.Context, args string) (string, error) {
+func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := otel.Tracer("kagome").Start(ctx, "KagomeAction.Run")
+	defer span.End()
 	var dict *dict.Dict
 	if a.dictionary == UNI {
 		dict = uni.Dict()

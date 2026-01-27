@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"go.opentelemetry.io/otel"
 )
 
 type DisplayPlaylistsAction struct {
@@ -14,6 +16,8 @@ type DisplayPlaylistsAction struct {
 // Run
 // Playlistの一覧を取得して文字列として返す
 func (a DisplayPlaylistsAction) Run(ctx context.Context, category string) (string, error) {
+	ctx, span := otel.Tracer("owntone").Start(ctx, "DisplayPlaylistsAction.Run")
+	defer span.End()
 	msg := []string{"Playlists are..."}
 	flg := onlySpotify(category)
 	playlists, err := a.c.GetPlaylists(ctx)

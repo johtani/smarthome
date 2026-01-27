@@ -1,6 +1,9 @@
 package owntone
 
-import "context"
+import (
+	"context"
+	"go.opentelemetry.io/otel"
+)
 
 type PauseAction struct {
 	name string
@@ -8,6 +11,8 @@ type PauseAction struct {
 }
 
 func (a PauseAction) Run(ctx context.Context, _ string) (string, error) {
+	ctx, span := otel.Tracer("owntone").Start(ctx, "PauseAction.Run")
+	defer span.End()
 	err := a.c.Pause(ctx)
 	if err != nil {
 		return "", err
