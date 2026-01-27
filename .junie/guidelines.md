@@ -17,6 +17,8 @@ SwitchBot、OwnTone、YamahaなどのAPIを統合しています。
 - `internal/otel/`: OpenTelemetryの設定。
 
 ### 開発ガイドライン
+- **ブランチ作成**:
+  - 作業を開始する前に、必ず新しいブランチを作成してください（例: `feature/xxxx`）。
 - **新しいコマンドの追加**:
   1. `subcommand/` 直下に `xxxx.go` を作成し、`Definition` とファクトリ関数を実装します。
   2. `subcommand/subcommand.go` の `NewCommands()` 関数に作成した `Definition` を追加します。
