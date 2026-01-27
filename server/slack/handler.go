@@ -17,6 +17,12 @@ func defaultHandler(event *socketmode.Event, client *socketmode.Client) {
 	//client.Debugf("skip event: %v", event.Type)
 }
 
+func PostMessage(ctx context.Context, client *socketmode.Client, channelID string, options ...slack.MsgOption) (string, string, error) {
+	_, span := otel.Tracer("slack").Start(ctx, "PostMessage")
+	defer span.End()
+	return client.PostMessage(channelID, options...)
+}
+
 func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix string) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
 		ctx, span := otel.Tracer("slack").Start(context.Background(), "AppMention")
@@ -53,7 +59,7 @@ func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix strin
 			msg = "Yes, master."
 		}
 
-		_, _, err := client.PostMessage(payloadEvent.Channel, slack.MsgOptionText(msg, false))
+		_, _, err := PostMessage(ctx, client, payloadEvent.Channel, slack.MsgOptionText(msg, false))
 		if err != nil {
 			fmt.Printf("######### : failed posting message: %v\n", err)
 			return
@@ -93,7 +99,7 @@ func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.Socke
 		client.Ack(*event.Request)
 
 		cmd := fmt.Sprintf("%v %v", ev.Command, ev.Text)
-		if _, _, err := client.PostMessage(ev.ChannelID, slack.MsgOptionText(cmd, false)); err != nil {
+		if _, _, err := PostMessage(ctx, client, ev.ChannelID, slack.MsgOptionText(cmd, false)); err != nil {
 			client.Debugf("failed to post message: %v", err)
 			return
 		}
@@ -110,7 +116,7 @@ func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.Socke
 		if len(msg) == 0 {
 			msg = "Yes, master."
 		}
-		_, _, err = client.PostMessage(ev.ChannelID, slack.MsgOptionText(msg, false))
+		_, _, err = PostMessage(ctx, client, ev.ChannelID, slack.MsgOptionText(msg, false))
 		if err != nil {
 			fmt.Printf("######### : failed posting message: %v\n", err)
 			return
