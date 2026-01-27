@@ -9,7 +9,7 @@ import (
 type SetVolumeAction struct {
 	name   string
 	volume int
-	c      *Client
+	c      YamahaAPI
 }
 
 func (a SetVolumeAction) Run(ctx context.Context, _ string) (string, error) {
@@ -22,7 +22,7 @@ func (a SetVolumeAction) Run(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Set volume to %v.", a.volume), nil
 }
 
-func NewSetVolumeAction(client *Client) SetVolumeAction {
+func NewSetVolumeAction(client YamahaAPI) SetVolumeAction {
 	return SetVolumeAction{
 		name:   "Set Yamaha Volume",
 		volume: 70,

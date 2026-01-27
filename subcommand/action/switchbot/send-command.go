@@ -17,7 +17,7 @@ type SendCommandAction struct {
 func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "SendCommandAction.Run")
 	defer span.End()
-	err := a.Device().Command(ctx, a.deviceId, a.command)
+	err := a.DeviceAPI.Command(ctx, a.deviceId, a.command)
 	if err != nil {
 		return "", err
 	}

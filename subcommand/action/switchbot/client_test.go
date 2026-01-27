@@ -2,10 +2,7 @@ package switchbot
 
 import (
 	"context"
-	"reflect"
 	"testing"
-
-	"github.com/nasa9084/go-switchbot/v3"
 )
 
 func TestNewClient(t *testing.T) {
@@ -15,20 +12,14 @@ func TestNewClient(t *testing.T) {
 	}
 	client := NewClient(config)
 
-	if client.Client == nil {
-		t.Fatal("NewClient() client.Client is nil")
+	if client.DeviceAPI == nil {
+		t.Fatal("NewClient() client.DeviceAPI is nil")
+	}
+	if client.SceneAPI == nil {
+		t.Fatal("NewClient() client.SceneAPI is nil")
 	}
 
-	// check if it is *switchbot.Client
-	if reflect.TypeOf(client.Client) != reflect.TypeOf(&switchbot.Client{}) {
-		t.Errorf("NewClient() client.Client type is %T, want *switchbot.Client", client.Client)
-	}
-
-	// switchbot.Client uses an internal httpClient.
-	// We want to check if the transport is otelhttp.Transport.
-	// Since it's internal, we might have to use reflection if we really want to check it,
-	// but switchbot.Client doesn't export the httpClient.
-	// However, we can check the caches are initialized.
+	// however, we can check the caches are initialized.
 	if client.deviceNameCache == nil {
 		t.Error("NewClient() deviceNameCache is nil")
 	}

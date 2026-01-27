@@ -4,16 +4,23 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/johtani/smarthome/subcommand/action/internal"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"io"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/johtani/smarthome/subcommand/action/internal"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 const basePath = "YamahaExtendedControl/v1/main/"
+
+type YamahaAPI interface {
+	SetScene(ctx context.Context, scene int) error
+	SetVolume(ctx context.Context, volume int) error
+	PowerOff(ctx context.Context) error
+}
 
 type Client struct {
 	config Config

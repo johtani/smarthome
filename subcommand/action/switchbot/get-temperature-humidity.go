@@ -20,13 +20,13 @@ func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (str
 	defer span.End()
 	msg := map[string]string{}
 	//goland:noinspection SpellCheckingInspection
-	pdev, vdev, err := a.Device().List(ctx)
+	pdev, vdev, err := a.DeviceAPI.List(ctx)
 	if err != nil {
 		return "", err
 	}
 	for _, d := range pdev {
 		if IsTargetDevice(a.deviceTypes, string(d.Type)) {
-			status, err := a.Device().Status(ctx, d.ID)
+			status, err := a.Status(ctx, d.ID)
 			if err != nil {
 				return "", err
 			}
@@ -39,7 +39,7 @@ func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (str
 	}
 	for _, d := range vdev {
 		if IsTargetDevice(a.deviceTypes, string(d.Type)) {
-			status, err := a.Device().Status(ctx, d.ID)
+			status, err := a.Status(ctx, d.ID)
 			if err != nil {
 				return "", err
 			}

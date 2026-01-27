@@ -9,7 +9,7 @@ import (
 type SetSceneAction struct {
 	name  string
 	scene int
-	c     *Client
+	c     YamahaAPI
 }
 
 func (a SetSceneAction) Run(ctx context.Context, _ string) (string, error) {
@@ -22,7 +22,7 @@ func (a SetSceneAction) Run(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Set scene to No.%v.", a.scene), nil
 }
 
-func NewSetSceneAction(client *Client, scene int) SetSceneAction {
+func NewSetSceneAction(client YamahaAPI, scene int) SetSceneAction {
 	return SetSceneAction{
 		name:  "Set Yamaha Scene",
 		scene: scene,

@@ -16,7 +16,7 @@ type ListScenesAction struct {
 func (a ListScenesAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListScenesAction.Run")
 	defer span.End()
-	scenes, err := a.Scene().List(ctx)
+	scenes, err := a.SceneAPI.List(ctx)
 	var msg []string
 	if err != nil {
 		return "", err
