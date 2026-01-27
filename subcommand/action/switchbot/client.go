@@ -3,8 +3,11 @@ package switchbot
 import (
 	"context"
 	"fmt"
-	"github.com/nasa9084/go-switchbot/v3"
+	"net/http"
 	"strings"
+
+	"github.com/nasa9084/go-switchbot/v3"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 type Config struct {
@@ -37,7 +40,9 @@ type CachedClient struct {
 
 func NewClient(config Config) CachedClient {
 	return CachedClient{
-		Client:          switchbot.New(config.Token, config.Secret),
+		Client: switchbot.New(config.Token, config.Secret, switchbot.WithHTTPClient(&http.Client{
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+		})),
 		deviceNameCache: map[string]string{},
 		sceneNameCache:  map[string]string{},
 	}

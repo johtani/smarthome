@@ -2,11 +2,12 @@ package subcommand
 
 import (
 	"context"
+	"testing"
+
 	"github.com/johtani/smarthome/subcommand/action"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
-	"testing"
 )
 
 func TestSubcommand_Exec_Tracing(t *testing.T) {
