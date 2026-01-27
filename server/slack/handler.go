@@ -3,13 +3,14 @@ package slack
 import (
 	"context"
 	"fmt"
+	"os"
+	"strings"
+
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
 	"go.opentelemetry.io/otel"
-	"os"
-	"strings"
 )
 
 func defaultHandler(event *socketmode.Event, client *socketmode.Client) {

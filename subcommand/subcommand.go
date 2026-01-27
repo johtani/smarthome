@@ -9,6 +9,7 @@ import (
 	"github.com/hbollon/go-edlib"
 	"github.com/johtani/smarthome/subcommand/action"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 )
 
 type Subcommand struct {
@@ -20,6 +21,10 @@ type Subcommand struct {
 func (s Subcommand) Exec(ctx context.Context, args string) (string, error) {
 	ctx, span := otel.Tracer("subcommand").Start(ctx, "Subcommand.Exec")
 	defer span.End()
+	span.SetAttributes(
+		attribute.String("subcommand.name", s.Name),
+		attribute.String("subcommand.args", args),
+	)
 	var msgs []string
 	for i := range s.actions {
 		msg, err := s.actions[i].Run(ctx, args)
