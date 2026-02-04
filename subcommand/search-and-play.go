@@ -30,7 +30,7 @@ func NewSearchAndPlayMusicSubcommand(definition Definition, config Config) Subco
 		actions: []action.Action{
 			owntone.NewSearchAndPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
-			owntone.NewSetVolumeAction(owntoneClient),
+			owntone.NewSetVolumeAction(owntoneClient, 33),
 			owntone.NewDisplayOutputsAction(owntoneClient, true),
 		},
 		ignoreError: true,

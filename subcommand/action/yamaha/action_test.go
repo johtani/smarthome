@@ -58,7 +58,7 @@ func TestActions(t *testing.T) {
 	})
 
 	t.Run("SetVolumeAction", func(t *testing.T) {
-		action := NewSetVolumeAction(mock)
+		action := NewSetVolumeAction(mock, 70)
 		got, err := action.Run(context.Background(), "")
 		if err != nil {
 			t.Fatalf("Run() error = %v", err)
