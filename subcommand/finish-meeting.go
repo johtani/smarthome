@@ -5,6 +5,7 @@ import (
 
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
+	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
 
 const FinishMeetingCmd = "finish meeting"
@@ -19,12 +20,13 @@ func NewFinishMeetingDefinition() Definition {
 
 func NewFinishMeetingSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
+	yamahaClient := yamaha.NewClient(config.Yamaha)
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
 			owntone.NewPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
-			owntone.NewSetVolumeAction(owntoneClient, 33),
+			yamaha.NewSetVolumeAction(yamahaClient, 39),
 		},
 		ignoreError: true,
 	}
