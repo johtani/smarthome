@@ -1,9 +1,10 @@
 package subcommand
 
 import (
+	"time"
+
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
-	"time"
 )
 
 const FinishMeetingCmd = "finish meeting"
@@ -23,7 +24,7 @@ func NewFinishMeetingSubcommand(definition Definition, config Config) Subcommand
 		actions: []action.Action{
 			owntone.NewPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
-			owntone.NewSetVolumeAction(owntoneClient),
+			owntone.NewSetVolumeAction(owntoneClient, 33),
 		},
 		ignoreError: true,
 	}

@@ -1,9 +1,10 @@
 package subcommand
 
 import (
+	"time"
+
 	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
-	"time"
 )
 
 const StartPS5Cmd = "start ps5"
@@ -23,7 +24,7 @@ func NewStartPS5Subcommand(definition Definition, config Config) Subcommand {
 		actions: []action.Action{
 			yamaha.NewSetSceneAction(yamahaClient, 1),
 			action.NewNoOpAction(1 * time.Second),
-			yamaha.NewSetVolumeAction(yamahaClient),
+			yamaha.NewSetVolumeAction(yamahaClient, 70),
 		},
 		ignoreError: true,
 	}

@@ -23,10 +23,10 @@ func (a SetVolumeAction) Run(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Set volume to %v.", a.volume), nil
 }
 
-func NewSetVolumeAction(client *Client) SetVolumeAction {
+func NewSetVolumeAction(client *Client, volume int) SetVolumeAction {
 	return SetVolumeAction{
 		name:   "Set Owntone Volume",
-		volume: 33,
+		volume: volume,
 		c:      client,
 	}
 }

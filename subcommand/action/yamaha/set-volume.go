@@ -22,10 +22,10 @@ func (a SetVolumeAction) Run(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Set volume to %v.", a.volume), nil
 }
 
-func NewSetVolumeAction(client YamahaAPI) SetVolumeAction {
+func NewSetVolumeAction(client YamahaAPI, volume int) SetVolumeAction {
 	return SetVolumeAction{
 		name:   "Set Yamaha Volume",
-		volume: 70,
+		volume: volume,
 		c:      client,
 	}
 }

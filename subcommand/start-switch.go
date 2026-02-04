@@ -24,7 +24,7 @@ func NewStartSwitchSubcommand(definition Definition, config Config) Subcommand {
 		actions: []action.Action{
 			yamaha.NewSetSceneAction(yamahaClient, 2),
 			action.NewNoOpAction(1 * time.Second),
-			yamaha.NewSetVolumeAction(yamahaClient),
+			yamaha.NewSetVolumeAction(yamahaClient, 70),
 		},
 		ignoreError: true,
 	}

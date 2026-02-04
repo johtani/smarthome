@@ -25,7 +25,7 @@ func NewStartMusicSubcommand(definition Definition, config Config) Subcommand {
 			owntone.NewClearQueueAction(owntoneClient),
 			owntone.NewPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
-			owntone.NewSetVolumeAction(owntoneClient),
+			owntone.NewSetVolumeAction(owntoneClient, 33),
 			owntone.NewDisplayOutputsAction(owntoneClient, true),
 		},
 		ignoreError: true,
