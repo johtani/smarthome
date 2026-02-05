@@ -13,9 +13,12 @@
 
 ### 2. エラーハンドリングの改善
 
-- [ ] `subcommand/config.go` - panicをエラー返却に変更
-- [ ] `server/cron/cron.go` - panicをエラー返却に変更
-- [ ] エラーメッセージの一貫性向上
+- [x] `subcommand/config.go` - panicをエラー返却に変更
+- [x] `server/cron/cron.go` - panicをエラー返却に変更
+- [x] `server/mcp/server.go` - panicをエラー返却に変更
+- [x] `server/slack/bot-server.go` - panicをエラー返却に変更
+- [x] `main.go` - 各呼び出し箇所でエラーハンドリングを追加
+- [x] エラーメッセージの一貫性向上（%wを使用したエラーラップ）
 
 ### 3. ロギングの構造化
 
