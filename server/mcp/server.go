@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func Run(config subcommand.Config) {
+func Run(config subcommand.Config) error {
 	s := NewMCPServer()
 
 	// 登録してあるコマンドをMCPのツールとして登録していく
@@ -19,8 +19,9 @@ func Run(config subcommand.Config) {
 	}
 
 	if err := server.ServeStdio(s); err != nil {
-		panic(err)
+		return fmt.Errorf("MCPサーバーの起動に失敗しました: %w", err)
 	}
+	return nil
 }
 
 func NewMCPServer() *server.MCPServer {

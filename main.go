@@ -49,16 +49,39 @@ func run() error {
 	}()
 
 	if serverFlag {
-		config := subcommand.LoadConfig()
+		config, err := subcommand.LoadConfig()
+		if err != nil {
+			return fmt.Errorf("設定の読み込みに失敗: %w", err)
+		}
 		_, _ = fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
-		go cron.Run(config)
+
+		// cronはgoroutineで実行するため、エラーハンドリングが必要
+		errChan := make(chan error, 1)
+		go func() {
+			if err := cron.Run(config); err != nil {
+				errChan <- err
+			}
+		}()
+
+		// cron起動時のエラーチェック（非ブロッキング）
+		select {
+		case err := <-errChan:
+			return fmt.Errorf("cron起動失敗: %w", err)
+		default:
+		}
+
 		return slack.Run(config)
 	} else if mcpFlag {
-		config := subcommand.LoadConfigWithPath(configPath)
-		mcp.Run(config)
-		return nil
+		config, err := subcommand.LoadConfigWithPath(configPath)
+		if err != nil {
+			return fmt.Errorf("設定の読み込みに失敗: %w", err)
+		}
+		return mcp.Run(config)
 	} else {
-		config := subcommand.LoadConfigWithPath(configPath)
+		config, err := subcommand.LoadConfigWithPath(configPath)
+		if err != nil {
+			return fmt.Errorf("設定の読み込みに失敗: %w", err)
+		}
 		return runCmd(ctx, config, flag.Args())
 	}
 }

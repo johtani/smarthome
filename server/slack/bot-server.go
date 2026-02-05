@@ -41,28 +41,32 @@ func (c Config) validate() error {
 	return nil
 }
 
-func loadConfigFromFile() Config {
+func loadConfigFromFile() (Config, error) {
 	file, err := os.Open(ConfigFileName)
 	if err != nil {
-		panic(fmt.Sprintf("ファイルの読み込みエラー: %v", err))
+		return Config{}, fmt.Errorf("Slack設定ファイルの読み込みに失敗しました (%s): %w", ConfigFileName, err)
 	}
+	defer file.Close()
+
 	// JSONデコード
-	decoder := json.NewDecoder(file)
 	var config Config
-	err = decoder.Decode(&config)
-	if err != nil {
-		panic(fmt.Sprintf("JSONデコードエラー: %v", err))
-	}
-	err = config.validate()
-	if err != nil {
-		panic(fmt.Sprintf("Validation エラー: %v", err))
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&config); err != nil {
+		return Config{}, fmt.Errorf("Slack設定ファイルのJSON解析に失敗しました: %w", err)
 	}
 
-	return config
+	if err := config.validate(); err != nil {
+		return Config{}, fmt.Errorf("Slack設定のバリデーションに失敗しました: %w", err)
+	}
+
+	return config, nil
 }
 
 func Run(config subcommand.Config) error {
-	slackConfig := loadConfigFromFile()
+	slackConfig, err := loadConfigFromFile()
+	if err != nil {
+		return err
+	}
 	webApi := slack.New(
 		slackConfig.BotToken,
 		slack.OptionAppLevelToken(slackConfig.AppToken),

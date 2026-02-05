@@ -43,26 +43,28 @@ func (c Config) validate() error {
 	return nil
 }
 
-func LoadConfig() Config {
+func LoadConfig() (Config, error) {
 	return LoadConfigWithPath(ConfigFileName)
 }
 
-func LoadConfigWithPath(configFile string) Config {
+func LoadConfigWithPath(configFile string) (Config, error) {
 	file, err := os.Open(configFile)
 	if err != nil {
-		panic(fmt.Sprintf("ファイルの読み込みエラー: %v", err))
+		return Config{}, fmt.Errorf("設定ファイルの読み込みに失敗しました (%s): %w", configFile, err)
 	}
+	defer file.Close()
+
 	// JSONデコード
-	decoder := json.NewDecoder(file)
 	var config Config
-	err = decoder.Decode(&config)
-	if err != nil {
-		panic(fmt.Sprintf("JSONデコードエラー: %v", err))
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&config); err != nil {
+		return Config{}, fmt.Errorf("設定ファイルのJSON解析に失敗しました: %w", err)
 	}
-	err = config.validate()
-	if err != nil {
-		panic(fmt.Sprintf("Validation エラー: \n%v", err))
+
+	if err := config.validate(); err != nil {
+		return Config{}, fmt.Errorf("設定のバリデーションに失敗しました:\n%w", err)
 	}
+
 	config.Commands = NewCommands()
-	return config
+	return config, nil
 }
