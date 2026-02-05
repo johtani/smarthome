@@ -88,7 +88,7 @@ func Run(config subcommand.Config) error {
 	socketModeHandler := socketmode.NewSocketmodeHandler(client)
 	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(config, botUserIdPrefix))
 	socketModeHandler.Handle(socketmode.EventTypeSlashCommand, newSlashCommandSubcommandHandler(config))
-	err := socketModeHandler.RunEventLoop()
+	err = socketModeHandler.RunEventLoop()
 	if err != nil {
 		return err
 	}
