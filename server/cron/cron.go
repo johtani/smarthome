@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-func Run(config subcommand.Config) {
+func Run(config subcommand.Config) error {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("タイムゾーンの読み込みに失敗しました: %w", err)
 	}
 	s, err := gocron.NewScheduler(gocron.WithLocation(jst))
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("スケジューラーの初期化に失敗しました: %w", err)
 	}
 	_, err = s.NewJob(
 		gocron.CronJob("*/10 * * * *", false),
@@ -25,7 +25,7 @@ func Run(config subcommand.Config) {
 		),
 	)
 	if err != nil {
-		panic(err)
+		return fmt.Errorf("ジョブの登録に失敗しました: %w", err)
 	}
 	s.Start()
 	fmt.Println("Start cron service...")
