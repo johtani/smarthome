@@ -2,9 +2,7 @@ package yamaha
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -61,12 +59,9 @@ type ResponseCode struct {
 }
 
 func parseHttpResponse(res *http.Response, caller string) error {
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
 	var rc ResponseCode
-	if err := json.NewDecoder(res.Body).Decode(&rc); err != nil {
-		return fmt.Errorf("failed to decode response: %v", err)
+	if err := internal.DecodeJSONResponse(res, &rc, http.StatusOK); err != nil {
+		return err
 	}
 	if rc.ResponseCode != 0 {
 		return fmt.Errorf("something wrong %v... response_code is %v", caller, rc.ResponseCode)
@@ -85,10 +80,6 @@ func (c Client) SetScene(ctx context.Context, scene int) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
 	err = parseHttpResponse(res, "SetScene")
 	if err != nil {
 		return err
@@ -107,10 +98,6 @@ func (c Client) SetVolume(ctx context.Context, volume int) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
 	err = parseHttpResponse(res, "SetVolume")
 	if err != nil {
 		return err
@@ -129,10 +116,6 @@ func (c Client) PowerOff(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
 	err = parseHttpResponse(res, "PowerOff")
 	if err != nil {
 		return err
