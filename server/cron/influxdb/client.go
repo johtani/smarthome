@@ -2,10 +2,11 @@ package influxdb
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
+	"time"
+
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
-	"time"
 )
 
 type Config struct {
@@ -48,7 +49,7 @@ func (c Client) WriteTemperature(data Temperature) {
 	point := write.NewPoint("temperature", tags, fields, time.Now())
 
 	if err := writeAPI.WritePoint(context.Background(), point); err != nil {
-		fmt.Printf("Error for writing data... / %v\n", err)
+		slog.Error("Error for writing data to InfluxDB", "error", err)
 	}
 }
 
