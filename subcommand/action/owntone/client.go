@@ -2,9 +2,7 @@ package owntone
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -57,14 +55,7 @@ func (c Client) Pause(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
-	return nil
+	return internal.HandleResponse(res, http.StatusNoContent)
 }
 
 func (c Client) Play(ctx context.Context) error {
@@ -76,14 +67,7 @@ func (c Client) Play(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
-	return nil
+	return internal.HandleResponse(res, http.StatusNoContent)
 }
 
 func (c Client) SetVolume(ctx context.Context, volume int) error {
@@ -97,14 +81,7 @@ func (c Client) SetVolume(ctx context.Context, volume int) error {
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_, _ = io.Copy(io.Discard, res.Body)
-		_ = res.Body.Close()
-	}()
-	if res.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
-	return nil
+	return internal.HandleResponse(res, http.StatusNoContent)
 }
 
 type Playlist struct {
@@ -127,16 +104,9 @@ func (c Client) GetPlaylists(ctx context.Context) ([]Playlist, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
 	var p Playlists
-	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	if err := internal.DecodeJSONResponse(res, &p, http.StatusOK); err != nil {
+		return nil, err
 	}
 	var lists []Playlist
 	for _, item := range p.Items {
@@ -163,14 +133,7 @@ func (c Client) AddItem2QueueAndPlay(ctx context.Context, uri string, expression
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
-	return nil
+	return internal.HandleResponse(res, http.StatusOK)
 }
 
 type PlayerStatus struct {
@@ -193,16 +156,9 @@ func (c Client) GetPlayerStatus(ctx context.Context) (*PlayerStatus, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
 	var p PlayerStatus
-	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	if err := internal.DecodeJSONResponse(res, &p, http.StatusOK); err != nil {
+		return nil, err
 	}
 	return &p, nil
 }
@@ -216,14 +172,7 @@ func (c Client) ClearQueue(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
-	return nil
+	return internal.HandleResponse(res, http.StatusNoContent)
 }
 
 type SearchType string
@@ -295,18 +244,11 @@ func (c Client) Search(ctx context.Context, keyword string, resultType []SearchT
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
 
 	// Decode the JSON response into a Response struct
 	var results SearchResult
-	if err := json.NewDecoder(res.Body).Decode(&results); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	if err := internal.DecodeJSONResponse(res, &results, http.StatusOK); err != nil {
+		return nil, err
 	}
 	return &results, nil
 }
@@ -326,16 +268,9 @@ func (c Client) Counts(ctx context.Context) (*Counts, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
 	var p Counts
-	if err := json.NewDecoder(res.Body).Decode(&p); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	if err := internal.DecodeJSONResponse(res, &p, http.StatusOK); err != nil {
+		return nil, err
 	}
 	return &p, nil
 }
@@ -363,18 +298,11 @@ func (c Client) GetArtist(ctx context.Context, offset int) (*Artist, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
 
 	// Decode the JSON response into a Response struct
 	var results Artists
-	if err := json.NewDecoder(res.Body).Decode(&results); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	if err := internal.DecodeJSONResponse(res, &results, http.StatusOK); err != nil {
+		return nil, err
 	}
 	//
 	return &results.Items[0], nil
@@ -398,18 +326,11 @@ func (c Client) GetGenres(ctx context.Context) ([]Genre, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
 
 	// Decode the JSON response into a Response struct
 	var results Genres
-	if err := json.NewDecoder(res.Body).Decode(&results); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	if err := internal.DecodeJSONResponse(res, &results, http.StatusOK); err != nil {
+		return nil, err
 	}
 	//
 	return results.Items, nil
@@ -437,17 +358,10 @@ func (c Client) GetOutputs(ctx context.Context) ([]Output, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
 	// Decode the JSON response into an Outputs struct
 	var results Outputs
-	if err := json.NewDecoder(res.Body).Decode(&results); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
+	if err := internal.DecodeJSONResponse(res, &results, http.StatusOK); err != nil {
+		return nil, err
 	}
 	return results.Outputs, nil
 }
@@ -461,12 +375,5 @@ func (c Client) UpdateLibrary(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	defer func(Body io.ReadCloser) {
-		_, _ = io.Copy(io.Discard, Body)
-		_ = Body.Close()
-	}(res.Body)
-	if res.StatusCode != http.StatusNoContent {
-		return fmt.Errorf("something wrong... status code is %d. %v", res.StatusCode, res.Header)
-	}
-	return nil
+	return internal.HandleResponse(res, http.StatusNoContent)
 }
