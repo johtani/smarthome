@@ -3,7 +3,7 @@ package slack
 import (
 	"context"
 	"fmt"
-	"os"
+	"log/slog"
 	"strings"
 
 	"github.com/johtani/smarthome/subcommand"
@@ -14,8 +14,7 @@ import (
 )
 
 func defaultHandler(event *socketmode.Event, client *socketmode.Client) {
-	fmt.Fprintf(os.Stderr, "Unexpected event type received: %s\n", event.Type)
-	//client.Debugf("skip event: %v", event.Type)
+	slog.Warn("Unexpected event type received", "type", event.Type)
 }
 
 func PostMessage(ctx context.Context, client *socketmode.Client, channelID string, options ...slack.MsgOption) (string, string, error) {
@@ -49,11 +48,11 @@ func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix strin
 			var err error
 			msg, err = findAndExec(ctx, config, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
 			if err != nil {
-				fmt.Printf("######### : Got error %v\n", err)
+				slog.Error("Got error in findAndExec", "error", err)
 				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
 			}
 		} else {
-			fmt.Printf("######### : Skipped message: %v", payloadEvent.Text)
+			slog.Debug("Skipped message", "text", payloadEvent.Text)
 		}
 
 		if len(msg) == 0 {
@@ -62,7 +61,7 @@ func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix strin
 
 		_, _, err := PostMessage(ctx, client, payloadEvent.Channel, slack.MsgOptionText(msg, false))
 		if err != nil {
-			fmt.Printf("######### : failed posting message: %v\n", err)
+			slog.Error("failed posting message", "error", err)
 			return
 		}
 	}
@@ -110,7 +109,7 @@ func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.Socke
 		msg, err := findAndExec(ctx, config, escaped+" "+ev.Text)
 
 		if err != nil {
-			fmt.Printf("######### : Got error %v\n", err)
+			slog.Error("Got error in findAndExec for slash command", "error", err)
 			msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
 		}
 
@@ -119,7 +118,7 @@ func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.Socke
 		}
 		_, _, err = PostMessage(ctx, client, ev.ChannelID, slack.MsgOptionText(msg, false))
 		if err != nil {
-			fmt.Printf("######### : failed posting message: %v\n", err)
+			slog.Error("failed posting message for slash command", "error", err)
 			return
 		}
 	}

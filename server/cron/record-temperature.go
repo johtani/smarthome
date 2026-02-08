@@ -2,7 +2,8 @@ package cron
 
 import (
 	"context"
-	"fmt"
+	"log/slog"
+
 	"github.com/johtani/smarthome/server/cron/influxdb"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"go.opentelemetry.io/otel"
@@ -19,14 +20,14 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 
 	pdev, vdev, err := sCli.DeviceAPI.List(ctx)
 	if err != nil {
-		fmt.Printf("Cannot get device list / %v\n", err)
+		slog.Error("Cannot get device list", "error", err)
 		return
 	}
 	for _, d := range pdev {
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
 			status, err := sCli.DeviceAPI.Status(ctx, d.ID)
 			if err != nil {
-				fmt.Printf("Something wrong on [%s] / %v\n", d.Name, err)
+				slog.Error("Something wrong on getting status", "device", d.Name, "error", err)
 			}
 			data := influxdb.Temperature{
 				Room:        d.Name,
@@ -42,7 +43,7 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
 			status, err := sCli.DeviceAPI.Status(ctx, d.ID)
 			if err != nil {
-				fmt.Printf("Something wrong on [%s] / %v\n", d.Name, err)
+				slog.Error("Something wrong on getting status", "device", d.Name, "error", err)
 			}
 
 			data := influxdb.Temperature{

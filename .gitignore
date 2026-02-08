@@ -2,3 +2,4 @@
 *.exe
 tmp
 config/*.json
+.output.txt

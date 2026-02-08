@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -24,6 +25,12 @@ smarthome <コマンド名>`
 }
 
 func main() {
+	opts := &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}
+	var handler slog.Handler = slog.NewTextHandler(os.Stderr, opts)
+	slog.SetDefault(slog.New(handler))
+
 	if err := run(); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
