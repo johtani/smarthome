@@ -8,6 +8,7 @@ import (
 
 	"github.com/nasa9084/go-switchbot/v3"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"sync"
 )
 
 type Config struct {
@@ -21,13 +22,13 @@ type Config struct {
 func (c Config) Validate() error {
 	var errs []string
 	if len(c.Token) == 0 {
-		errs = append(errs, fmt.Sprintf("not found \"switchbot.Token\". Please check config file."))
+		errs = append(errs, "switchbot.token is required")
 	}
 	if len(c.Secret) == 0 {
-		errs = append(errs, fmt.Sprintf("not found \"switchbot.Secret\". Please check config file."))
+		errs = append(errs, "switchbot.secret is required")
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("%s", strings.Join(errs, "\n"))
+		return fmt.Errorf("switchbot config validation failed: %s", strings.Join(errs, ", "))
 	}
 	return nil
 }
@@ -48,13 +49,14 @@ type CachedClient struct {
 	SceneAPI
 	deviceNameCache map[string]string
 	sceneNameCache  map[string]string
+	mu              sync.RWMutex
 }
 
-func NewClient(config Config) CachedClient {
+func NewClient(config Config) *CachedClient {
 	c := switchbot.New(config.Token, config.Secret, switchbot.WithHTTPClient(&http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}))
-	return CachedClient{
+	return &CachedClient{
 		DeviceAPI:       c.Device(),
 		SceneAPI:        c.Scene(),
 		deviceNameCache: map[string]string{},
@@ -62,8 +64,10 @@ func NewClient(config Config) CachedClient {
 	}
 }
 
-func (c CachedClient) GetSceneName(ctx context.Context, id string) (string, error) {
+func (c *CachedClient) GetSceneName(ctx context.Context, id string) (string, error) {
+	c.mu.RLock()
 	name, ok := c.sceneNameCache[id]
+	c.mu.RUnlock()
 	if ok {
 		return name, nil
 	}
@@ -71,15 +75,18 @@ func (c CachedClient) GetSceneName(ctx context.Context, id string) (string, erro
 	if err != nil {
 		return "", err
 	}
-	c.sceneNameCache = map[string]string{}
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	for _, scene := range scenes {
 		c.sceneNameCache[scene.ID] = scene.Name
 	}
 	return c.sceneNameCache[id], nil
 }
 
-func (c CachedClient) GetDeviceName(ctx context.Context, id string) (string, error) {
+func (c *CachedClient) GetDeviceName(ctx context.Context, id string) (string, error) {
+	c.mu.RLock()
 	name, ok := c.deviceNameCache[id]
+	c.mu.RUnlock()
 	if ok {
 		return name, nil
 	}
@@ -87,7 +94,8 @@ func (c CachedClient) GetDeviceName(ctx context.Context, id string) (string, err
 	if err != nil {
 		return "", err
 	}
-	c.deviceNameCache = map[string]string{}
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	for _, device := range pDevices {
 		c.deviceNameCache[device.ID] = device.Name
 	}

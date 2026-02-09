@@ -12,6 +12,8 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+const DefaultTimeout = 10 * time.Second
+
 type Client struct {
 	config Config
 	http.Client
@@ -23,7 +25,7 @@ type Config struct {
 
 func (c Config) Validate() error {
 	if c.Url == "" {
-		return fmt.Errorf("owntone Url is null")
+		return fmt.Errorf("owntone.url is required")
 	}
 	return nil
 }
@@ -40,7 +42,7 @@ func NewClient(config Config) *Client {
 	return &Client{
 		config: config,
 		Client: http.Client{
-			Timeout:   10 * time.Second,
+			Timeout:   DefaultTimeout,
 			Transport: otelhttp.NewTransport(http.DefaultTransport),
 		},
 	}

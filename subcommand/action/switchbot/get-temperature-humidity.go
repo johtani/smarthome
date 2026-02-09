@@ -9,10 +9,12 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+var DefaultDeviceTypes = []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"}
+
 type GetTemperatureAndHumidityAction struct {
 	name        string
 	deviceTypes []string
-	CachedClient
+	client      *CachedClient
 }
 
 func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (string, error) {
@@ -20,13 +22,13 @@ func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (str
 	defer span.End()
 	msg := map[string]string{}
 	//goland:noinspection SpellCheckingInspection
-	pdev, vdev, err := a.DeviceAPI.List(ctx)
+	pdev, vdev, err := a.client.DeviceAPI.List(ctx)
 	if err != nil {
 		return "", err
 	}
 	for _, d := range pdev {
 		if IsTargetDevice(a.deviceTypes, string(d.Type)) {
-			status, err := a.Status(ctx, d.ID)
+			status, err := a.client.Status(ctx, d.ID)
 			if err != nil {
 				return "", err
 			}
@@ -39,7 +41,7 @@ func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (str
 	}
 	for _, d := range vdev {
 		if IsTargetDevice(a.deviceTypes, string(d.Type)) {
-			status, err := a.Status(ctx, d.ID)
+			status, err := a.client.Status(ctx, d.ID)
 			if err != nil {
 				return "", err
 			}
@@ -59,10 +61,10 @@ func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (str
 	return strings.Join(output, "\n"), nil
 }
 
-func NewGetTemperatureAndHumidityAction(client CachedClient) GetTemperatureAndHumidityAction {
+func NewGetTemperatureAndHumidityAction(client *CachedClient) GetTemperatureAndHumidityAction {
 	return GetTemperatureAndHumidityAction{
-		name:         "Get temperature and humidity from devices on SwitchBot",
-		deviceTypes:  []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"},
-		CachedClient: client,
+		name:        "Get temperature and humidity from devices on SwitchBot",
+		deviceTypes: DefaultDeviceTypes,
+		client:      client,
 	}
 }

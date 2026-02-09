@@ -9,14 +9,14 @@ import (
 )
 
 type ListScenesAction struct {
-	name string
-	CachedClient
+	name   string
+	client *CachedClient
 }
 
 func (a ListScenesAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListScenesAction.Run")
 	defer span.End()
-	scenes, err := a.SceneAPI.List(ctx)
+	scenes, err := a.client.SceneAPI.List(ctx)
 	var msg []string
 	if err != nil {
 		return "", err
@@ -27,9 +27,9 @@ func (a ListScenesAction) Run(ctx context.Context, _ string) (string, error) {
 	return strings.Join(msg, "\n"), nil
 }
 
-func NewListScenesAction(client CachedClient) ListScenesAction {
+func NewListScenesAction(client *CachedClient) ListScenesAction {
 	return ListScenesAction{
-		name:         "List scenes on SwitchBot",
-		CachedClient: client,
+		name:   "List scenes on SwitchBot",
+		client: client,
 	}
 }
