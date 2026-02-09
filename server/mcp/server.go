@@ -69,9 +69,8 @@ func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp
 				params := []string{}
 				for _, arg := range definition.Args {
 					if p, ok := request.Params.Arguments[arg.Name]; ok {
-						//TODO 特殊処理になってるけど、もうちょっと別のやり方ができそう
-						if arg.Name == "type" {
-							params = append(params, fmt.Sprint("type:", p))
+						if arg.Prefix != "" {
+							params = append(params, fmt.Sprint(arg.Prefix, p))
 						} else {
 							params = append(params, fmt.Sprint(p))
 						}

@@ -18,8 +18,8 @@ func NewSearchAndPlayMusicCmdDefinition() Definition {
 		Factory:     NewSearchAndPlayMusicSubcommand,
 		shortnames:  []string{SearchPlayCmd},
 		Args: []Arg{
-			{"keyword", "search phrase or keyword", true, []string{}},
-			{"type", "search result type", false, []string{"artist", "album", "track", "genre"}},
+			{"keyword", "search phrase or keyword", true, []string{}, ""},
+			{"type", "search result type", false, []string{"artist", "album", "track", "genre"}, "type:"},
 		},
 	}
 }
