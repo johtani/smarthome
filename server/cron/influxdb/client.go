@@ -15,11 +15,6 @@ type Config struct {
 	Bucket string `json:"bucket"`
 }
 
-type Client struct {
-	config Config
-	client influxdb2.Client
-}
-
 type Temperature struct {
 	Room        string  `json:"room"`
 	Temperature float64 `json:"temperature"`
@@ -28,14 +23,24 @@ type Temperature struct {
 	Co2         int     `json:"co2"`
 }
 
+type Client interface {
+	WriteTemperature(data Temperature)
+	Close()
+}
+
+type clientImpl struct {
+	config Config
+	client influxdb2.Client
+}
+
 func NewClient(config Config) Client {
-	return Client{
+	return &clientImpl{
 		config: config,
 		client: influxdb2.NewClient(config.Url, config.Token),
 	}
 }
 
-func (c Client) WriteTemperature(data Temperature) {
+func (c *clientImpl) WriteTemperature(data Temperature) {
 	writeAPI := c.client.WriteAPIBlocking("personal", c.config.Bucket)
 	tags := map[string]string{
 		"room": data.Room,
@@ -53,6 +58,6 @@ func (c Client) WriteTemperature(data Temperature) {
 	}
 }
 
-func (c Client) Close() {
+func (c *clientImpl) Close() {
 	c.client.Close()
 }

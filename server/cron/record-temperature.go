@@ -10,13 +10,18 @@ import (
 )
 
 func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config) {
-	ctx, span := otel.Tracer("cron").Start(context.Background(), "RecordTemp")
-	defer span.End()
-
-	targetTypes := []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"}
 	sCli := switchbot.NewClient(switchbotConfig)
 	iCli := influxdb.NewClient(influxdbConfig)
 	defer iCli.Close()
+
+	ExecuteRecordTemp(context.Background(), sCli, iCli)
+}
+
+func ExecuteRecordTemp(ctx context.Context, sCli *switchbot.CachedClient, iCli influxdb.Client) {
+	ctx, span := otel.Tracer("cron").Start(ctx, "RecordTemp")
+	defer span.End()
+
+	targetTypes := []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"}
 
 	pdev, vdev, err := sCli.DeviceAPI.List(ctx)
 	if err != nil {
@@ -56,5 +61,4 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 			iCli.WriteTemperature(data)
 		}
 	}
-	//fmt.Println("Run RecordTemp")
 }
