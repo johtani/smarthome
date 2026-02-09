@@ -43,7 +43,7 @@ func TestGetTemperatureAndHumidityAction_Run(t *testing.T) {
 		},
 	}
 
-	client := CachedClient{
+	client := &CachedClient{
 		DeviceAPI: mock,
 	}
 	action := NewGetTemperatureAndHumidityAction(client)

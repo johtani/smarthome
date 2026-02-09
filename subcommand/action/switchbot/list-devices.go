@@ -9,15 +9,15 @@ import (
 )
 
 type ListDevicesAction struct {
-	name string
-	CachedClient
+	name   string
+	client *CachedClient
 }
 
 func (a ListDevicesAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListDevicesAction.Run")
 	defer span.End()
 	var msg []string
-	pdev, vdev, err := a.DeviceAPI.List(ctx)
+	pdev, vdev, err := a.client.DeviceAPI.List(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -30,9 +30,9 @@ func (a ListDevicesAction) Run(ctx context.Context, _ string) (string, error) {
 	return strings.Join(msg, "\n"), nil
 }
 
-func NewListDevicesAction(client CachedClient) ListDevicesAction {
+func NewListDevicesAction(client *CachedClient) ListDevicesAction {
 	return ListDevicesAction{
-		name:         "List devices on SwitchBot",
-		CachedClient: client,
+		name:   "List devices on SwitchBot",
+		client: client,
 	}
 }

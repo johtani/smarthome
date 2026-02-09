@@ -11,28 +11,28 @@ type SendCommandAction struct {
 	name     string
 	deviceId string
 	command  switchbot.Command
-	CachedClient
+	client   *CachedClient
 }
 
 func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "SendCommandAction.Run")
 	defer span.End()
-	err := a.DeviceAPI.Command(ctx, a.deviceId, a.command)
+	err := a.client.DeviceAPI.Command(ctx, a.deviceId, a.command)
 	if err != nil {
 		return "", err
 	}
-	name, err := a.GetDeviceName(ctx, a.deviceId)
+	name, err := a.client.GetDeviceName(ctx, a.deviceId)
 	if err != nil {
 		return "", err
 	}
 	return fmt.Sprintf("Send the command(%v) to the device(%v)", a.command, name), nil
 }
 
-func NewSendCommandAction(client CachedClient, deviceId string, command switchbot.Command) SendCommandAction {
+func NewSendCommandAction(client *CachedClient, deviceId string, command switchbot.Command) SendCommandAction {
 	return SendCommandAction{
-		name:         "Send the command to the device on SwitchBot",
-		deviceId:     deviceId,
-		command:      command,
-		CachedClient: client,
+		name:     "Send the command to the device on SwitchBot",
+		deviceId: deviceId,
+		command:  command,
+		client:   client,
 	}
 }

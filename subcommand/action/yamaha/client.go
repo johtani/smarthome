@@ -12,6 +12,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+const DefaultTimeout = 10 * time.Second
 const basePath = "YamahaExtendedControl/v1/main/"
 
 type YamahaAPI interface {
@@ -31,7 +32,7 @@ type Config struct {
 
 func (c Config) Validate() error {
 	if c.Url == "" {
-		return fmt.Errorf("yamaha Url is null")
+		return fmt.Errorf("yamaha.url is required")
 	}
 	return nil
 }
@@ -48,7 +49,7 @@ func NewClient(config Config) *Client {
 	return &Client{
 		config: config,
 		Client: http.Client{
-			Timeout:   10 * time.Second,
+			Timeout:   DefaultTimeout,
 			Transport: otelhttp.NewTransport(http.DefaultTransport),
 		},
 	}

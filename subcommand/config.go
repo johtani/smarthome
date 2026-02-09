@@ -21,7 +21,7 @@ type Config struct {
 
 const ConfigFileName = "./config/config.json"
 
-func (c Config) validate() error {
+func (c *Config) validate() error {
 	var errs []string
 	var err error
 	err = c.Owntone.Validate()
@@ -43,6 +43,37 @@ func (c Config) validate() error {
 	return nil
 }
 
+func (c *Config) overrideWithEnv() {
+	// SMARTHOME_OWNTONE_URL
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_URL"); ok {
+		c.Owntone.Url = val
+	}
+	// SMARTHOME_SWITCHBOT_TOKEN
+	if val, ok := os.LookupEnv("SMARTHOME_SWITCHBOT_TOKEN"); ok {
+		c.Switchbot.Token = val
+	}
+	// SMARTHOME_SWITCHBOT_SECRET
+	if val, ok := os.LookupEnv("SMARTHOME_SWITCHBOT_SECRET"); ok {
+		c.Switchbot.Secret = val
+	}
+	// SMARTHOME_YAMAHA_URL
+	if val, ok := os.LookupEnv("SMARTHOME_YAMAHA_URL"); ok {
+		c.Yamaha.Url = val
+	}
+	// SMARTHOME_INFLUXDB_TOKEN
+	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_TOKEN"); ok {
+		c.Influxdb.Token = val
+	}
+	// SMARTHOME_INFLUXDB_URL
+	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_URL"); ok {
+		c.Influxdb.Url = val
+	}
+	// SMARTHOME_INFLUXDB_BUCKET
+	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_BUCKET"); ok {
+		c.Influxdb.Bucket = val
+	}
+}
+
 func LoadConfig() (Config, error) {
 	return LoadConfigWithPath(ConfigFileName)
 }
@@ -60,6 +91,8 @@ func LoadConfigWithPath(configFile string) (Config, error) {
 	if err := decoder.Decode(&config); err != nil {
 		return Config{}, fmt.Errorf("設定ファイルのJSON解析に失敗しました: %w", err)
 	}
+
+	config.overrideWithEnv()
 
 	if err := config.validate(); err != nil {
 		return Config{}, fmt.Errorf("設定のバリデーションに失敗しました:\n%w", err)
