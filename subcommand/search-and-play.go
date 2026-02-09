@@ -30,6 +30,8 @@ func NewSearchAndPlayMusicSubcommand(definition Definition, config Config) Subco
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
+			yamaha.NewPowerOnAction(yamahaClient),
+			yamaha.NewSetInputAction(yamahaClient, "airplay"),
 			owntone.NewSearchAndPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
 			yamaha.NewSetVolumeAction(yamahaClient, 39),

@@ -24,6 +24,8 @@ func NewFinishMeetingSubcommand(definition Definition, config Config) Subcommand
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
+			yamaha.NewPowerOnAction(yamahaClient),
+			yamaha.NewSetInputAction(yamahaClient, "airplay"),
 			owntone.NewPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
 			yamaha.NewSetVolumeAction(yamahaClient, 39),

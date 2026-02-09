@@ -18,7 +18,9 @@ const basePath = "YamahaExtendedControl/v1/main/"
 type YamahaAPI interface {
 	SetScene(ctx context.Context, scene int) error
 	SetVolume(ctx context.Context, volume int) error
+	PowerOn(ctx context.Context) error
 	PowerOff(ctx context.Context) error
+	SetInput(ctx context.Context, input string) error
 }
 
 type Client struct {
@@ -106,6 +108,24 @@ func (c Client) SetVolume(ctx context.Context, volume int) error {
 	return nil
 }
 
+func (c Client) PowerOn(ctx context.Context) error {
+	params := map[string]string{}
+	params["power"] = "on"
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("setPower"), params)
+	if err != nil {
+		return err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	err = parseHttpResponse(res, "PowerOn")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c Client) PowerOff(ctx context.Context) error {
 	params := map[string]string{}
 	params["power"] = "standby"
@@ -118,6 +138,24 @@ func (c Client) PowerOff(ctx context.Context) error {
 		return err
 	}
 	err = parseHttpResponse(res, "PowerOff")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (c Client) SetInput(ctx context.Context, input string) error {
+	params := map[string]string{}
+	params["input"] = input
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("setInput"), params)
+	if err != nil {
+		return err
+	}
+	res, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	err = parseHttpResponse(res, "SetInput")
 	if err != nil {
 		return err
 	}

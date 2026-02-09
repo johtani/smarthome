@@ -25,6 +25,8 @@ func NewStartMusicSubcommand(definition Definition, config Config) Subcommand {
 		Definition: definition,
 		actions: []action.Action{
 			owntone.NewClearQueueAction(owntoneClient),
+			yamaha.NewPowerOnAction(yamahaClient),
+			yamaha.NewSetInputAction(yamahaClient, "airplay"),
 			owntone.NewPlayAction(owntoneClient),
 			action.NewNoOpAction(3 * time.Second),
 			yamaha.NewSetVolumeAction(yamahaClient, 39),

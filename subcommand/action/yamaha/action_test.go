@@ -9,7 +9,9 @@ import (
 type mockYamahaAPI struct {
 	setSceneFunc  func(ctx context.Context, scene int) error
 	setVolumeFunc func(ctx context.Context, volume int) error
+	powerOnFunc   func(ctx context.Context) error
 	powerOffFunc  func(ctx context.Context) error
+	setInputFunc  func(ctx context.Context, input string) error
 }
 
 func (m *mockYamahaAPI) SetScene(ctx context.Context, scene int) error {
@@ -18,8 +20,14 @@ func (m *mockYamahaAPI) SetScene(ctx context.Context, scene int) error {
 func (m *mockYamahaAPI) SetVolume(ctx context.Context, volume int) error {
 	return m.setVolumeFunc(ctx, volume)
 }
+func (m *mockYamahaAPI) PowerOn(ctx context.Context) error {
+	return m.powerOnFunc(ctx)
+}
 func (m *mockYamahaAPI) PowerOff(ctx context.Context) error {
 	return m.powerOffFunc(ctx)
+}
+func (m *mockYamahaAPI) SetInput(ctx context.Context, input string) error {
+	return m.setInputFunc(ctx, input)
 }
 
 func TestActions(t *testing.T) {
@@ -30,10 +38,27 @@ func TestActions(t *testing.T) {
 		setVolumeFunc: func(ctx context.Context, volume int) error {
 			return nil
 		},
+		powerOnFunc: func(ctx context.Context) error {
+			return nil
+		},
 		powerOffFunc: func(ctx context.Context) error {
 			return nil
 		},
+		setInputFunc: func(ctx context.Context, input string) error {
+			return nil
+		},
 	}
+
+	t.Run("PowerOnAction", func(t *testing.T) {
+		action := NewPowerOnAction(mock)
+		got, err := action.Run(context.Background(), "")
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+		if !strings.Contains(got, "Power on") {
+			t.Errorf("Unexpected result: %s", got)
+		}
+	})
 
 	t.Run("PowerOffAction", func(t *testing.T) {
 		action := NewPowerOffAction(mock)
@@ -64,6 +89,17 @@ func TestActions(t *testing.T) {
 			t.Fatalf("Run() error = %v", err)
 		}
 		if !strings.Contains(got, "volume to 70") {
+			t.Errorf("Unexpected result: %s", got)
+		}
+	})
+
+	t.Run("SetInputAction", func(t *testing.T) {
+		action := NewSetInputAction(mock, "airplay")
+		got, err := action.Run(context.Background(), "")
+		if err != nil {
+			t.Fatalf("Run() error = %v", err)
+		}
+		if !strings.Contains(got, "input to airplay") {
 			t.Errorf("Unexpected result: %s", got)
 		}
 	})
