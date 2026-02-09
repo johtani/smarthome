@@ -47,10 +47,10 @@
 
 ### 7. テストカバレッジ向上
 
-- [ ] `main.go` のテスト追加
-- [ ] `server/slack/bot-server.go` のテスト追加
-- [ ] `server/cron/` のテスト追加
-- [ ] `server/mcp/server.go` のテスト追加
+- [x] `main.go` のテスト追加
+- [x] `server/slack/bot-server.go` のテスト追加
+- [x] `server/cron/` のテスト追加
+- [x] `server/mcp/server.go` のテスト追加
 
 ### 8. CI/CDパイプライン強化
 
