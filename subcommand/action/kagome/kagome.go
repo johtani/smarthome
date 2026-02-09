@@ -45,7 +45,6 @@ func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("tokenizer initialization failed, %w", err)
 	}
-	// TODO Slack用の返信をできるようにしたい
 
 	tokens := t.Analyze(parsedArgs.text, parsedArgs.mode)
 	var buf bytes.Buffer

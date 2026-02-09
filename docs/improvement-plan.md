@@ -8,8 +8,8 @@
 
 - [x] `subcommand/subcommand.go:34` - ignoreError時のエラーメッセージ処理を決定・実装
 - [x] `subcommand/subcommand.go:77,184` - Did You Mean機能の候補ソート実装
-- [ ] `server/mcp/server.go:71` - typeパラメータの特殊処理をより汎用的な設計に変更
-- [ ] `subcommand/action/kagome/kagome.go:48` - Slack用返信フォーマットの実装検討
+- [x] `server/mcp/server.go:71` - typeパラメータの特殊処理をより汎用的な設計に変更
+- [x] `subcommand/action/kagome/kagome.go:48` - Slack用返信フォーマットの実装検討
 
 ### 2. エラーハンドリングの改善
 
