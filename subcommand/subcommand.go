@@ -3,6 +3,7 @@ package subcommand
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 	"unicode"
 
@@ -29,14 +30,13 @@ func (s Subcommand) Exec(ctx context.Context, args string) (string, error) {
 	for i := range s.actions {
 		msg, err := s.actions[i].Run(ctx, args)
 		if s.ignoreError && err != nil {
-			//fmt.Printf("skip error\t %v\n", err)
 			msg = fmt.Sprintf("skip error\t %v\n", err)
-			//TODO msgsにエラーを追加する？
-
+			msgs = append(msgs, msg)
 		} else if err != nil {
 			return "", err
+		} else {
+			msgs = append(msgs, msg)
 		}
-		msgs = append(msgs, msg)
 	}
 	return strings.Join(msgs, "\n"), nil
 }
@@ -176,18 +176,32 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 
 const dymCandidateDistance = 3
 
+type dymCandidate struct {
+	def      Definition
+	cmd      string
+	distance int
+}
+
 func (c Commands) didYouMean(name string) ([]Definition, []string) {
-	var candidates []Definition
-	var cmds []string
+	var candidates []dymCandidate
 	for _, def := range c.Definitions {
 		d, cmd := def.Distance(name)
-		// TODO 3にした場合は、candidatesの距離の小さい順で返したほうが便利な気がする
 		if d < dymCandidateDistance {
-			candidates = append(candidates, def)
-			cmds = append(cmds, cmd)
+			candidates = append(candidates, dymCandidate{def, cmd, d})
 		}
 	}
-	return candidates, cmds
+
+	sort.Slice(candidates, func(i, j int) bool {
+		return candidates[i].distance < candidates[j].distance
+	})
+
+	var resultDefs []Definition
+	var resultCmds []string
+	for _, candidate := range candidates {
+		resultDefs = append(resultDefs, candidate.def)
+		resultCmds = append(resultCmds, candidate.cmd)
+	}
+	return resultDefs, resultCmds
 }
 
 func (c Commands) Help() string {

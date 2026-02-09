@@ -184,6 +184,20 @@ func TestCommands_Find(t *testing.T) {
 			wantErr:  false,
 		},
 		{
+			name: "Match Did you mean (sorted by distance)",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "longername", Description: "description", Factory: NewDummySubcommand},
+					{Name: "abc", Description: "description", Factory: NewDummySubcommand},
+				},
+			},
+			args:     args{name: "abd", withoutHyphen: false},
+			def:      Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand},
+			wantArgs: "",
+			dymMsg:   "Did you mean \"abc\"?",
+			wantErr:  false,
+		},
+		{
 			name: "Match Did you mean",
 			fields: fields{
 				definitions: []Definition{
