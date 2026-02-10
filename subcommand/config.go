@@ -8,6 +8,7 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -48,6 +49,12 @@ func (c *Config) overrideWithEnv() {
 	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_URL"); ok {
 		c.Owntone.Url = val
 	}
+	// SMARTHOME_OWNTONE_TIMEOUT
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_TIMEOUT"); ok {
+		if i, err := strconv.Atoi(val); err == nil {
+			c.Owntone.Timeout = i
+		}
+	}
 	// SMARTHOME_SWITCHBOT_TOKEN
 	if val, ok := os.LookupEnv("SMARTHOME_SWITCHBOT_TOKEN"); ok {
 		c.Switchbot.Token = val
@@ -60,6 +67,12 @@ func (c *Config) overrideWithEnv() {
 	if val, ok := os.LookupEnv("SMARTHOME_YAMAHA_URL"); ok {
 		c.Yamaha.Url = val
 	}
+	// SMARTHOME_YAMAHA_TIMEOUT
+	if val, ok := os.LookupEnv("SMARTHOME_YAMAHA_TIMEOUT"); ok {
+		if i, err := strconv.Atoi(val); err == nil {
+			c.Yamaha.Timeout = i
+		}
+	}
 	// SMARTHOME_INFLUXDB_TOKEN
 	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_TOKEN"); ok {
 		c.Influxdb.Token = val
@@ -71,6 +84,14 @@ func (c *Config) overrideWithEnv() {
 	// SMARTHOME_INFLUXDB_BUCKET
 	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_BUCKET"); ok {
 		c.Influxdb.Bucket = val
+	}
+	// SMARTHOME_INFLUXDB_ORG
+	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_ORG"); ok {
+		c.Influxdb.Org = val
+	}
+	// SMARTHOME_INFLUXDB_MEASUREMENT
+	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_MEASUREMENT"); ok {
+		c.Influxdb.Measurement = val
 	}
 }
 

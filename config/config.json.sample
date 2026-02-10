@@ -7,14 +7,18 @@
     "air_conditioner_id": ""
   },
   "owntone": {
-    "url": ""
+    "url": "",
+    "timeout": 10
   },
   "yamaha": {
-    "url": ""
+    "url": "",
+    "timeout": 10
   },
   "influxdb": {
     "token": "",
     "url": "",
-    "bucket": ""
+    "bucket": "",
+    "org": "personal",
+    "measurement": "temperature"
   }
 }
