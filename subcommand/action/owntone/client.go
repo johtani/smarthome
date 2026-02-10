@@ -20,7 +20,8 @@ type Client struct {
 }
 
 type Config struct {
-	Url string `json:"url"`
+	Url     string `json:"url"`
+	Timeout int    `json:"timeout"`
 }
 
 func (c Config) Validate() error {
@@ -39,10 +40,14 @@ func (c Client) buildUrl(path string) string {
 }
 
 func NewClient(config Config) *Client {
+	timeout := DefaultTimeout
+	if config.Timeout > 0 {
+		timeout = time.Duration(config.Timeout) * time.Second
+	}
 	return &Client{
 		config: config,
 		Client: http.Client{
-			Timeout:   DefaultTimeout,
+			Timeout:   timeout,
 			Transport: otelhttp.NewTransport(http.DefaultTransport),
 		},
 	}

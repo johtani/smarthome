@@ -10,9 +10,11 @@ import (
 )
 
 type Config struct {
-	Token  string `json:"token"`
-	Url    string `json:"url"`
-	Bucket string `json:"bucket"`
+	Token       string `json:"token"`
+	Url         string `json:"url"`
+	Bucket      string `json:"bucket"`
+	Org         string `json:"org"`
+	Measurement string `json:"measurement"`
 }
 
 type Temperature struct {
@@ -41,7 +43,15 @@ func NewClient(config Config) Client {
 }
 
 func (c *clientImpl) WriteTemperature(data Temperature) {
-	writeAPI := c.client.WriteAPIBlocking("personal", c.config.Bucket)
+	org := c.config.Org
+	if org == "" {
+		org = "personal"
+	}
+	measurement := c.config.Measurement
+	if measurement == "" {
+		measurement = "temperature"
+	}
+	writeAPI := c.client.WriteAPIBlocking(org, c.config.Bucket)
 	tags := map[string]string{
 		"room": data.Room,
 	}
@@ -51,7 +61,7 @@ func (c *clientImpl) WriteTemperature(data Temperature) {
 		"battery":     data.Battery,
 		"co2":         data.Co2,
 	}
-	point := write.NewPoint("temperature", tags, fields, time.Now())
+	point := write.NewPoint(measurement, tags, fields, time.Now())
 
 	if err := writeAPI.WritePoint(context.Background(), point); err != nil {
 		slog.Error("Error for writing data to InfluxDB", "error", err)
