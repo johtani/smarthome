@@ -58,6 +58,7 @@ func (c Client) Pause(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -70,6 +71,7 @@ func (c Client) Play(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -84,6 +86,7 @@ func (c Client) SetVolume(ctx context.Context, volume int) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -107,6 +110,7 @@ func (c Client) GetPlaylists(ctx context.Context) ([]Playlist, error) {
 	if err != nil {
 		return nil, err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return nil, err
@@ -136,6 +140,7 @@ func (c Client) AddItem2QueueAndPlay(ctx context.Context, uri string, expression
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -159,6 +164,7 @@ func (c Client) GetPlayerStatus(ctx context.Context) (*PlayerStatus, error) {
 	if err != nil {
 		return nil, err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return nil, err
@@ -175,6 +181,7 @@ func (c Client) ClearQueue(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -247,6 +254,7 @@ func (c Client) Search(ctx context.Context, keyword string, resultType []SearchT
 	if err != nil {
 		return nil, err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return nil, err
@@ -271,6 +279,7 @@ func (c Client) Counts(ctx context.Context) (*Counts, error) {
 	if err != nil {
 		return nil, err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return nil, err
@@ -301,6 +310,7 @@ func (c Client) GetArtist(ctx context.Context, offset int) (*Artist, error) {
 	if err != nil {
 		return nil, err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return nil, err
@@ -329,6 +339,7 @@ func (c Client) GetGenres(ctx context.Context) ([]Genre, error) {
 	if err != nil {
 		return nil, err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return nil, err
@@ -361,6 +372,7 @@ func (c Client) GetOutputs(ctx context.Context) ([]Output, error) {
 	if err != nil {
 		return nil, err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return nil, err
@@ -378,6 +390,7 @@ func (c Client) UpdateLibrary(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err

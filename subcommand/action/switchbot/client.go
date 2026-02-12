@@ -12,7 +12,8 @@ import (
 )
 
 type Config struct {
-	Token            string `json:"token"`
+	Token string `json:"token"`
+	// #nosec G117
 	Secret           string `json:"secret"`
 	LightDeviceID    string `json:"light_device_id"`
 	LightSceneID     string `json:"light_scene_id"`

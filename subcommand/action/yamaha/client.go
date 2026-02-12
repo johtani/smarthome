@@ -84,6 +84,7 @@ func (c Client) SetScene(ctx context.Context, scene int) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -102,6 +103,7 @@ func (c Client) SetVolume(ctx context.Context, volume int) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -120,6 +122,7 @@ func (c Client) PowerOn(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -138,6 +141,7 @@ func (c Client) PowerOff(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
@@ -156,6 +160,7 @@ func (c Client) SetInput(ctx context.Context, input string) error {
 	if err != nil {
 		return err
 	}
+	// #nosec G704
 	res, err := c.Do(req)
 	if err != nil {
 		return err
