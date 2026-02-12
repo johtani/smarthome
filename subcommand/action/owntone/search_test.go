@@ -73,14 +73,14 @@ func TestSearchAndPlayAction_Run(t *testing.T) {
 	// But our createMockServer is limited to one path.
 	// We can use a custom mux.
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/search", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(searchSampleJSONResponse()))
 	})
-	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 

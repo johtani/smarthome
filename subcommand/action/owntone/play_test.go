@@ -10,29 +10,29 @@ import (
 
 func TestPlayAction_Run(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/player", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/player", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(playerStatusSampleJSONResponse()))
 	})
-	mux.HandleFunc("/api/library/playlists", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/library/playlists", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(playlistsSampleJSONResponse()))
 	})
-	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
-	mux.HandleFunc("/api/player/play", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/player/play", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	mux.HandleFunc("/api/library", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/library", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(countsSampleJSONResponse()))
 	})
-	mux.HandleFunc("/api/library/artists", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/library/artists", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(getArtistsSampleJSONResponse()))
 	})
-	mux.HandleFunc("/api/library/genres", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/library/genres", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(getGenresSampleJSONResponse()))
 	})
@@ -82,11 +82,11 @@ func TestPlayAction_Run(t *testing.T) {
 
 func TestPlayAction_Run_QueueNotEmpty(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/player", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/player", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"state": "pause", "item_id": 123}`))
 	})
-	mux.HandleFunc("/api/player/play", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/player/play", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
 

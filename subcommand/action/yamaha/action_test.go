@@ -32,10 +32,10 @@ func (m *mockYamahaAPI) SetInput(ctx context.Context, input string) error {
 
 func TestActions(t *testing.T) {
 	mock := &mockYamahaAPI{
-		setSceneFunc: func(_ context.Context, scene int) error {
+		setSceneFunc: func(_ context.Context, _ int) error {
 			return nil
 		},
-		setVolumeFunc: func(_ context.Context, volume int) error {
+		setVolumeFunc: func(_ context.Context, _ int) error {
 			return nil
 		},
 		powerOnFunc: func(_ context.Context) error {
@@ -44,7 +44,7 @@ func TestActions(t *testing.T) {
 		powerOffFunc: func(_ context.Context) error {
 			return nil
 		},
-		setInputFunc: func(_ context.Context, input string) error {
+		setInputFunc: func(_ context.Context, _ string) error {
 			return nil
 		},
 	}

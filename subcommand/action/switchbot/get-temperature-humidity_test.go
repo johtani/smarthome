@@ -19,7 +19,7 @@ func (m *mockDeviceAPI) List(ctx context.Context) ([]switchbot.Device, []switchb
 func (m *mockDeviceAPI) Status(ctx context.Context, id string) (switchbot.DeviceStatus, error) {
 	return m.statusFunc(ctx, id)
 }
-func (m *mockDeviceAPI) Command(_ context.Context, id string, cmd switchbot.Command) error {
+func (m *mockDeviceAPI) Command(_ context.Context, _ string, _ switchbot.Command) error {
 	return nil
 }
 

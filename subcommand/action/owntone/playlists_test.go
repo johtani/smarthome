@@ -10,7 +10,7 @@ import (
 
 func TestDisplayPlaylistsAction_Run(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/library/playlists", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/library/playlists", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{
 			"items": [
@@ -38,7 +38,7 @@ func TestDisplayPlaylistsAction_Run(t *testing.T) {
 
 func TestDisplayPlaylistsAction_Run_OnlySpotify(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/library/playlists", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/library/playlists", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{
 			"items": [

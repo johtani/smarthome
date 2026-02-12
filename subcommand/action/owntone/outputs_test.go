@@ -10,7 +10,7 @@ import (
 
 func TestDisplayOutputsAction_Run(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/outputs", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/outputs", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		// Return outputs with some diversity to test sorting and filtering
 		_, _ = w.Write([]byte(`{
@@ -47,7 +47,7 @@ func TestDisplayOutputsAction_Run(t *testing.T) {
 
 func TestDisplayOutputsAction_Run_OnlySelected(t *testing.T) {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/outputs", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/outputs", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{
 			"outputs": [
