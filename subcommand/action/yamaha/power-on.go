@@ -9,7 +9,7 @@ import (
 // PowerOnAction represents an action to turn on the Yamaha device.
 type PowerOnAction struct {
 	name string
-	c    YamahaAPI
+	c    API
 }
 
 // Run executes the PowerOnAction.
@@ -24,7 +24,7 @@ func (a PowerOnAction) Run(ctx context.Context, _ string) (string, error) {
 }
 
 // NewPowerOnAction creates a new PowerOnAction.
-func NewPowerOnAction(client YamahaAPI) PowerOnAction {
+func NewPowerOnAction(client API) PowerOnAction {
 	return PowerOnAction{
 		name: "Power On Yamaha",
 		c:    client,

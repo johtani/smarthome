@@ -10,7 +10,7 @@ import (
 type SetSceneAction struct {
 	name  string
 	scene int
-	c     YamahaAPI
+	c     API
 }
 
 // Run executes the SetSceneAction.
@@ -25,7 +25,7 @@ func (a SetSceneAction) Run(ctx context.Context, _ string) (string, error) {
 }
 
 // NewSetSceneAction creates a new SetSceneAction.
-func NewSetSceneAction(client YamahaAPI, scene int) SetSceneAction {
+func NewSetSceneAction(client API, scene int) SetSceneAction {
 	return SetSceneAction{
 		name:  "Set Yamaha Scene",
 		scene: scene,

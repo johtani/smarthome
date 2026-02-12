@@ -22,6 +22,7 @@ type Config struct {
 	Debug    bool   `json:"debug"`
 }
 
+// ConfigFileName is the default path to the Slack configuration file.
 const ConfigFileName = "./config/slack.json"
 
 func (c Config) validate() error {

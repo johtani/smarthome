@@ -10,7 +10,7 @@ import (
 type SetInputAction struct {
 	name  string
 	input string
-	c     YamahaAPI
+	c     API
 }
 
 // Run executes the SetInputAction.
@@ -25,7 +25,7 @@ func (a SetInputAction) Run(ctx context.Context, _ string) (string, error) {
 }
 
 // NewSetInputAction creates a new SetInputAction.
-func NewSetInputAction(client YamahaAPI, input string) SetInputAction {
+func NewSetInputAction(client API, input string) SetInputAction {
 	return SetInputAction{
 		name:  "Set Yamaha Input",
 		input: input,

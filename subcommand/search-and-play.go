@@ -8,9 +8,13 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
 
+// SearchAndPlayMusicCmd is the command name for searching and playing music.
 const SearchAndPlayMusicCmd = "search and play"
+
+// SearchPlayCmd is a short name for the search and play music command.
 const SearchPlayCmd = "search play"
 
+// NewSearchAndPlayMusicCmdDefinition creates the definition for the search and play music command.
 func NewSearchAndPlayMusicCmdDefinition() Definition {
 	return Definition{
 		Name:        SearchAndPlayMusicCmd,
@@ -24,6 +28,7 @@ func NewSearchAndPlayMusicCmdDefinition() Definition {
 	}
 }
 
+// NewSearchAndPlayMusicSubcommand creates a new Subcommand for the search and play music command.
 func NewSearchAndPlayMusicSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	yamahaClient := yamaha.NewClient(config.Yamaha)

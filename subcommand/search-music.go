@@ -5,8 +5,10 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 )
 
+// SearchMusicCmd is the command name for searching music.
 const SearchMusicCmd = "search music"
 
+// NewSearchMusicCmdDefinition creates the definition for the search music command.
 func NewSearchMusicCmdDefinition() Definition {
 	return Definition{
 		Name:        SearchMusicCmd,
@@ -19,6 +21,7 @@ func NewSearchMusicCmdDefinition() Definition {
 	}
 }
 
+// NewSearchMusicSubcommand creates a new Subcommand for the search music command.
 func NewSearchMusicSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	return Subcommand{

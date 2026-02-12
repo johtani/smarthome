@@ -10,7 +10,7 @@ import (
 type SetVolumeAction struct {
 	name   string
 	volume int
-	c      YamahaAPI
+	c      API
 }
 
 // Run executes the SetVolumeAction.
@@ -25,7 +25,7 @@ func (a SetVolumeAction) Run(ctx context.Context, _ string) (string, error) {
 }
 
 // NewSetVolumeAction creates a new SetVolumeAction.
-func NewSetVolumeAction(client YamahaAPI, volume int) SetVolumeAction {
+func NewSetVolumeAction(client API, volume int) SetVolumeAction {
 	return SetVolumeAction{
 		name:   "Set Yamaha Volume",
 		volume: volume,

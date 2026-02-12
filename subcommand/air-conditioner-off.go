@@ -6,9 +6,13 @@ import (
 	switchbotsdk "github.com/nasa9084/go-switchbot/v3"
 )
 
+// AirConditionerOffCmd is the command name for turning off the air conditioner.
 const AirConditionerOffCmd = "air conditioner off"
+
+// ACOffCmd is a short name for the air conditioner off command.
 const ACOffCmd = "ac off"
 
+// NewAirConditionerOffDefinition creates the definition for the air conditioner off command.
 func NewAirConditionerOffDefinition() Definition {
 	return Definition{
 		Name:        AirConditionerOffCmd,
@@ -18,6 +22,7 @@ func NewAirConditionerOffDefinition() Definition {
 	}
 }
 
+// NewAirConditionerOffSubcommand creates a new Subcommand for the air conditioner off command.
 func NewAirConditionerOffSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{

@@ -7,8 +7,10 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
 
+// StartMeetingCmd is the command name for starting a meeting.
 const StartMeetingCmd = "start meeting"
 
+// NewStartMeetingDefinition creates the definition for the start meeting command.
 func NewStartMeetingDefinition() Definition {
 	return Definition{
 		Name:        StartMeetingCmd,
@@ -17,6 +19,7 @@ func NewStartMeetingDefinition() Definition {
 	}
 }
 
+// NewStartMeetingSubcommand creates a new Subcommand for the start meeting command.
 func NewStartMeetingSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	switchbotClient := switchbot.NewClient(config.Switchbot)

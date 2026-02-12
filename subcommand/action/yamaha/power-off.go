@@ -8,7 +8,7 @@ import (
 // PowerOffAction represents an action to turn off the Yamaha device.
 type PowerOffAction struct {
 	name string
-	c    YamahaAPI
+	c    API
 }
 
 // Run executes the PowerOffAction.
@@ -23,7 +23,7 @@ func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
 }
 
 // NewPowerOffAction creates a new PowerOffAction.
-func NewPowerOffAction(client YamahaAPI) PowerOffAction {
+func NewPowerOffAction(client API) PowerOffAction {
 	return PowerOffAction{
 		name: "Power off Yamaha Amplifier",
 		c:    client,

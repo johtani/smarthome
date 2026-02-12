@@ -16,8 +16,6 @@ type ChangePlaylistAction struct {
 	c    *Client
 }
 
-// Run
-// キューにプレイリストを追加して再生する
 // Run executes the ChangePlaylistAction.
 // It picks a random playlist and starts playback.
 func (a ChangePlaylistAction) Run(ctx context.Context, _ string) (string, error) {

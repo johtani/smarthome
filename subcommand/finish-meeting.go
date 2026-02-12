@@ -8,8 +8,10 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
 
+// FinishMeetingCmd is the command name for finishing a meeting.
 const FinishMeetingCmd = "finish meeting"
 
+// NewFinishMeetingDefinition creates the definition for the finish meeting command.
 func NewFinishMeetingDefinition() Definition {
 	return Definition{
 		Name:        FinishMeetingCmd,
@@ -18,6 +20,7 @@ func NewFinishMeetingDefinition() Definition {
 	}
 }
 
+// NewFinishMeetingSubcommand creates a new Subcommand for the finish meeting command.
 func NewFinishMeetingSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	yamahaClient := yamaha.NewClient(config.Yamaha)

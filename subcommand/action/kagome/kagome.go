@@ -31,15 +31,15 @@ const (
 	NEOLOGD Dict = "neologd"
 )
 
-// KagomeAction represents an action that tokenizes text using Kagome.
-type KagomeAction struct {
+// Action represents an action that tokenizes text using Kagome.
+type Action struct {
 	name       string
 	dictionary Dict
 }
 
 // Run executes the Kagome tokenization action.
-func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
-	_, span := otel.Tracer("kagome").Start(ctx, "KagomeAction.Run")
+func (a Action) Run(ctx context.Context, args string) (string, error) {
+	_, span := otel.Tracer("kagome").Start(ctx, "Action.Run")
 	defer span.End()
 	var dict *dict.Dict
 	switch {
@@ -75,14 +75,14 @@ func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
 	return "```\n" + buf.String() + "```", nil
 }
 
-// Args represents the arguments for KagomeAction.
+// Args represents the arguments for Action.
 type Args struct {
 	mode   tokenizer.TokenizeMode
 	text   string
 	filter bool
 }
 
-func (a KagomeAction) parseArgs(args string) Args {
+func (a Action) parseArgs(args string) Args {
 	inputs := strings.Fields(args)
 	var text string
 	filter := false
@@ -120,9 +120,9 @@ func (a KagomeAction) parseArgs(args string) Args {
 	}
 }
 
-// NewKagomeAction creates a new KagomeAction with the specified dictionary.
-func NewKagomeAction(dict Dict) KagomeAction {
-	return KagomeAction{
+// NewKagomeAction creates a new Action with the specified dictionary.
+func NewKagomeAction(dict Dict) Action {
+	return Action{
 		name:       "Tokenize by Kagome with some Dictionaries",
 		dictionary: dict,
 	}

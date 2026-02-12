@@ -16,8 +16,8 @@ import (
 const DefaultTimeout = 10 * time.Second
 const basePath = "YamahaExtendedControl/v1/main/"
 
-// YamahaAPI is an interface for controlling Yamaha devices.
-type YamahaAPI interface {
+// API is an interface for controlling Yamaha devices.
+type API interface {
 	SetScene(ctx context.Context, scene int) error
 	SetVolume(ctx context.Context, volume int) error
 	PowerOn(ctx context.Context) error

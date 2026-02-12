@@ -6,11 +6,13 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// UpdateLibraryAction represents an action to update the Owntone library.
 type UpdateLibraryAction struct {
 	name string
 	c    *Client
 }
 
+// Run executes the UpdateLibraryAction.
 func (a UpdateLibraryAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("owntone").Start(ctx, "UpdateLibraryAction.Run")
 	defer span.End()
@@ -21,6 +23,7 @@ func (a UpdateLibraryAction) Run(ctx context.Context, _ string) (string, error) 
 	return "Updated library", nil
 }
 
+// NewUpdateLibraryAction creates a new UpdateLibraryAction.
 func NewUpdateLibraryAction(client *Client) UpdateLibraryAction {
 	return UpdateLibraryAction{
 		name: "Update library on Owntone",

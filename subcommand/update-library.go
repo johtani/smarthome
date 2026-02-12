@@ -5,8 +5,10 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 )
 
+// UpdateLibraryCmd is the command name for updating the music library.
 const UpdateLibraryCmd = "update library"
 
+// NewUpdateLibraryCmdDefinition creates the definition for the update library command.
 func NewUpdateLibraryCmdDefinition() Definition {
 	return Definition{
 		Name:        UpdateLibraryCmd,
@@ -15,6 +17,7 @@ func NewUpdateLibraryCmdDefinition() Definition {
 	}
 }
 
+// NewUpdateLibrarySubcommand creates a new Subcommand for the update library command.
 func NewUpdateLibrarySubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	return Subcommand{

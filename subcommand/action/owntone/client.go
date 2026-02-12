@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+// DefaultTimeout is the default timeout for Owntone API requests.
 const DefaultTimeout = 10 * time.Second
 
 // Client is a client for the Owntone API.

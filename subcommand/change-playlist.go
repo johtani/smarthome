@@ -6,8 +6,10 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
 
+// ChangePlaylistCmd is the command name for changing the music playlist.
 const ChangePlaylistCmd = "change playlist"
 
+// NewChangePlaylistCmdDefinition creates the definition for the change playlist command.
 func NewChangePlaylistCmdDefinition() Definition {
 	return Definition{
 		Name:        ChangePlaylistCmd,
@@ -16,6 +18,7 @@ func NewChangePlaylistCmdDefinition() Definition {
 	}
 }
 
+// NewChangePlaylistSubcommand creates a new Subcommand for the change playlist command.
 func NewChangePlaylistSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	yamahaClient := yamaha.NewClient(config.Yamaha)
