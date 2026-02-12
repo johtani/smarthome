@@ -8,13 +8,13 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// DisplayPlaylistsAction represents an action to displayplaylists from Owntone.
 type DisplayPlaylistsAction struct {
 	name string
 	c    *Client
 }
 
-// Run
-// Playlistの一覧を取得して文字列として返す
+// Run executes the DisplayPlaylistsAction and returns a formatted string of playlists.
 func (a DisplayPlaylistsAction) Run(ctx context.Context, category string) (string, error) {
 	ctx, span := otel.Tracer("owntone").Start(ctx, "DisplayPlaylistsAction.Run")
 	defer span.End()
@@ -35,6 +35,7 @@ func (a DisplayPlaylistsAction) Run(ctx context.Context, category string) (strin
 	return strings.Join(msg, " \n"), nil
 }
 
+// NewDisplayPlaylistsAction creates a new DisplayPlaylistsAction.
 func NewDisplayPlaylistsAction(client *Client) DisplayPlaylistsAction {
 	return DisplayPlaylistsAction{
 		name: "Display playlists from Owntone",

@@ -5,9 +5,13 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 )
 
+// SwitchBotSceneListCmd is the command name for listing SwitchBot scenes.
 const SwitchBotSceneListCmd = "switchbot scene list"
+
+// SceneListCmd is a short name for the SwitchBot scene list command.
 const SceneListCmd = "scene list"
 
+// NewSwitchBotSceneListDefinition creates the definition for the SwitchBot scene list command.
 func NewSwitchBotSceneListDefinition() Definition {
 	return Definition{
 		Name:        SwitchBotSceneListCmd,
@@ -17,6 +21,7 @@ func NewSwitchBotSceneListDefinition() Definition {
 	}
 }
 
+// NewSwitchBotSceneListSubcommand creates a new Subcommand for the SwitchBot scene list command.
 func NewSwitchBotSceneListSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{

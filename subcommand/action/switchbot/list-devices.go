@@ -8,11 +8,13 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// ListDevicesAction represents an action to list all SwitchBot devices.
 type ListDevicesAction struct {
 	name   string
 	client *CachedClient
 }
 
+// Run executes the ListDevicesAction.
 func (a ListDevicesAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListDevicesAction.Run")
 	defer span.End()
@@ -30,6 +32,7 @@ func (a ListDevicesAction) Run(ctx context.Context, _ string) (string, error) {
 	return strings.Join(msg, "\n"), nil
 }
 
+// NewListDevicesAction creates a new ListDevicesAction.
 func NewListDevicesAction(client *CachedClient) ListDevicesAction {
 	return ListDevicesAction{
 		name:   "List devices on SwitchBot",

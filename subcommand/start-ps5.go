@@ -7,8 +7,10 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
 
+// StartPS5Cmd is the command name for starting the PS5 setup.
 const StartPS5Cmd = "start ps5"
 
+// NewStartPS5Definition creates the definition for the start ps5 command.
 func NewStartPS5Definition() Definition {
 	return Definition{
 		Name:        StartPS5Cmd,
@@ -17,6 +19,7 @@ func NewStartPS5Definition() Definition {
 	}
 }
 
+// NewStartPS5Subcommand creates a new Subcommand for the start ps5 command.
 func NewStartPS5Subcommand(definition Definition, config Config) Subcommand {
 	yamahaClient := yamaha.NewClient(config.Yamaha)
 	return Subcommand{

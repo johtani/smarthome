@@ -6,8 +6,10 @@ import (
 	switchbotsdk "github.com/nasa9084/go-switchbot/v3"
 )
 
+// LightOffCmd is the command name for turning off the light.
 const LightOffCmd = "light off"
 
+// NewLightOffDefinition creates the definition for the light off command.
 func NewLightOffDefinition() Definition {
 	return Definition{
 		Name:        LightOffCmd,
@@ -16,6 +18,7 @@ func NewLightOffDefinition() Definition {
 	}
 }
 
+// NewLightOffSubcommand creates a new Subcommand for the light off command.
 func NewLightOffSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{

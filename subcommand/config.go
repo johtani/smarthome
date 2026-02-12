@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// Config represents the application configuration.
 type Config struct {
 	Owntone   owntone.Config   `json:"Owntone"`
 	Switchbot switchbot.Config `json:"Switchbot"`
@@ -20,6 +21,7 @@ type Config struct {
 	Commands  Commands
 }
 
+// ConfigFileName is the default path to the configuration file.
 const ConfigFileName = "./config/config.json"
 
 func (c *Config) validate() error {
@@ -95,10 +97,12 @@ func (c *Config) overrideWithEnv() {
 	}
 }
 
+// LoadConfig loads the configuration from the default path.
 func LoadConfig() (Config, error) {
 	return LoadConfigWithPath(ConfigFileName)
 }
 
+// LoadConfigWithPath loads the configuration from the specified path.
 func LoadConfigWithPath(configFile string) (Config, error) {
 	// #nosec G304
 	file, err := os.Open(configFile)

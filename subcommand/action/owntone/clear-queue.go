@@ -6,11 +6,13 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// ClearQueueAction represents an action to clear the playback queue on Owntone.
 type ClearQueueAction struct {
 	name string
 	c    *Client
 }
 
+// Run executes the ClearQueueAction.
 func (a ClearQueueAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("owntone").Start(ctx, "ClearQueueAction.Run")
 	defer span.End()
@@ -21,6 +23,7 @@ func (a ClearQueueAction) Run(ctx context.Context, _ string) (string, error) {
 	return "Cleared queue", nil
 }
 
+// NewClearQueueAction creates a new ClearQueueAction.
 func NewClearQueueAction(client *Client) ClearQueueAction {
 	return ClearQueueAction{
 		name: "Clear queue on Owntone",

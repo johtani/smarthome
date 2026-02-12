@@ -17,6 +17,7 @@ func defaultHandler(event *socketmode.Event, _ *socketmode.Client) {
 	slog.Warn("Unexpected event type received", "type", event.Type)
 }
 
+// PostMessage sends a message to a Slack channel.
 func PostMessage(ctx context.Context, client *socketmode.Client, channelID string, options ...slack.MsgOption) (string, string, error) {
 	_, span := otel.Tracer("slack").Start(ctx, "PostMessage")
 	defer span.End()

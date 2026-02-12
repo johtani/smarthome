@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// PlayAction represents an action to play music on Owntone.
 type PlayAction struct {
 	name string
 	c    *Client
@@ -17,6 +18,8 @@ type PlayAction struct {
 
 // Run
 
+// Run executes the PlayAction.
+// It can play a random artist, random genre, or a random playlist depending on args.
 func (a PlayAction) Run(ctx context.Context, args string) (string, error) {
 	ctx, span := otel.Tracer("owntone").Start(ctx, "PlayAction.Run")
 	defer span.End()
@@ -109,6 +112,7 @@ func (a PlayAction) playPlaylist(ctx context.Context) (string, error) {
 	return strings.Join(msg, " "), nil
 }
 
+// NewPlayAction creates a new PlayAction.
 func NewPlayAction(client *Client) PlayAction {
 	return PlayAction{
 		name: "Play music on Owntone",

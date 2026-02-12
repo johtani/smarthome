@@ -1,3 +1,7 @@
+/*
+Package cron provides scheduled tasks for the smart home system.
+It currently handles periodic recording of temperature and humidity.
+*/
 package cron
 
 import (
@@ -7,6 +11,7 @@ import (
 	"time"
 )
 
+// Run starts the cron scheduler and runs scheduled jobs.
 func Run(config subcommand.Config) error {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {

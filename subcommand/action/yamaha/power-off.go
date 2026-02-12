@@ -5,11 +5,13 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// PowerOffAction represents an action to turn off the Yamaha device.
 type PowerOffAction struct {
 	name string
-	c    YamahaAPI
+	c    API
 }
 
+// Run executes the PowerOffAction.
 func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("yamaha").Start(ctx, "PowerOffAction.Run")
 	defer span.End()
@@ -20,7 +22,8 @@ func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
 	return "Amplifier Power off.", nil
 }
 
-func NewPowerOffAction(client YamahaAPI) PowerOffAction {
+// NewPowerOffAction creates a new PowerOffAction.
+func NewPowerOffAction(client API) PowerOffAction {
 	return PowerOffAction{
 		name: "Power off Yamaha Amplifier",
 		c:    client,

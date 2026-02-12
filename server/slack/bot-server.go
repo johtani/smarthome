@@ -1,3 +1,6 @@
+/*
+Package slack provides a Slack bot server that handles commands via Socket Mode and Slash Commands.
+*/
 package slack
 
 import (
@@ -12,12 +15,14 @@ import (
 	"strings"
 )
 
+// Config represents the configuration for the Slack bot.
 type Config struct {
 	AppToken string `json:"app_token"`
 	BotToken string `json:"bot_token"`
 	Debug    bool   `json:"debug"`
 }
 
+// ConfigFileName is the default path to the Slack configuration file.
 const ConfigFileName = "./config/slack.json"
 
 func (c Config) validate() error {
@@ -64,6 +69,7 @@ func loadConfigFromFile() (Config, error) {
 	return config, nil
 }
 
+// Run starts the Slack bot server.
 func Run(config subcommand.Config) error {
 	slackConfig, err := loadConfigFromFile()
 	if err != nil {

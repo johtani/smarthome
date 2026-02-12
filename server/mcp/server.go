@@ -1,3 +1,7 @@
+/*
+Package mcp provides an MCP (Model Context Protocol) server implementation.
+It exposes subcommands as tools that can be called by LLMs.
+*/
 package mcp
 
 import (
@@ -10,6 +14,7 @@ import (
 	"strings"
 )
 
+// Run starts the MCP server.
 func Run(config subcommand.Config) error {
 	s := NewMCPServer()
 
@@ -24,6 +29,7 @@ func Run(config subcommand.Config) error {
 	return nil
 }
 
+// NewMCPServer creates and returns a new MCPServer instance.
 func NewMCPServer() *server.MCPServer {
 	return server.NewMCPServer(
 		"Smrat Home MCP",
@@ -32,6 +38,7 @@ func NewMCPServer() *server.MCPServer {
 	)
 }
 
+// NewMCPTool creates an MCP tool and its handler from a subcommand definition.
 func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp.Tool, server.ToolHandlerFunc) {
 	if definition.Args == nil {
 		tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description))

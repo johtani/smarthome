@@ -1,3 +1,7 @@
+/*
+Package subcommand provides the infrastructure for defining and executing smart home commands.
+Each command is composed of one or more actions.
+*/
 package subcommand
 
 import (
@@ -13,12 +17,14 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 )
 
+// Subcommand represents a executable command consisting of one or more actions.
 type Subcommand struct {
 	Definition
 	actions     []action.Action
 	ignoreError bool
 }
 
+// Exec executes the subcommand by running all its actions in sequence.
 func (s Subcommand) Exec(ctx context.Context, args string) (string, error) {
 	ctx, span := otel.Tracer("subcommand").Start(ctx, "Subcommand.Exec")
 	defer span.End()
@@ -42,6 +48,7 @@ func (s Subcommand) Exec(ctx context.Context, args string) (string, error) {
 	return strings.Join(msgs, "\n"), nil
 }
 
+// Definition defines the metadata and factory for a subcommand.
 type Definition struct {
 	Name        string
 	Description string
@@ -50,6 +57,7 @@ type Definition struct {
 	Args        []Arg
 }
 
+// Arg represents an argument for a subcommand.
 type Arg struct {
 	Name        string
 	Description string
@@ -58,10 +66,12 @@ type Arg struct {
 	Prefix      string
 }
 
+// Init initializes a subcommand from its definition and configuration.
 func (d Definition) Init(config Config) Subcommand {
 	return d.Factory(d, config)
 }
 
+// Help returns a help string for the subcommand.
 func (d Definition) Help() string {
 	var help string
 	if len(d.shortnames) > 0 {
@@ -72,6 +82,7 @@ func (d Definition) Help() string {
 	return help
 }
 
+// Distance calculates the Levenshtein distance between the input and the command names.
 func (d Definition) Distance(input string) (int, string) {
 	// 対象にならないサイズを初期値として設定
 	distance := dymCandidateDistance + 1
@@ -87,6 +98,7 @@ func (d Definition) Distance(input string) (int, string) {
 	return distance, command
 }
 
+// Match checks if the given message matches the subcommand name or its shortnames.
 func (d Definition) Match(message string) (bool, string) {
 	var args = ""
 	inputs := strings.Fields(message)
@@ -116,10 +128,12 @@ func (d Definition) isPrefix(inputs []string, cmd []string) bool {
 	return true
 }
 
+// Commands represents a collection of subcommand definitions.
 type Commands struct {
 	Definitions []Definition
 }
 
+// NewCommands creates a new collection of all available subcommand definitions.
 func NewCommands() Commands {
 	return Commands{
 		Definitions: []Definition{
@@ -150,6 +164,7 @@ func NewCommands() Commands {
 	}
 }
 
+// Find searches for a subcommand definition that matches the given text.
 func (c Commands) Find(text string) (Definition, string, string, error) {
 	var def Definition
 	var args string
@@ -205,6 +220,7 @@ func (c Commands) didYouMean(name string) ([]Definition, []string) {
 	return resultDefs, resultCmds
 }
 
+// Help returns a help string for all subcommands in the collection.
 func (c Commands) Help() string {
 	var builder strings.Builder
 	for _, d := range c.Definitions {

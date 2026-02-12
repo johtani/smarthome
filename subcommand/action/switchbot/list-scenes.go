@@ -8,11 +8,13 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// ListScenesAction represents an action to list all SwitchBot scenes.
 type ListScenesAction struct {
 	name   string
 	client *CachedClient
 }
 
+// Run executes the ListScenesAction.
 func (a ListScenesAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListScenesAction.Run")
 	defer span.End()
@@ -27,6 +29,7 @@ func (a ListScenesAction) Run(ctx context.Context, _ string) (string, error) {
 	return strings.Join(msg, "\n"), nil
 }
 
+// NewListScenesAction creates a new ListScenesAction.
 func NewListScenesAction(client *CachedClient) ListScenesAction {
 	return ListScenesAction{
 		name:   "List scenes on SwitchBot",

@@ -1,3 +1,7 @@
+/*
+Package main is the entry point for the smarthome application.
+It switches between server mode (Slack, MCP) and command line mode.
+*/
 package main
 
 import (

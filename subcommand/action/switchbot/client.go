@@ -1,3 +1,6 @@
+/*
+Package switchbot provides actions and a client for controlling SwitchBot devices.
+*/
 package switchbot
 
 import (
@@ -11,6 +14,7 @@ import (
 	"sync"
 )
 
+// Config is the configuration for the SwitchBot client.
 type Config struct {
 	Token string `json:"token"`
 	// #nosec G117
@@ -20,6 +24,7 @@ type Config struct {
 	AirConditionerID string `json:"air_conditioner_id"`
 }
 
+// Validate validates the SwitchBot configuration.
 func (c Config) Validate() error {
 	var errs []string
 	if len(c.Token) == 0 {
@@ -34,17 +39,20 @@ func (c Config) Validate() error {
 	return nil
 }
 
+// DeviceAPI is an interface for controlling SwitchBot devices.
 type DeviceAPI interface {
 	List(ctx context.Context) ([]switchbot.Device, []switchbot.InfraredDevice, error)
 	Status(ctx context.Context, id string) (switchbot.DeviceStatus, error)
 	Command(ctx context.Context, id string, cmd switchbot.Command) error
 }
 
+// SceneAPI is an interface for controlling SwitchBot scenes.
 type SceneAPI interface {
 	List(ctx context.Context) ([]switchbot.Scene, error)
 	Execute(ctx context.Context, id string) error
 }
 
+// CachedClient is a wrapper around the SwitchBot API client with name caching.
 type CachedClient struct {
 	DeviceAPI
 	SceneAPI
@@ -53,6 +61,7 @@ type CachedClient struct {
 	mu              sync.RWMutex
 }
 
+// NewClient creates a new SwitchBot client with the given configuration.
 func NewClient(config Config) *CachedClient {
 	c := switchbot.New(config.Token, config.Secret, switchbot.WithHTTPClient(&http.Client{
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
@@ -65,6 +74,7 @@ func NewClient(config Config) *CachedClient {
 	}
 }
 
+// GetSceneName returns the name of the scene with the given ID.
 func (c *CachedClient) GetSceneName(ctx context.Context, id string) (string, error) {
 	c.mu.RLock()
 	name, ok := c.sceneNameCache[id]
@@ -84,6 +94,7 @@ func (c *CachedClient) GetSceneName(ctx context.Context, id string) (string, err
 	return c.sceneNameCache[id], nil
 }
 
+// GetDeviceName returns the name of the device with the given ID.
 func (c *CachedClient) GetDeviceName(ctx context.Context, id string) (string, error) {
 	c.mu.RLock()
 	name, ok := c.deviceNameCache[id]
@@ -106,6 +117,7 @@ func (c *CachedClient) GetDeviceName(ctx context.Context, id string) (string, er
 	return c.deviceNameCache[id], nil
 }
 
+// IsTargetDevice checks if the target device type is in the list of device types.
 func IsTargetDevice(deviceTypes []string, target string) bool {
 	for _, item := range deviceTypes {
 		if target == item {

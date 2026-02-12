@@ -6,12 +6,14 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// SetInputAction represents an action to set the input source on the Yamaha device.
 type SetInputAction struct {
 	name  string
 	input string
-	c     YamahaAPI
+	c     API
 }
 
+// Run executes the SetInputAction.
 func (a SetInputAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("yamaha").Start(ctx, "SetInputAction.Run")
 	defer span.End()
@@ -22,7 +24,8 @@ func (a SetInputAction) Run(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Set input to %v.", a.input), nil
 }
 
-func NewSetInputAction(client YamahaAPI, input string) SetInputAction {
+// NewSetInputAction creates a new SetInputAction.
+func NewSetInputAction(client API, input string) SetInputAction {
 	return SetInputAction{
 		name:  "Set Yamaha Input",
 		input: input,

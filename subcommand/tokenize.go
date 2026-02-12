@@ -5,8 +5,10 @@ import (
 	"github.com/johtani/smarthome/subcommand/action/kagome"
 )
 
+// TokenizeIpaCmd is the command name for tokenizing with IPA dictionary.
 const TokenizeIpaCmd = "tokenize ipa"
 
+// NewTokenizeIpaDefinition creates the definition for the tokenize ipa command.
 func NewTokenizeIpaDefinition() Definition {
 	return Definition{
 		Name:        TokenizeIpaCmd,
@@ -19,6 +21,7 @@ func NewTokenizeIpaDefinition() Definition {
 	}
 }
 
+// NewTokenizeIpaCommand creates a new Subcommand for the tokenize ipa command.
 func NewTokenizeIpaCommand(definition Definition, _ Config) Subcommand {
 	return Subcommand{
 		Definition: definition,
@@ -29,11 +32,13 @@ func NewTokenizeIpaCommand(definition Definition, _ Config) Subcommand {
 	}
 }
 
+// TokenizeUniCmd is the command name for tokenizing with Uni dictionary.
 const (
 	// #nosec G101
 	TokenizeUniCmd = "tokenize uni"
 )
 
+// NewTokenizeUniDefinition creates the definition for the tokenize uni command.
 func NewTokenizeUniDefinition() Definition {
 	return Definition{
 		Name:        TokenizeUniCmd,
@@ -45,6 +50,7 @@ func NewTokenizeUniDefinition() Definition {
 	}
 }
 
+// NewTokenizeUniCommand creates a new Subcommand for the tokenize uni command.
 func NewTokenizeUniCommand(definition Definition, _ Config) Subcommand {
 	return Subcommand{
 		Definition: definition,
@@ -55,11 +61,13 @@ func NewTokenizeUniCommand(definition Definition, _ Config) Subcommand {
 	}
 }
 
+// TokenizeNeologdCmd is the command name for tokenizing with Neologd dictionary.
 const (
 	// #nosec G101
 	TokenizeNeologdCmd = "tokenize neologd"
 )
 
+// NewTokenizeNeologdDefinition creates the definition for the tokenize neologd command.
 func NewTokenizeNeologdDefinition() Definition {
 	return Definition{
 		Name:        TokenizeNeologdCmd,
@@ -71,6 +79,7 @@ func NewTokenizeNeologdDefinition() Definition {
 	}
 }
 
+// NewTokenizeNeologdCommand creates a new Subcommand for the tokenize neologd command.
 func NewTokenizeNeologdCommand(definition Definition, _ Config) Subcommand {
 	return Subcommand{
 		Definition: definition,

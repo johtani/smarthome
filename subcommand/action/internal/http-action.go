@@ -8,6 +8,7 @@ import (
 	"net/http"
 )
 
+// BuildHttpRequestWithParams creates an HTTP request with the given context, method, URL, and query parameters.
 func BuildHttpRequestWithParams(ctx context.Context, method string, url string, params map[string]string) (*http.Request, error) {
 	req, err := http.NewRequestWithContext(ctx, method, url, nil)
 	if err != nil {
@@ -21,6 +22,7 @@ func BuildHttpRequestWithParams(ctx context.Context, method string, url string, 
 	return req, nil
 }
 
+// HandleResponse checks if the response status code is among the expected statuses and closes the response body.
 func HandleResponse(res *http.Response, expectedStatuses ...int) error {
 	defer func() {
 		_, _ = io.Copy(io.Discard, res.Body)
@@ -48,6 +50,8 @@ func HandleResponse(res *http.Response, expectedStatuses ...int) error {
 	return nil
 }
 
+// DecodeJSONResponse checks the response status code and decodes the JSON response body into the target.
+// It also ensures the response body is closed.
 func DecodeJSONResponse[T any](res *http.Response, target *T, expectedStatuses ...int) error {
 	// HandleResponse と同様の defer 処理が必要だが、
 	// HandleResponse を呼ぶと Body が閉じられてしまうので、ここではインラインで書くか工夫が必要。

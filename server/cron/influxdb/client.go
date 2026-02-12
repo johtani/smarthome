@@ -1,3 +1,6 @@
+/*
+Package influxdb provides a client for writing temperature and humidity data to InfluxDB.
+*/
 package influxdb
 
 import (
@@ -9,6 +12,7 @@ import (
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 )
 
+// Config represents the configuration for the InfluxDB client.
 type Config struct {
 	Token       string `json:"token"`
 	URL         string `json:"url"`
@@ -17,6 +21,7 @@ type Config struct {
 	Measurement string `json:"measurement"`
 }
 
+// Temperature represents the temperature data to be recorded.
 type Temperature struct {
 	Room        string  `json:"room"`
 	Temperature float64 `json:"temperature"`
@@ -25,6 +30,7 @@ type Temperature struct {
 	Co2         int     `json:"co2"`
 }
 
+// Client is an interface for writing temperature data to InfluxDB.
 type Client interface {
 	WriteTemperature(data Temperature)
 	Close()
@@ -35,6 +41,7 @@ type clientImpl struct {
 	client influxdb2.Client
 }
 
+// NewClient creates a new InfluxDB client with the given configuration.
 func NewClient(config Config) Client {
 	return &clientImpl{
 		config: config,

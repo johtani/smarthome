@@ -1,3 +1,7 @@
+/*
+Package kagome provides an action to tokenize Japanese text using the Kagome tokenizer.
+It supports multiple dictionaries like IPA, Uni, and Neologd.
+*/
 package kagome
 
 import (
@@ -15,21 +19,27 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// Dict represents the type of dictionary used by Kagome.
 type Dict string
 
 const (
-	IPA     Dict = "ipa"
-	UNI     Dict = "uni"
+	// IPA dictionary.
+	IPA Dict = "ipa"
+	// UNI dictionary.
+	UNI Dict = "uni"
+	// NEOLOGD dictionary.
 	NEOLOGD Dict = "neologd"
 )
 
-type KagomeAction struct {
+// Action represents an action that tokenizes text using Kagome.
+type Action struct {
 	name       string
 	dictionary Dict
 }
 
-func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
-	_, span := otel.Tracer("kagome").Start(ctx, "KagomeAction.Run")
+// Run executes the Kagome tokenization action.
+func (a Action) Run(ctx context.Context, args string) (string, error) {
+	_, span := otel.Tracer("kagome").Start(ctx, "Action.Run")
 	defer span.End()
 	var dict *dict.Dict
 	switch {
@@ -65,13 +75,14 @@ func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
 	return "```\n" + buf.String() + "```", nil
 }
 
+// Args represents the arguments for Action.
 type Args struct {
 	mode   tokenizer.TokenizeMode
 	text   string
 	filter bool
 }
 
-func (a KagomeAction) parseArgs(args string) Args {
+func (a Action) parseArgs(args string) Args {
 	inputs := strings.Fields(args)
 	var text string
 	filter := false
@@ -109,8 +120,9 @@ func (a KagomeAction) parseArgs(args string) Args {
 	}
 }
 
-func NewKagomeAction(dict Dict) KagomeAction {
-	return KagomeAction{
+// NewKagomeAction creates a new Action with the specified dictionary.
+func NewKagomeAction(dict Dict) Action {
+	return Action{
 		name:       "Tokenize by Kagome with some Dictionaries",
 		dictionary: dict,
 	}
