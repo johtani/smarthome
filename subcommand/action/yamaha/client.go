@@ -43,7 +43,7 @@ func (c Config) Validate() error {
 func (c Client) buildUrl(path string) string {
 	url := c.config.Url
 	if !strings.HasSuffix(url, "/") {
-		url = url + "/"
+		url += "/"
 	}
 	return url + basePath + path
 }

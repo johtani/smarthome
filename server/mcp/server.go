@@ -62,8 +62,7 @@ func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp
 				))
 
 		}
-		var tmp mcp.Tool
-		tmp = mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), args...)
+		tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), args...)
 		return tmp,
 			func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				params := []string{}

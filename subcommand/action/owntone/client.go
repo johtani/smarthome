@@ -34,7 +34,7 @@ func (c Config) Validate() error {
 func (c Client) buildUrl(path string) string {
 	url := c.config.Url
 	if !strings.HasSuffix(url, "/") {
-		url = url + "/"
+		url += "/"
 	}
 	return url + path
 }
@@ -117,7 +117,7 @@ func (c Client) GetPlaylists(ctx context.Context) ([]Playlist, error) {
 	}
 	var lists []Playlist
 	for _, item := range p.Items {
-		//曲がないプレイリストは不要なので返さない
+		// 曲がないプレイリストは不要なので返さない
 		if item.ItemCount > 0 {
 			lists = append(lists, item)
 		}

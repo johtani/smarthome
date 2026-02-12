@@ -23,17 +23,17 @@ const ConfigFileName = "./config/slack.json"
 func (c Config) validate() error {
 	var errs []string
 	if c.AppToken == "" {
-		errs = append(errs, fmt.Sprintf("app_token must be set.\n"))
+		errs = append(errs, "app_token must be set.\n")
 	}
 	if !strings.HasPrefix(c.AppToken, "xapp-") {
-		errs = append(errs, fmt.Sprintf("app_token must have the prefix \"xapp-\"."))
+		errs = append(errs, "app_token must have the prefix \"xapp-\".")
 	}
 
 	if c.BotToken == "" {
-		errs = append(errs, fmt.Sprintf("bot_token must be set.\n"))
+		errs = append(errs, "bot_token must be set.\n")
 	}
 	if !strings.HasPrefix(c.BotToken, "xoxb-") {
-		errs = append(errs, fmt.Sprintf("bot_token must have the prefix \"xoxb-\"."))
+		errs = append(errs, "bot_token must have the prefix \"xoxb-\".")
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf("%s", strings.Join(errs, "\n"))

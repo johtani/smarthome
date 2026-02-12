@@ -20,11 +20,12 @@ type PlayAction struct {
 func (a PlayAction) Run(ctx context.Context, args string) (string, error) {
 	ctx, span := otel.Tracer("owntone").Start(ctx, "PlayAction.Run")
 	defer span.End()
-	if strings.HasPrefix(args, "artist") {
+	switch {
+	case strings.HasPrefix(args, "artist"):
 		return a.playRandomArtists(ctx)
-	} else if strings.HasPrefix(args, "genre") {
+	case strings.HasPrefix(args, "genre"):
 		return a.playRandomGenre(ctx)
-	} else {
+	default:
 		return a.playPlaylist(ctx)
 	}
 }
@@ -66,7 +67,7 @@ func (a PlayAction) playRandomArtists(ctx context.Context) (string, error) {
 			return "", fmt.Errorf("error in AddItem2QueueAndPlay\n %v", err)
 		}
 	} else {
-		msg = append(msg, fmt.Sprintf("couldn't get artist"))
+		msg = append(msg, "couldn't get artist")
 	}
 	return strings.Join(msg, " "), nil
 }
@@ -80,8 +81,8 @@ func (a PlayAction) playPlaylist(ctx context.Context) (string, error) {
 		return "", err
 	}
 	if status.ItemID == 0 {
-		//プレイヤーのキューに曲が入っていない状態
-		//fmt.Print("queue is empty, so playing a randomly selected playlist")
+		// プレイヤーのキューに曲が入っていない状態
+		// fmt.Print("queue is empty, so playing a randomly selected playlist")
 		playlists, err := a.c.GetPlaylists(ctx)
 		if err != nil {
 			return "", fmt.Errorf("error in playPlaylist\n %v", err)

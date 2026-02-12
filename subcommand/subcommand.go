@@ -162,7 +162,7 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 		}
 	}
 
-	if find == false {
+	if !find {
 		candidates, cmds := c.didYouMean(text)
 		if len(candidates) == 0 {
 			return Definition{}, "", "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", text)

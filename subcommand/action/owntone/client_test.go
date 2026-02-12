@@ -66,7 +66,6 @@ func createMockServerWithResponse(code int, method string, path string, requestP
 			if response != "" {
 				_, _ = rw.Write([]byte(response))
 			}
-			return
 		}))
 }
 

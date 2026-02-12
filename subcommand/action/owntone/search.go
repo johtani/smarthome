@@ -99,9 +99,9 @@ func (a SearchAndDisplayAction) Run(ctx context.Context, query string) (string, 
 	ctx, span := otel.Tracer("owntone").Start(ctx, "SearchAndDisplayAction.Run")
 	defer span.End()
 	msg := []string{"Search Results..."}
-	//fmt.Println("original query... " + query)
+	// fmt.Println("original query... " + query)
 	searchQuery := Parse(query)
-	//fmt.Println("Terms... " + strings.Join(searchQuery.Terms, " "))
+	// fmt.Println("Terms... " + strings.Join(searchQuery.Terms, " "))
 	result, err := a.c.Search(ctx, strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
 		return "Something wrong...", fmt.Errorf("error in SearchAndDisplayAction(terms=%v)\n %v", strings.Join(searchQuery.Terms, " "), err)
@@ -159,7 +159,8 @@ func Parse(target string) *SearchQuery {
 	limit := -1
 	offset := -1
 	for _, term := range split {
-		if strings.HasPrefix(term, limitPrefix) {
+		switch {
+		case strings.HasPrefix(term, limitPrefix):
 			value := term[len(limitPrefix):]
 			i, err := strconv.Atoi(value)
 			if err == nil {
@@ -167,7 +168,7 @@ func Parse(target string) *SearchQuery {
 			} else {
 				queries = append(queries, term)
 			}
-		} else if strings.HasPrefix(term, offsetPrefix) {
+		case strings.HasPrefix(term, offsetPrefix):
 			value := term[len(offsetPrefix):]
 			i, err := strconv.Atoi(value)
 			if err == nil {
@@ -175,7 +176,7 @@ func Parse(target string) *SearchQuery {
 			} else {
 				queries = append(queries, term)
 			}
-		} else if strings.HasPrefix(term, typePrefix) {
+		case strings.HasPrefix(term, typePrefix):
 			value := term[len(typePrefix):]
 			st, err := SearchTypeFromString(value)
 			if err == nil {
@@ -183,7 +184,7 @@ func Parse(target string) *SearchQuery {
 			} else {
 				queries = append(queries, term)
 			}
-		} else {
+		default:
 			queries = append(queries, term)
 		}
 	}
