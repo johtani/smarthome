@@ -30,7 +30,7 @@ func (a ChangePlaylistAction) Run(ctx context.Context, _ string) (string, error)
 		index := rand.Intn(len(playlists))
 		target := playlists[index]
 		msg = append(msg, target.Name+".")
-		err := a.c.AddItem2QueueAndPlay(ctx, target.Uri, "")
+		err := a.c.AddItem2QueueAndPlay(ctx, target.URI, "")
 		if err != nil {
 			return "", fmt.Errorf("error in AddItem2QueueAndPlay(target=%v)\n %v", target.Name, err)
 		}

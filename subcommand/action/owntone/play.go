@@ -62,7 +62,7 @@ func (a PlayAction) playRandomArtists(ctx context.Context) (string, error) {
 			return "", fmt.Errorf("error in playRandomArtists\n %v", err)
 		}
 		msg = append(msg, fmt.Sprintf("Artist : %v", artist.Name))
-		err = a.c.AddItem2QueueAndPlay(ctx, artist.Uri, "")
+		err = a.c.AddItem2QueueAndPlay(ctx, artist.URI, "")
 		if err != nil {
 			return "", fmt.Errorf("error in AddItem2QueueAndPlay\n %v", err)
 		}
@@ -92,7 +92,7 @@ func (a PlayAction) playPlaylist(ctx context.Context) (string, error) {
 			index := rand.Intn(len(playlists))
 			target := playlists[index]
 			msg = append(msg, "from "+target.Name+".")
-			err := a.c.AddItem2QueueAndPlay(ctx, target.Uri, "")
+			err := a.c.AddItem2QueueAndPlay(ctx, target.URI, "")
 			if err != nil {
 				return "", fmt.Errorf("error in AddItem2QueueAndPlay(%v)\n %v", target.Name, err)
 			}

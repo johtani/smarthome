@@ -29,7 +29,10 @@ func NewTokenizeIpaCommand(definition Definition, _ Config) Subcommand {
 	}
 }
 
-const TokenizeUniCmd = "tokenize uni"
+const (
+	// #nosec G101
+	TokenizeUniCmd = "tokenize uni"
+)
 
 func NewTokenizeUniDefinition() Definition {
 	return Definition{
@@ -52,7 +55,10 @@ func NewTokenizeUniCommand(definition Definition, _ Config) Subcommand {
 	}
 }
 
-const TokenizeNeologdCmd = "tokenize neologd"
+const (
+	// #nosec G101
+	TokenizeNeologdCmd = "tokenize neologd"
+)
 
 func NewTokenizeNeologdDefinition() Definition {
 	return Definition{

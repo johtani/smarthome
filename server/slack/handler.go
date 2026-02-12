@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
-func defaultHandler(event *socketmode.Event, client *socketmode.Client) {
+func defaultHandler(event *socketmode.Event, _ *socketmode.Client) {
 	slog.Warn("Unexpected event type received", "type", event.Type)
 }
 
@@ -23,7 +23,7 @@ func PostMessage(ctx context.Context, client *socketmode.Client, channelID strin
 	return client.PostMessage(channelID, options...)
 }
 
-func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix string) socketmode.SocketmodeHandlerFunc {
+func newMessageSubcommandHandler(config subcommand.Config, botUserIDPrefix string) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
 		ctx, span := otel.Tracer("slack").Start(context.Background(), "AppMention")
 		defer span.End()
@@ -44,9 +44,9 @@ func newMessageSubcommandHandler(config subcommand.Config, botUserIdPrefix strin
 		var msg string
 
 		// とりあえずBotのUserIDが最初にあるメッセージだけ対象とする
-		if strings.HasPrefix(payloadEvent.Text, botUserIdPrefix) {
+		if strings.HasPrefix(payloadEvent.Text, botUserIDPrefix) {
 			var err error
-			msg, err = findAndExec(ctx, config, strings.ReplaceAll(payloadEvent.Text, botUserIdPrefix, ""))
+			msg, err = findAndExec(ctx, config, strings.ReplaceAll(payloadEvent.Text, botUserIDPrefix, ""))
 			if err != nil {
 				slog.Error("Got error in findAndExec", "error", err)
 				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())

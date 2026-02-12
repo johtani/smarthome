@@ -92,7 +92,7 @@ func (c Client) SetVolume(ctx context.Context, volume int) error {
 }
 
 type Playlist struct {
-	Uri       string `json:"uri"`
+	URI       string `json:"uri"`
 	Name      string `json:"name"`
 	ItemCount int    `json:"item_count"`
 	Path      string `json:"path"`
@@ -210,7 +210,7 @@ const (
 
 type SearchItem struct {
 	Title  string `json:"title"`
-	Uri    string `json:"uri"`
+	URI    string `json:"uri"`
 	Name   string `json:"name"`
 	Artist string `json:"artist"`
 }
@@ -288,7 +288,7 @@ type Artists struct {
 
 type Artist struct {
 	Name       string `json:"name"`
-	Uri        string `json:"uri"`
+	URI        string `json:"uri"`
 	TrackCount int    `json:"track_count"`
 }
 

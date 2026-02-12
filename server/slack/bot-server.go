@@ -69,27 +69,28 @@ func Run(config subcommand.Config) error {
 	if err != nil {
 		return err
 	}
-	webApi := slack.New(
+	webAPI := slack.New(
 		slackConfig.BotToken,
 		slack.OptionAppLevelToken(slackConfig.AppToken),
 		slack.OptionDebug(slackConfig.Debug),
 		slack.OptionLog(log.New(os.Stdout, "api: ", log.Lshortfile|log.LstdFlags)),
 	)
 	client := socketmode.New(
-		webApi,
+		webAPI,
 		socketmode.OptionDebug(slackConfig.Debug),
 		socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)),
 	)
-	authTest, authTestErr := webApi.AuthTest()
+	authTest, authTestErr := webAPI.AuthTest()
 	if authTestErr != nil {
-		return fmt.Errorf("SLACK_BOT_TOKEN is invalid: %v\n", authTestErr)
+		return fmt.Errorf("SLACK_BOT_TOKEN is invalid: %v", authTestErr)
 	}
-	botUserId := authTest.UserID
-	botUserIdPrefix := fmt.Sprintf("<@%v>", botUserId)
+	botUserID := authTest.UserID
+	botUserIDPrefix := fmt.Sprintf("<@%v>", botUserID)
 
 	socketModeHandler := socketmode.NewSocketmodeHandler(client)
-	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(config, botUserIdPrefix))
+	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(config, botUserIDPrefix))
 	socketModeHandler.Handle(socketmode.EventTypeSlashCommand, newSlashCommandSubcommandHandler(config))
+	socketModeHandler.HandleDefault(defaultHandler)
 	err = socketModeHandler.RunEventLoop()
 	if err != nil {
 		return err

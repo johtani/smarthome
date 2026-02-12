@@ -100,6 +100,7 @@ func LoadConfig() (Config, error) {
 }
 
 func LoadConfigWithPath(configFile string) (Config, error) {
+	// #nosec G304
 	file, err := os.Open(configFile)
 	if err != nil {
 		return Config{}, fmt.Errorf("設定ファイルの読み込みに失敗しました (%s): %w", configFile, err)

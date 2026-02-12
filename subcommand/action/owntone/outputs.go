@@ -33,9 +33,9 @@ func NewDisplayOutputsAction(client *Client, opts ...bool) DisplayOutputsAction 
 }
 
 // Run fetches outputs and returns a formatted string.
-// Note: arg is currently ignored; behavior is controlled by defaultOnlySelected.
+// Note: _ is currently ignored; behavior is controlled by defaultOnlySelected.
 // Default (no args) shows both selected and unselected unless defaultOnlySelected is true.
-func (a DisplayOutputsAction) Run(ctx context.Context, arg string) (string, error) {
+func (a DisplayOutputsAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("owntone").Start(ctx, "DisplayOutputsAction.Run")
 	defer span.End()
 	outputs, err := a.c.GetOutputs(ctx)

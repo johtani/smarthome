@@ -529,32 +529,32 @@ func TestClient_Search(t *testing.T) {
 				Tracks: Items{Items: []SearchItem{
 					{
 						Title:  "Another Love",
-						Uri:    "library:track:35",
+						URI:    "library:track:35",
 						Name:   "",
 						Artist: "Tom Odell",
 					},
 					{
 						Title:  "Away From the Sun",
-						Uri:    "library:track:215",
+						URI:    "library:track:215",
 						Name:   "",
 						Artist: "3 Doors Down",
 					}}, Total: 14, Offset: 0, Limit: 2},
 				Artists: Items{Items: []SearchItem{{
 					Title:  "",
-					Uri:    "library:artist:8737690491750445895",
+					URI:    "library:artist:8737690491750445895",
 					Name:   "The xx",
 					Artist: "",
 				}}, Total: 1, Offset: 0, Limit: 2},
 				Albums: Items{Items: []SearchItem{
 					{
 						Title:  "",
-						Uri:    "library:album:8264078270267374619",
+						URI:    "library:album:8264078270267374619",
 						Name:   "Away From the Sun",
 						Artist: "3 Doors Down",
 					},
 					{
 						Title:  "",
-						Uri:    "library:album:6835720495312674468",
+						URI:    "library:album:6835720495312674468",
 						Name:   "The Better Life",
 						Artist: "3 Doors Down",
 					},
@@ -562,13 +562,13 @@ func TestClient_Search(t *testing.T) {
 				Genres: Items{Items: []SearchItem{
 					{
 						Title:  "",
-						Uri:    "",
+						URI:    "",
 						Name:   "Abstract",
 						Artist: "",
 					},
 					{
 						Title:  "",
-						Uri:    "",
+						URI:    "",
 						Name:   "Alternative",
 						Artist: "",
 					},
@@ -703,7 +703,7 @@ func TestClient_GetArtist(t *testing.T) {
 		wantErr  bool
 		expected *Artist
 	}{
-		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: getArtistsSampleJSONResponse()}, args{offset: 1}, false, &Artist{Name: "Ace Of Base", Uri: "library:artist:5132191696218976531", TrackCount: 58}},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: getArtistsSampleJSONResponse()}, args{offset: 1}, false, &Artist{Name: "Ace Of Base", URI: "library:artist:5132191696218976531", TrackCount: 58}},
 		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: getArtistsSampleJSONResponse()}, args{offset: 1}, true, nil},
 	}
 	for _, tt := range tests {

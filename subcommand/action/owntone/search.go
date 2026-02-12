@@ -36,17 +36,17 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	var uris []string
 	msg, uris = appendMessage(result.Artists, "Artists", msg, uris, func(item SearchItem, msg []string) ([]string, []string) {
 		msg = append(msg, fmt.Sprintf(" %v", item.Name))
-		uris = append(uris, item.Uri)
+		uris = append(uris, item.URI)
 		return msg, uris
 	})
 	msg, uris = appendMessage(result.Albums, "Albums", msg, uris, func(item SearchItem, msg []string) ([]string, []string) {
 		msg = append(msg, fmt.Sprintf(" %v / %v", item.Name, item.Artist))
-		uris = append(uris, item.Uri)
+		uris = append(uris, item.URI)
 		return msg, uris
 	})
 	msg, uris = appendMessage(result.Tracks, "Tracks", msg, uris, func(item SearchItem, msg []string) ([]string, []string) {
 		msg = append(msg, fmt.Sprintf(" %v / %v ", item.Title, item.Artist))
-		uris = append(uris, item.Uri)
+		uris = append(uris, item.URI)
 		return msg, uris
 	})
 	msg, uris = appendMessage(result.Genres, "Genres", msg, uris, func(item SearchItem, msg []string) ([]string, []string) {

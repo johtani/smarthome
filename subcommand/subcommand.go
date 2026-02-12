@@ -166,7 +166,7 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 	if !find {
 		candidates, cmds := c.didYouMean(text)
 		if len(candidates) == 0 {
-			return Definition{}, "", "", fmt.Errorf("sorry, I cannot understand what you want from what you said '%v'...\n", text)
+			return Definition{}, "", "", fmt.Errorf("sorry, i cannot understand what you want from what you said '%v'", text)
 		}
 		def = candidates[0]
 		dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])

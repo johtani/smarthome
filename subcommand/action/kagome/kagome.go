@@ -53,9 +53,8 @@ func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
 		f, err := ja.NewFilter()
 		if err != nil {
 			return "", fmt.Errorf("filter initialization failed, %w", err)
-		} else {
-			f.Drop(&tokens)
 		}
+		f.Drop(&tokens)
 	}
 	for _, token := range tokens {
 		if token.Class == tokenizer.DUMMY {

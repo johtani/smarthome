@@ -25,7 +25,7 @@ func NewStartMeetingSubcommand(definition Definition, config Config) Subcommand 
 		Definition: definition,
 		actions: []action.Action{
 			owntone.NewPauseAction(owntoneClient),
-			switchbot.NewExecuteSceneAction(switchbotClient, config.Switchbot.LightSceneId),
+			switchbot.NewExecuteSceneAction(switchbotClient, config.Switchbot.LightSceneID),
 			yamaha.NewPowerOffAction(yamahaClient),
 		},
 		ignoreError: true,
