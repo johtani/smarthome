@@ -55,7 +55,8 @@ func run() error {
 		_ = shutdown(ctx)
 	}()
 
-	if serverFlag {
+	switch {
+	case serverFlag:
 		config, err := subcommand.LoadConfig()
 		if err != nil {
 			return fmt.Errorf("設定の読み込みに失敗: %w", err)
@@ -78,13 +79,13 @@ func run() error {
 		}
 
 		return slack.Run(config)
-	} else if mcpFlag {
+	case mcpFlag:
 		config, err := subcommand.LoadConfigWithPath(configPath)
 		if err != nil {
 			return fmt.Errorf("設定の読み込みに失敗: %w", err)
 		}
 		return mcp.Run(config)
-	} else {
+	default:
 		config, err := subcommand.LoadConfigWithPath(configPath)
 		if err != nil {
 			return fmt.Errorf("設定の読み込みに失敗: %w", err)

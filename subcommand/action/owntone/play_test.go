@@ -39,7 +39,7 @@ func TestPlayAction_Run(t *testing.T) {
 
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := NewClient(Config{Url: server.URL})
+	client := NewClient(Config{URL: server.URL})
 	action := NewPlayAction(client)
 
 	tests := []struct {
@@ -92,7 +92,7 @@ func TestPlayAction_Run_QueueNotEmpty(t *testing.T) {
 
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := NewClient(Config{Url: server.URL})
+	client := NewClient(Config{URL: server.URL})
 	action := NewPlayAction(client)
 
 	got, err := action.Run(context.Background(), "")

@@ -46,7 +46,9 @@ func loadConfigFromFile() (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("Slack設定ファイルの読み込みに失敗しました (%s): %w", ConfigFileName, err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// JSONデコード
 	var config Config

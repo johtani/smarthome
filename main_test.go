@@ -15,9 +15,9 @@ import (
 
 func TestRunCmd(t *testing.T) {
 	config := subcommand.Config{
-		Owntone:   owntone.Config{Url: "http://localhost:8000"},
+		Owntone:   owntone.Config{URL: "http://localhost:8000"},
 		Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
-		Yamaha:    yamaha.Config{Url: "http://localhost:8080"},
+		Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 		Commands:  subcommand.NewCommands(),
 	}
 
@@ -53,8 +53,7 @@ func TestRunCmd(t *testing.T) {
 			os.Stderr = w
 
 			err := runCmd(ctx, config, tt.args)
-
-			w.Close()
+			_ = w.Close()
 			out, _ := io.ReadAll(r)
 			os.Stdout = oldStdout
 			os.Stderr = oldStderr

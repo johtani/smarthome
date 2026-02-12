@@ -23,7 +23,7 @@ func TestDisplayPlaylistsAction_Run(t *testing.T) {
 
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := NewClient(Config{Url: server.URL})
+	client := NewClient(Config{URL: server.URL})
 	action := NewDisplayPlaylistsAction(client)
 
 	got, err := action.Run(context.Background(), "")
@@ -50,7 +50,7 @@ func TestDisplayPlaylistsAction_Run_OnlySpotify(t *testing.T) {
 
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := NewClient(Config{Url: server.URL})
+	client := NewClient(Config{URL: server.URL})
 	action := NewDisplayPlaylistsAction(client)
 
 	got, err := action.Run(context.Background(), "spotify")

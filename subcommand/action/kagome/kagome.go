@@ -32,11 +32,12 @@ func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
 	_, span := otel.Tracer("kagome").Start(ctx, "KagomeAction.Run")
 	defer span.End()
 	var dict *dict.Dict
-	if a.dictionary == UNI {
+	switch {
+	case a.dictionary == UNI:
 		dict = uni.Dict()
-	} else if a.dictionary == NEOLOGD {
+	case a.dictionary == NEOLOGD:
 		dict = ipaneologd.Dict()
-	} else {
+	default:
 		dict = ipa.Dict()
 	}
 	parsedArgs := a.parseArgs(args)
@@ -76,22 +77,24 @@ func (a KagomeAction) parseArgs(args string) Args {
 	var text string
 	filter := false
 	mode := tokenizer.Normal
-	if len(inputs) == 0 {
+	switch len(inputs) {
+	case 0:
 		text = ""
-	} else if len(inputs) == 1 {
+	case 1:
 		text = inputs[0]
-	} else {
+	default:
 		var tmp []string
 		for _, input := range inputs {
 			if strings.HasPrefix(input, "-") {
 				option := input[1:]
-				if option == tokenizer.Search.String() {
+				switch option {
+				case tokenizer.Search.String():
 					mode = tokenizer.Search
-				} else if option == tokenizer.Extended.String() {
+				case tokenizer.Extended.String():
 					mode = tokenizer.Extended
-				} else if option == "filter" {
+				case "filter":
 					filter = true
-				} else {
+				default:
 					tmp = append(tmp, input)
 				}
 			} else {

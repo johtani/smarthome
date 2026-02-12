@@ -38,7 +38,7 @@ func TestParse(t *testing.T) {
 func TestSearchAndDisplayAction_Run(t *testing.T) {
 	server := createMockServerWithResponse(http.StatusOK, http.MethodGet, "/api/search", nil, searchSampleJSONResponse())
 	defer server.Close()
-	client := NewClient(Config{Url: server.URL})
+	client := NewClient(Config{URL: server.URL})
 	action := NewSearchAndDisplayAction(client)
 
 	got, err := action.Run(context.Background(), "keyword")
@@ -86,7 +86,7 @@ func TestSearchAndPlayAction_Run(t *testing.T) {
 
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := NewClient(Config{Url: server.URL})
+	client := NewClient(Config{URL: server.URL})
 	action := NewSearchAndPlayAction(client)
 
 	got, err := action.Run(context.Background(), "keyword")

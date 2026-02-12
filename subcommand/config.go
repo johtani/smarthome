@@ -47,7 +47,7 @@ func (c *Config) validate() error {
 func (c *Config) overrideWithEnv() {
 	// SMARTHOME_OWNTONE_URL
 	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_URL"); ok {
-		c.Owntone.Url = val
+		c.Owntone.URL = val
 	}
 	// SMARTHOME_OWNTONE_TIMEOUT
 	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_TIMEOUT"); ok {
@@ -65,7 +65,7 @@ func (c *Config) overrideWithEnv() {
 	}
 	// SMARTHOME_YAMAHA_URL
 	if val, ok := os.LookupEnv("SMARTHOME_YAMAHA_URL"); ok {
-		c.Yamaha.Url = val
+		c.Yamaha.URL = val
 	}
 	// SMARTHOME_YAMAHA_TIMEOUT
 	if val, ok := os.LookupEnv("SMARTHOME_YAMAHA_TIMEOUT"); ok {
@@ -79,7 +79,7 @@ func (c *Config) overrideWithEnv() {
 	}
 	// SMARTHOME_INFLUXDB_URL
 	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_URL"); ok {
-		c.Influxdb.Url = val
+		c.Influxdb.URL = val
 	}
 	// SMARTHOME_INFLUXDB_BUCKET
 	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_BUCKET"); ok {

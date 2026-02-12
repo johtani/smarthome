@@ -14,9 +14,9 @@ import (
 
 func TestNewMCPTool(t *testing.T) {
 	config := subcommand.Config{
-		Owntone:   owntone.Config{Url: "http://localhost:8000"},
+		Owntone:   owntone.Config{URL: "http://localhost:8000"},
 		Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
-		Yamaha:    yamaha.Config{Url: "http://localhost:8080"},
+		Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 	}
 
 	tests := []struct {
@@ -73,9 +73,9 @@ func TestNewMCPTool(t *testing.T) {
 
 func TestMCPToolHandler(t *testing.T) {
 	config := subcommand.Config{
-		Owntone:   owntone.Config{Url: "http://localhost:8000"},
+		Owntone:   owntone.Config{URL: "http://localhost:8000"},
 		Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
-		Yamaha:    yamaha.Config{Url: "http://localhost:8080"},
+		Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 		Commands:  subcommand.NewCommands(),
 	}
 

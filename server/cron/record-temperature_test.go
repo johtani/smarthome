@@ -39,7 +39,7 @@ func TestExecuteRecordTemp(t *testing.T) {
 
 	sCli := &sb.CachedClient{
 		DeviceAPI: &mockDeviceAPI{
-			list: func(ctx context.Context) ([]switchbot.Device, []switchbot.InfraredDevice, error) {
+			list: func(_ context.Context) ([]switchbot.Device, []switchbot.InfraredDevice, error) {
 				return []switchbot.Device{
 					{
 						ID:   "meter-id",
@@ -53,7 +53,7 @@ func TestExecuteRecordTemp(t *testing.T) {
 					},
 				}, nil, nil
 			},
-			status: func(ctx context.Context, id string) (switchbot.DeviceStatus, error) {
+			status: func(_ context.Context, id string) (switchbot.DeviceStatus, error) {
 				if id == "meter-id" {
 					return switchbot.DeviceStatus{
 						Temperature: 25.5,

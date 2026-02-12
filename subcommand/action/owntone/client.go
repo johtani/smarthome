@@ -20,19 +20,19 @@ type Client struct {
 }
 
 type Config struct {
-	Url     string `json:"url"`
+	URL     string `json:"url"`
 	Timeout int    `json:"timeout"`
 }
 
 func (c Config) Validate() error {
-	if c.Url == "" {
+	if c.URL == "" {
 		return fmt.Errorf("owntone.url is required")
 	}
 	return nil
 }
 
-func (c Client) buildUrl(path string) string {
-	url := c.config.Url
+func (c Client) buildURL(path string) string {
+	url := c.config.URL
 	if !strings.HasSuffix(url, "/") {
 		url += "/"
 	}
@@ -54,7 +54,7 @@ func NewClient(config Config) *Client {
 }
 
 func (c Client) Pause(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildUrl("api/player/pause"), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildURL("api/player/pause"), nil)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (c Client) Pause(ctx context.Context) error {
 }
 
 func (c Client) Play(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildUrl("api/player/play"), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildURL("api/player/play"), nil)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (c Client) Play(ctx context.Context) error {
 func (c Client) SetVolume(ctx context.Context, volume int) error {
 	params := map[string]string{}
 	params["volume"] = strconv.Itoa(volume)
-	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPut, c.buildUrl("api/player/volume"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPut, c.buildURL("api/player/volume"), params)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (c Client) GetPlaylists(ctx context.Context) ([]Playlist, error) {
 		Items []Playlist `json:"items"`
 		Total int        `json:"total"`
 	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl("api/library/playlists"), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildURL("api/library/playlists"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -132,7 +132,7 @@ func (c Client) AddItem2QueueAndPlay(ctx context.Context, uri string, expression
 	} else if len(expression) > 0 {
 		params["expression"] = expression
 	}
-	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPost, c.buildUrl("api/queue/items/add"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPost, c.buildURL("api/queue/items/add"), params)
 	if err != nil {
 		return err
 	}
@@ -155,7 +155,7 @@ type PlayerStatus struct {
 }
 
 func (c Client) GetPlayerStatus(ctx context.Context) (*PlayerStatus, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl("api/player"), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildURL("api/player"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +171,7 @@ func (c Client) GetPlayerStatus(ctx context.Context) (*PlayerStatus, error) {
 }
 
 func (c Client) ClearQueue(ctx context.Context) error {
-	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildUrl("api/queue/clear"), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildURL("api/queue/clear"), nil)
 	if err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func SearchTypeFromString(s string) (SearchType, error) {
 }
 
 const (
-	//playlist SearchType = "playlist"
+	// playlist SearchType = "playlist"
 	artist SearchType = "artist"
 	album  SearchType = "album"
 	track  SearchType = "track"
@@ -243,7 +243,7 @@ func (c Client) Search(ctx context.Context, keyword string, resultType []SearchT
 		types = append(types, string(s))
 	}
 	params["type"] = strings.Join(types, ",")
-	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("api/search"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildURL("api/search"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +267,7 @@ type Counts struct {
 }
 
 func (c Client) Counts(ctx context.Context) (*Counts, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl("api/library"), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildURL("api/library"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func (c Client) GetArtist(ctx context.Context, offset int) (*Artist, error) {
 	params := map[string]string{}
 	params["offset"] = strconv.Itoa(offset)
 	params["limit"] = strconv.Itoa(1)
-	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("api/library/artists"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildURL("api/library/artists"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -325,7 +325,7 @@ type Genre struct {
 
 func (c Client) GetGenres(ctx context.Context) ([]Genre, error) {
 	params := map[string]string{}
-	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildUrl("api/library/genres"), params)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildURL("api/library/genres"), params)
 	if err != nil {
 		return nil, err
 	}
@@ -357,7 +357,7 @@ type Outputs struct {
 
 // GetOutputs fetches the list of audio outputs (speakers) from Owntone.
 func (c Client) GetOutputs(ctx context.Context) ([]Output, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl("api/outputs"), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildURL("api/outputs"), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -374,7 +374,7 @@ func (c Client) GetOutputs(ctx context.Context) ([]Output, error) {
 }
 
 func (c Client) UpdateLibrary(ctx context.Context) error {
-	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPut, c.buildUrl("api/update"), nil)
+	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPut, c.buildURL("api/update"), nil)
 	if err != nil {
 		return err
 	}
