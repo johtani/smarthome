@@ -18,18 +18,18 @@ func TestConfig_Validate(t *testing.T) {
 		{
 			name: "valid config",
 			config: Config{
-				Owntone:   owntone.Config{Url: "http://localhost:8000"},
+				Owntone:   owntone.Config{URL: "http://localhost:8000"},
 				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
-				Yamaha:    yamaha.Config{Url: "http://localhost:8080"},
+				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 			},
 			wantErr: false,
 		},
 		{
 			name: "invalid owntone config",
 			config: Config{
-				Owntone:   owntone.Config{Url: ""},
+				Owntone:   owntone.Config{URL: ""},
 				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
-				Yamaha:    yamaha.Config{Url: "http://localhost:8080"},
+				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 			},
 			wantErr: true,
 		},
@@ -46,27 +46,27 @@ func TestConfig_Validate(t *testing.T) {
 
 func TestConfig_OverrideWithEnv(t *testing.T) {
 	config := Config{}
-	os.Setenv("SMARTHOME_OWNTONE_URL", "http://env-owntone")
-	os.Setenv("SMARTHOME_SWITCHBOT_TOKEN", "env-token")
-	os.Setenv("SMARTHOME_SWITCHBOT_SECRET", "env-secret")
-	os.Setenv("SMARTHOME_YAMAHA_URL", "http://env-yamaha")
-	os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
-	os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
-	os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
+	_ = os.Setenv("SMARTHOME_OWNTONE_URL", "http://env-owntone")
+	_ = os.Setenv("SMARTHOME_SWITCHBOT_TOKEN", "env-token")
+	_ = os.Setenv("SMARTHOME_SWITCHBOT_SECRET", "env-secret")
+	_ = os.Setenv("SMARTHOME_YAMAHA_URL", "http://env-yamaha")
+	_ = os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
+	_ = os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
+	_ = os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
 	defer func() {
-		os.Unsetenv("SMARTHOME_OWNTONE_URL")
-		os.Unsetenv("SMARTHOME_SWITCHBOT_TOKEN")
-		os.Unsetenv("SMARTHOME_SWITCHBOT_SECRET")
-		os.Unsetenv("SMARTHOME_YAMAHA_URL")
-		os.Unsetenv("SMARTHOME_INFLUXDB_TOKEN")
-		os.Unsetenv("SMARTHOME_INFLUXDB_URL")
-		os.Unsetenv("SMARTHOME_INFLUXDB_BUCKET")
+		_ = os.Unsetenv("SMARTHOME_OWNTONE_URL")
+		_ = os.Unsetenv("SMARTHOME_SWITCHBOT_TOKEN")
+		_ = os.Unsetenv("SMARTHOME_SWITCHBOT_SECRET")
+		_ = os.Unsetenv("SMARTHOME_YAMAHA_URL")
+		_ = os.Unsetenv("SMARTHOME_INFLUXDB_TOKEN")
+		_ = os.Unsetenv("SMARTHOME_INFLUXDB_URL")
+		_ = os.Unsetenv("SMARTHOME_INFLUXDB_BUCKET")
 	}()
 
 	config.overrideWithEnv()
 
-	if config.Owntone.Url != "http://env-owntone" {
-		t.Errorf("expected http://env-owntone, got %s", config.Owntone.Url)
+	if config.Owntone.URL != "http://env-owntone" {
+		t.Errorf("expected http://env-owntone, got %s", config.Owntone.URL)
 	}
 	if config.Switchbot.Token != "env-token" {
 		t.Errorf("expected env-token, got %s", config.Switchbot.Token)
@@ -74,14 +74,14 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	if config.Switchbot.Secret != "env-secret" {
 		t.Errorf("expected env-secret, got %s", config.Switchbot.Secret)
 	}
-	if config.Yamaha.Url != "http://env-yamaha" {
-		t.Errorf("expected http://env-yamaha, got %s", config.Yamaha.Url)
+	if config.Yamaha.URL != "http://env-yamaha" {
+		t.Errorf("expected http://env-yamaha, got %s", config.Yamaha.URL)
 	}
 	if config.Influxdb.Token != "env-influx-token" {
 		t.Errorf("expected env-influx-token, got %s", config.Influxdb.Token)
 	}
-	if config.Influxdb.Url != "http://env-influx-url" {
-		t.Errorf("expected http://env-influx-url, got %s", config.Influxdb.Url)
+	if config.Influxdb.URL != "http://env-influx-url" {
+		t.Errorf("expected http://env-influx-url, got %s", config.Influxdb.URL)
 	}
 	if config.Influxdb.Bucket != "env-bucket" {
 		t.Errorf("expected env-bucket, got %s", config.Influxdb.Bucket)
@@ -100,7 +100,9 @@ func TestLoadConfigWithPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer os.Remove(tmpfile.Name())
+	defer func() {
+		_ = os.Remove(tmpfile.Name())
+	}()
 
 	if _, err := tmpfile.Write([]byte(content)); err != nil {
 		t.Fatal(err)
@@ -114,8 +116,8 @@ func TestLoadConfigWithPath(t *testing.T) {
 		t.Fatalf("LoadConfigWithPath failed: %v", err)
 	}
 
-	if config.Owntone.Url != "http://localhost:8000" {
-		t.Errorf("expected http://localhost:8000, got %s", config.Owntone.Url)
+	if config.Owntone.URL != "http://localhost:8000" {
+		t.Errorf("expected http://localhost:8000, got %s", config.Owntone.URL)
 	}
 	if len(config.Commands.Definitions) == 0 {
 		t.Error("commands should be initialized")

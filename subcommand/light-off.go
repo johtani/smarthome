@@ -21,7 +21,7 @@ func NewLightOffSubcommand(definition Definition, config Config) Subcommand {
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
-			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.LightDeviceId, switchbotsdk.TurnOffCommand()),
+			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.LightDeviceID, switchbotsdk.TurnOffCommand()),
 		},
 		ignoreError: true,
 	}

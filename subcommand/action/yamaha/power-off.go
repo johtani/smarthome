@@ -2,7 +2,6 @@ package yamaha
 
 import (
 	"context"
-	"fmt"
 	"go.opentelemetry.io/otel"
 )
 
@@ -18,7 +17,7 @@ func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("Amplifier Power off."), nil
+	return "Amplifier Power off.", nil
 }
 
 func NewPowerOffAction(client YamahaAPI) PowerOffAction {

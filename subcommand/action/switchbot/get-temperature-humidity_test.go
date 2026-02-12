@@ -19,20 +19,20 @@ func (m *mockDeviceAPI) List(ctx context.Context) ([]switchbot.Device, []switchb
 func (m *mockDeviceAPI) Status(ctx context.Context, id string) (switchbot.DeviceStatus, error) {
 	return m.statusFunc(ctx, id)
 }
-func (m *mockDeviceAPI) Command(ctx context.Context, id string, cmd switchbot.Command) error {
+func (m *mockDeviceAPI) Command(_ context.Context, _ string, _ switchbot.Command) error {
 	return nil
 }
 
 func TestGetTemperatureAndHumidityAction_Run(t *testing.T) {
 	mock := &mockDeviceAPI{
-		listFunc: func(ctx context.Context) ([]switchbot.Device, []switchbot.InfraredDevice, error) {
+		listFunc: func(_ context.Context) ([]switchbot.Device, []switchbot.InfraredDevice, error) {
 			return []switchbot.Device{
 				{ID: "1", Name: "Meter 1", Type: "Meter"},
 				{ID: "2", Name: "CO2 Meter", Type: "MeterPro(CO2)"},
 				{ID: "3", Name: "Light", Type: "Light"}, // Should be filtered out
 			}, nil, nil
 		},
-		statusFunc: func(ctx context.Context, id string) (switchbot.DeviceStatus, error) {
+		statusFunc: func(_ context.Context, id string) (switchbot.DeviceStatus, error) {
 			if id == "1" {
 				return switchbot.DeviceStatus{Temperature: 25.5, Humidity: 50, Battery: 90}, nil
 			}

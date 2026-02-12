@@ -36,51 +36,49 @@ func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp
 	if definition.Args == nil {
 		tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description))
 		return tmp,
-			func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 				msg, err := definition.Init(config).Exec(ctx, "")
 				if err != nil {
 					return nil, errors.New(definition.Name + ": " + err.Error())
 				}
 				return mcp.NewToolResultText(msg), nil
 			}
-	} else {
-		args := []mcp.ToolOption{mcp.WithDescription(definition.Description)}
-		for _, arg := range definition.Args {
+	}
+	args := []mcp.ToolOption{mcp.WithDescription(definition.Description)}
+	for _, arg := range definition.Args {
 
-			opts := []mcp.PropertyOption{mcp.Description(arg.Description)}
+		opts := []mcp.PropertyOption{mcp.Description(arg.Description)}
 
-			if arg.Required {
-				opts = append(opts, mcp.Required())
-			}
-			if len(arg.Enum) > 0 {
-				opts = append(opts, mcp.Enum(arg.Enum...))
-			}
-			args = append(args,
-				mcp.WithString(
-					arg.Name,
-					opts...,
-				))
-
+		if arg.Required {
+			opts = append(opts, mcp.Required())
 		}
-		var tmp mcp.Tool
-		tmp = mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), args...)
-		return tmp,
-			func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				params := []string{}
-				for _, arg := range definition.Args {
-					if p, ok := request.Params.Arguments[arg.Name]; ok {
-						if arg.Prefix != "" {
-							params = append(params, fmt.Sprint(arg.Prefix, p))
-						} else {
-							params = append(params, fmt.Sprint(p))
-						}
+		if len(arg.Enum) > 0 {
+			opts = append(opts, mcp.Enum(arg.Enum...))
+		}
+		args = append(args,
+			mcp.WithString(
+				arg.Name,
+				opts...,
+			))
+
+	}
+	tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), args...)
+	return tmp,
+		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			params := []string{}
+			for _, arg := range definition.Args {
+				if p, ok := request.Params.Arguments[arg.Name]; ok {
+					if arg.Prefix != "" {
+						params = append(params, fmt.Sprint(arg.Prefix, p))
+					} else {
+						params = append(params, fmt.Sprint(p))
 					}
 				}
-				msg, err := definition.Init(config).Exec(ctx, strings.Join(params, " "))
-				if err != nil {
-					return nil, errors.New(definition.Name + ": " + err.Error())
-				}
-				return mcp.NewToolResultText(msg), nil
 			}
-	}
+			msg, err := definition.Init(config).Exec(ctx, strings.Join(params, " "))
+			if err != nil {
+				return nil, errors.New(definition.Name + ": " + err.Error())
+			}
+			return mcp.NewToolResultText(msg), nil
+		}
 }

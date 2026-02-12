@@ -27,7 +27,7 @@ func (a DisplayPlaylistsAction) Run(ctx context.Context, category string) (strin
 	for _, playlist := range playlists {
 		if strings.HasPrefix(playlist.Path, "spotify:") {
 			msg = append(msg, fmt.Sprintf("  %v (by Spotify)", playlist.Name))
-		} else if flg == false {
+		} else if !flg {
 			msg = append(msg, fmt.Sprintf("  %v", playlist.Name))
 		}
 	}

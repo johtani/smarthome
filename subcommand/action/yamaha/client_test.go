@@ -14,7 +14,7 @@ func TestClient_buildUrl(t *testing.T) {
 		config Config
 		Client http.Client
 	}
-	config := Config{Url: "URL"}
+	config := Config{URL: "URL"}
 	type args struct {
 		path string
 	}
@@ -33,7 +33,7 @@ func TestClient_buildUrl(t *testing.T) {
 				config: tt.fields.config,
 				Client: tt.fields.Client,
 			}
-			if got := c.buildUrl(tt.args.path); got != tt.want {
+			if got := c.buildURL(tt.args.path); got != tt.want {
 				t.Errorf("buildUrl() = %v, want %v", got, tt.want)
 			}
 		})
@@ -61,7 +61,6 @@ func createMockServerWithResponse(code int, method string, path string, requestP
 			if response != "" {
 				_, _ = rw.Write([]byte(response))
 			}
-			return
 		}))
 }
 
@@ -108,7 +107,7 @@ func TestClient_SetScene(t *testing.T) {
 			reqParams := map[string][]string{"num": {strconv.Itoa(tt.fields.scene)}}
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 			if err := c.SetScene(context.Background(), tt.fields.scene); (err != nil) != tt.wantErr {
 				t.Errorf("SetScene() error = %v, wantErr %v", err, tt.wantErr)
@@ -140,7 +139,7 @@ func TestClient_SetVolume(t *testing.T) {
 			reqParams := map[string][]string{"volume": {strconv.Itoa(tt.fields.volume)}}
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 			if err := c.SetVolume(context.Background(), tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
@@ -164,7 +163,7 @@ func TestConfig_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Config{
-				Url: tt.fields.url,
+				URL: tt.fields.url,
 			}
 			if err := c.Validate(); (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
@@ -195,7 +194,7 @@ func TestClient_PowerOff(t *testing.T) {
 			reqParams := map[string][]string{"power": {"standby"}}
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 			if err := c.PowerOff(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("PowerOff() error = %v, wantErr %v", err, tt.wantErr)

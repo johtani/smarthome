@@ -38,7 +38,7 @@ func TestParse(t *testing.T) {
 func TestSearchAndDisplayAction_Run(t *testing.T) {
 	server := createMockServerWithResponse(http.StatusOK, http.MethodGet, "/api/search", nil, searchSampleJSONResponse())
 	defer server.Close()
-	client := NewClient(Config{Url: server.URL})
+	client := NewClient(Config{URL: server.URL})
 	action := NewSearchAndDisplayAction(client)
 
 	got, err := action.Run(context.Background(), "keyword")
@@ -73,20 +73,20 @@ func TestSearchAndPlayAction_Run(t *testing.T) {
 	// But our createMockServer is limited to one path.
 	// We can use a custom mux.
 	mux := http.NewServeMux()
-	mux.HandleFunc("/api/search", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(searchSampleJSONResponse()))
 	})
-	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusNoContent)
 	})
-	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
 
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := NewClient(Config{Url: server.URL})
+	client := NewClient(Config{URL: server.URL})
 	action := NewSearchAndPlayAction(client)
 
 	got, err := action.Run(context.Background(), "keyword")

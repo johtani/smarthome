@@ -9,7 +9,7 @@ import (
 
 type SendCommandAction struct {
 	name     string
-	deviceId string
+	deviceID string
 	command  switchbot.Command
 	client   *CachedClient
 }
@@ -17,11 +17,11 @@ type SendCommandAction struct {
 func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "SendCommandAction.Run")
 	defer span.End()
-	err := a.client.DeviceAPI.Command(ctx, a.deviceId, a.command)
+	err := a.client.DeviceAPI.Command(ctx, a.deviceID, a.command)
 	if err != nil {
 		return "", err
 	}
-	name, err := a.client.GetDeviceName(ctx, a.deviceId)
+	name, err := a.client.GetDeviceName(ctx, a.deviceID)
 	if err != nil {
 		return "", err
 	}
@@ -31,7 +31,7 @@ func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
 func NewSendCommandAction(client *CachedClient, deviceId string, command switchbot.Command) SendCommandAction {
 	return SendCommandAction{
 		name:     "Send the command to the device on SwitchBot",
-		deviceId: deviceId,
+		deviceID: deviceId,
 		command:  command,
 		client:   client,
 	}

@@ -29,12 +29,13 @@ func (s Subcommand) Exec(ctx context.Context, args string) (string, error) {
 	var msgs []string
 	for i := range s.actions {
 		msg, err := s.actions[i].Run(ctx, args)
-		if s.ignoreError && err != nil {
+		switch {
+		case s.ignoreError && err != nil:
 			msg = fmt.Sprintf("skip error\t %v\n", err)
 			msgs = append(msgs, msg)
-		} else if err != nil {
+		case err != nil:
 			return "", err
-		} else {
+		default:
 			msgs = append(msgs, msg)
 		}
 	}
@@ -162,14 +163,13 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 		}
 	}
 
-	if find == false {
+	if !find {
 		candidates, cmds := c.didYouMean(text)
 		if len(candidates) == 0 {
-			return Definition{}, "", "", fmt.Errorf("Sorry, I cannot understand what you want from what you said '%v'...\n", text)
-		} else {
-			def = candidates[0]
-			dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
+			return Definition{}, "", "", fmt.Errorf("sorry, i cannot understand what you want from what you said '%v'", text)
 		}
+		def = candidates[0]
+		dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
 	}
 
 	return def, args, dymMsg, nil

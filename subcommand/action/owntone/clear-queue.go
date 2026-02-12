@@ -16,7 +16,7 @@ func (a ClearQueueAction) Run(ctx context.Context, _ string) (string, error) {
 	defer span.End()
 	err := a.c.ClearQueue(ctx)
 	if err != nil {
-		return "", fmt.Errorf("error in ClearQueue(%v)\n %v", a.c.config.Url, err)
+		return "", fmt.Errorf("error in ClearQueue(%v)\n %v", a.c.config.URL, err)
 	}
 	return "Cleared queue", nil
 }

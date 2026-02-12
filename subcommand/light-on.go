@@ -21,8 +21,8 @@ func NewLightOnSubcommand(definition Definition, config Config) Subcommand {
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
-			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.LightDeviceId, switchbotsdk.TurnOnCommand()),
-			switchbot.NewExecuteSceneAction(switchbotClient, config.Switchbot.LightSceneId),
+			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.LightDeviceID, switchbotsdk.TurnOnCommand()),
+			switchbot.NewExecuteSceneAction(switchbotClient, config.Switchbot.LightSceneID),
 		},
 		ignoreError: true,
 	}

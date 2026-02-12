@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	Token       string `json:"token"`
-	Url         string `json:"url"`
+	URL         string `json:"url"`
 	Bucket      string `json:"bucket"`
 	Org         string `json:"org"`
 	Measurement string `json:"measurement"`
@@ -38,7 +38,7 @@ type clientImpl struct {
 func NewClient(config Config) Client {
 	return &clientImpl{
 		config: config,
-		client: influxdb2.NewClient(config.Url, config.Token),
+		client: influxdb2.NewClient(config.URL, config.Token),
 	}
 }
 

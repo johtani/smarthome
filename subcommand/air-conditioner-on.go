@@ -23,7 +23,7 @@ func NewAirConditionerOnSubcommand(definition Definition, config Config) Subcomm
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
-			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.AirConditionerId, switchbotsdk.TurnOnCommand()),
+			switchbot.NewSendCommandAction(switchbotClient, config.Switchbot.AirConditionerID, switchbotsdk.TurnOnCommand()),
 		},
 		ignoreError: true,
 	}

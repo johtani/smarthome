@@ -29,13 +29,13 @@ func (a ChangePlaylistAction) Run(ctx context.Context, _ string) (string, error)
 		rand.New(rand.NewSource(time.Now().UnixNano()))
 		index := rand.Intn(len(playlists))
 		target := playlists[index]
-		msg = append(msg, fmt.Sprintf("%v.", target.Name))
-		err := a.c.AddItem2QueueAndPlay(ctx, target.Uri, "")
+		msg = append(msg, target.Name+".")
+		err := a.c.AddItem2QueueAndPlay(ctx, target.URI, "")
 		if err != nil {
 			return "", fmt.Errorf("error in AddItem2QueueAndPlay(target=%v)\n %v", target.Name, err)
 		}
 	} else {
-		msg = append(msg, fmt.Sprintf("playlists is empty\n"))
+		msg = append(msg, "playlists is empty\n")
 	}
 	return strings.Join(msg, " "), nil
 }

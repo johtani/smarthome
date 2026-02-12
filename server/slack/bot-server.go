@@ -23,17 +23,17 @@ const ConfigFileName = "./config/slack.json"
 func (c Config) validate() error {
 	var errs []string
 	if c.AppToken == "" {
-		errs = append(errs, fmt.Sprintf("app_token must be set.\n"))
+		errs = append(errs, "app_token must be set.\n")
 	}
 	if !strings.HasPrefix(c.AppToken, "xapp-") {
-		errs = append(errs, fmt.Sprintf("app_token must have the prefix \"xapp-\"."))
+		errs = append(errs, "app_token must have the prefix \"xapp-\".")
 	}
 
 	if c.BotToken == "" {
-		errs = append(errs, fmt.Sprintf("bot_token must be set.\n"))
+		errs = append(errs, "bot_token must be set.\n")
 	}
 	if !strings.HasPrefix(c.BotToken, "xoxb-") {
-		errs = append(errs, fmt.Sprintf("bot_token must have the prefix \"xoxb-\"."))
+		errs = append(errs, "bot_token must have the prefix \"xoxb-\".")
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf("%s", strings.Join(errs, "\n"))
@@ -46,7 +46,9 @@ func loadConfigFromFile() (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("Slack設定ファイルの読み込みに失敗しました (%s): %w", ConfigFileName, err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// JSONデコード
 	var config Config
@@ -67,27 +69,28 @@ func Run(config subcommand.Config) error {
 	if err != nil {
 		return err
 	}
-	webApi := slack.New(
+	webAPI := slack.New(
 		slackConfig.BotToken,
 		slack.OptionAppLevelToken(slackConfig.AppToken),
 		slack.OptionDebug(slackConfig.Debug),
 		slack.OptionLog(log.New(os.Stdout, "api: ", log.Lshortfile|log.LstdFlags)),
 	)
 	client := socketmode.New(
-		webApi,
+		webAPI,
 		socketmode.OptionDebug(slackConfig.Debug),
 		socketmode.OptionLog(log.New(os.Stdout, "sm: ", log.Lshortfile|log.LstdFlags)),
 	)
-	authTest, authTestErr := webApi.AuthTest()
+	authTest, authTestErr := webAPI.AuthTest()
 	if authTestErr != nil {
-		return fmt.Errorf("SLACK_BOT_TOKEN is invalid: %v\n", authTestErr)
+		return fmt.Errorf("SLACK_BOT_TOKEN is invalid: %v", authTestErr)
 	}
-	botUserId := authTest.UserID
-	botUserIdPrefix := fmt.Sprintf("<@%v>", botUserId)
+	botUserID := authTest.UserID
+	botUserIDPrefix := fmt.Sprintf("<@%v>", botUserID)
 
 	socketModeHandler := socketmode.NewSocketmodeHandler(client)
-	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(config, botUserIdPrefix))
+	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(config, botUserIDPrefix))
 	socketModeHandler.Handle(socketmode.EventTypeSlashCommand, newSlashCommandSubcommandHandler(config))
+	socketModeHandler.HandleDefault(defaultHandler)
 	err = socketModeHandler.RunEventLoop()
 	if err != nil {
 		return err

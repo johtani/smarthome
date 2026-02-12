@@ -15,7 +15,7 @@ func TestClient_buildUrl(t *testing.T) {
 		config Config
 		Client http.Client
 	}
-	config := Config{Url: "URL"}
+	config := Config{URL: "URL"}
 	type args struct {
 		path string
 	}
@@ -34,7 +34,7 @@ func TestClient_buildUrl(t *testing.T) {
 				config: tt.fields.config,
 				Client: tt.fields.Client,
 			}
-			if got := c.buildUrl(tt.args.path); got != tt.want {
+			if got := c.buildURL(tt.args.path); got != tt.want {
 				t.Errorf("buildUrl() = %v, want %v", got, tt.want)
 			}
 		})
@@ -66,7 +66,6 @@ func createMockServerWithResponse(code int, method string, path string, requestP
 			if response != "" {
 				_, _ = rw.Write([]byte(response))
 			}
-			return
 		}))
 }
 
@@ -95,7 +94,7 @@ func TestClient_Pause(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 			if err := c.Pause(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Pause() error = %v, wantErr %v", err, tt.wantErr)
@@ -123,7 +122,7 @@ func TestClient_Play(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 			if err := c.Play(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("Play() error = %v, wantErr %v", err, tt.wantErr)
@@ -153,7 +152,7 @@ func TestClient_SetVolume(t *testing.T) {
 			reqParams := map[string][]string{"volume": {strconv.Itoa(tt.fields.volume)}}
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, reqParams)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 			if err := c.SetVolume(context.Background(), tt.fields.volume); (err != nil) != tt.wantErr {
 				t.Errorf("SetVolume() error = %v, wantErr %v", err, tt.wantErr)
@@ -186,7 +185,7 @@ func TestClient_AddItem2QueueAndPlay(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, tt.expectedParams)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 			if err := c.AddItem2QueueAndPlay(context.Background(), tt.fields.uris, tt.fields.expression); (err != nil) != tt.wantErr {
 				t.Errorf("AddItem2QueueAndPlay() error = %v, wantErr %v", err, tt.wantErr)
@@ -244,7 +243,7 @@ func TestClient_GetPlaylists(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 
 			playlists, err := c.GetPlaylists(context.Background())
@@ -295,7 +294,7 @@ func TestClient_GetGetPlayerStatus(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 
 			status, err := c.GetPlayerStatus(context.Background())
@@ -324,7 +323,7 @@ func TestConfig_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			c := Config{
-				Url: tt.fields.url,
+				URL: tt.fields.url,
 			}
 			if err := c.Validate(); (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
@@ -352,7 +351,7 @@ func TestClient_ClearQueue(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServer(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 			if err := c.ClearQueue(context.Background()); (err != nil) != tt.wantErr {
 				t.Errorf("ClearQueue() error = %v, wantErr %v", err, tt.wantErr)
@@ -530,32 +529,32 @@ func TestClient_Search(t *testing.T) {
 				Tracks: Items{Items: []SearchItem{
 					{
 						Title:  "Another Love",
-						Uri:    "library:track:35",
+						URI:    "library:track:35",
 						Name:   "",
 						Artist: "Tom Odell",
 					},
 					{
 						Title:  "Away From the Sun",
-						Uri:    "library:track:215",
+						URI:    "library:track:215",
 						Name:   "",
 						Artist: "3 Doors Down",
 					}}, Total: 14, Offset: 0, Limit: 2},
 				Artists: Items{Items: []SearchItem{{
 					Title:  "",
-					Uri:    "library:artist:8737690491750445895",
+					URI:    "library:artist:8737690491750445895",
 					Name:   "The xx",
 					Artist: "",
 				}}, Total: 1, Offset: 0, Limit: 2},
 				Albums: Items{Items: []SearchItem{
 					{
 						Title:  "",
-						Uri:    "library:album:8264078270267374619",
+						URI:    "library:album:8264078270267374619",
 						Name:   "Away From the Sun",
 						Artist: "3 Doors Down",
 					},
 					{
 						Title:  "",
-						Uri:    "library:album:6835720495312674468",
+						URI:    "library:album:6835720495312674468",
 						Name:   "The Better Life",
 						Artist: "3 Doors Down",
 					},
@@ -563,13 +562,13 @@ func TestClient_Search(t *testing.T) {
 				Genres: Items{Items: []SearchItem{
 					{
 						Title:  "",
-						Uri:    "",
+						URI:    "",
 						Name:   "Abstract",
 						Artist: "",
 					},
 					{
 						Title:  "",
-						Uri:    "",
+						URI:    "",
 						Name:   "Alternative",
 						Artist: "",
 					},
@@ -584,7 +583,7 @@ func TestClient_Search(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 
 			got, err := c.Search(context.Background(), tt.args.keyword, tt.args.resultType, tt.args.limit)
@@ -646,7 +645,7 @@ func TestClient_Counts(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 
 			count, err := c.Counts(context.Background())
@@ -704,14 +703,14 @@ func TestClient_GetArtist(t *testing.T) {
 		wantErr  bool
 		expected *Artist
 	}{
-		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: getArtistsSampleJSONResponse()}, args{offset: 1}, false, &Artist{Name: "Ace Of Base", Uri: "library:artist:5132191696218976531", TrackCount: 58}},
+		{"OK", fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: getArtistsSampleJSONResponse()}, args{offset: 1}, false, &Artist{Name: "Ace Of Base", URI: "library:artist:5132191696218976531", TrackCount: 58}},
 		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: getArtistsSampleJSONResponse()}, args{offset: 1}, true, nil},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 
 			artist, err := c.GetArtist(context.Background(), tt.args.offset)
@@ -785,7 +784,7 @@ func TestClient_GetGenres(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 
 			genres, err := c.GetGenres(context.Background())
@@ -829,7 +828,7 @@ func TestClient_GetOutputs(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
 			defer server.Close()
-			config := Config{Url: server.URL}
+			config := Config{URL: server.URL}
 			c := NewClient(config)
 
 			outputs, err := c.GetOutputs(context.Background())
