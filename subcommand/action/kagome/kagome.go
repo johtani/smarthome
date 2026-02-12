@@ -29,7 +29,7 @@ type KagomeAction struct {
 }
 
 func (a KagomeAction) Run(ctx context.Context, args string) (string, error) {
-	ctx, span := otel.Tracer("kagome").Start(ctx, "KagomeAction.Run")
+	_, span := otel.Tracer("kagome").Start(ctx, "KagomeAction.Run")
 	defer span.End()
 	var dict *dict.Dict
 	if a.dictionary == UNI {

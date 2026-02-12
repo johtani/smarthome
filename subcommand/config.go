@@ -104,7 +104,9 @@ func LoadConfigWithPath(configFile string) (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("設定ファイルの読み込みに失敗しました (%s): %w", configFile, err)
 	}
-	defer file.Close()
+	defer func() {
+		_ = file.Close()
+	}()
 
 	// JSONデコード
 	var config Config

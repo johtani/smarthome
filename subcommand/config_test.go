@@ -46,13 +46,13 @@ func TestConfig_Validate(t *testing.T) {
 
 func TestConfig_OverrideWithEnv(t *testing.T) {
 	config := Config{}
-	os.Setenv("SMARTHOME_OWNTONE_URL", "http://env-owntone")
-	os.Setenv("SMARTHOME_SWITCHBOT_TOKEN", "env-token")
-	os.Setenv("SMARTHOME_SWITCHBOT_SECRET", "env-secret")
-	os.Setenv("SMARTHOME_YAMAHA_URL", "http://env-yamaha")
-	os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
-	os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
-	os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
+	_ = os.Setenv("SMARTHOME_OWNTONE_URL", "http://env-owntone")
+	_ = os.Setenv("SMARTHOME_SWITCHBOT_TOKEN", "env-token")
+	_ = os.Setenv("SMARTHOME_SWITCHBOT_SECRET", "env-secret")
+	_ = os.Setenv("SMARTHOME_YAMAHA_URL", "http://env-yamaha")
+	_ = os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
+	_ = os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
+	_ = os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
 	defer func() {
 		os.Unsetenv("SMARTHOME_OWNTONE_URL")
 		os.Unsetenv("SMARTHOME_SWITCHBOT_TOKEN")

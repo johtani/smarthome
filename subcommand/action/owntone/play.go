@@ -90,13 +90,13 @@ func (a PlayAction) playPlaylist(ctx context.Context) (string, error) {
 			rand.New(rand.NewSource(time.Now().UnixNano()))
 			index := rand.Intn(len(playlists))
 			target := playlists[index]
-			msg = append(msg, fmt.Sprintf("from %v.", target.Name))
+			msg = append(msg, "from "+target.Name+".")
 			err := a.c.AddItem2QueueAndPlay(ctx, target.Uri, "")
 			if err != nil {
 				return "", fmt.Errorf("error in AddItem2QueueAndPlay(%v)\n %v", target.Name, err)
 			}
 		} else {
-			msg = append(msg, fmt.Sprintf("playlists is empty"))
+			msg = append(msg, "playlists is empty")
 		}
 	} else {
 		msg = append(msg, " from queue")
