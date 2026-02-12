@@ -6,11 +6,13 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// PowerOnAction represents an action to turn on the Yamaha device.
 type PowerOnAction struct {
 	name string
 	c    YamahaAPI
 }
 
+// Run executes the PowerOnAction.
 func (a PowerOnAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("yamaha").Start(ctx, "PowerOnAction.Run")
 	defer span.End()
@@ -21,6 +23,7 @@ func (a PowerOnAction) Run(ctx context.Context, _ string) (string, error) {
 	return "Power on Yamaha.", nil
 }
 
+// NewPowerOnAction creates a new PowerOnAction.
 func NewPowerOnAction(client YamahaAPI) PowerOnAction {
 	return PowerOnAction{
 		name: "Power On Yamaha",

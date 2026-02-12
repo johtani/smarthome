@@ -9,14 +9,17 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// DefaultDeviceTypes is the default list of device types for which temperature and humidity are fetched.
 var DefaultDeviceTypes = []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"}
 
+// GetTemperatureAndHumidityAction represents an action to fetch temperature and humidity from SwitchBot devices.
 type GetTemperatureAndHumidityAction struct {
 	name        string
 	deviceTypes []string
 	client      *CachedClient
 }
 
+// Run executes the GetTemperatureAndHumidityAction.
 func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "GetTemperatureAndHumidityAction.Run")
 	defer span.End()
@@ -61,6 +64,7 @@ func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (str
 	return strings.Join(output, "\n"), nil
 }
 
+// NewGetTemperatureAndHumidityAction creates a new GetTemperatureAndHumidityAction.
 func NewGetTemperatureAndHumidityAction(client *CachedClient) GetTemperatureAndHumidityAction {
 	return GetTemperatureAndHumidityAction{
 		name:        "Get temperature and humidity from devices on SwitchBot",

@@ -12,9 +12,11 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+// DefaultTimeout is the default timeout for HTTP requests to Yamaha devices.
 const DefaultTimeout = 10 * time.Second
 const basePath = "YamahaExtendedControl/v1/main/"
 
+// YamahaAPI is an interface for controlling Yamaha devices.
 type YamahaAPI interface {
 	SetScene(ctx context.Context, scene int) error
 	SetVolume(ctx context.Context, volume int) error
@@ -23,16 +25,19 @@ type YamahaAPI interface {
 	SetInput(ctx context.Context, input string) error
 }
 
+// Client is a client for the Yamaha MusicCast API.
 type Client struct {
 	config Config
 	http.Client
 }
 
+// Config is the configuration for the Yamaha client.
 type Config struct {
 	URL     string `json:"url"`
 	Timeout int    `json:"timeout"`
 }
 
+// Validate validates the Yamaha configuration.
 func (c Config) Validate() error {
 	if c.URL == "" {
 		return fmt.Errorf("yamaha.url is required")
@@ -48,6 +53,7 @@ func (c Client) buildURL(path string) string {
 	return url + basePath + path
 }
 
+// NewClient creates a new Yamaha client with the given configuration.
 func NewClient(config Config) *Client {
 	timeout := DefaultTimeout
 	if config.Timeout > 0 {
@@ -62,6 +68,7 @@ func NewClient(config Config) *Client {
 	}
 }
 
+// ResponseCode represents the response code from the MusicCast API.
 type ResponseCode struct {
 	ResponseCode int `json:"response_code"`
 }
@@ -77,6 +84,7 @@ func parseHTTPResponse(res *http.Response, caller string) error {
 	return nil
 }
 
+// SetScene recalls a scene on the Yamaha device.
 func (c Client) SetScene(ctx context.Context, scene int) error {
 	params := map[string]string{}
 	params["num"] = strconv.Itoa(scene)
@@ -96,6 +104,7 @@ func (c Client) SetScene(ctx context.Context, scene int) error {
 	return nil
 }
 
+// SetVolume sets the volume level on the Yamaha device.
 func (c Client) SetVolume(ctx context.Context, volume int) error {
 	params := map[string]string{}
 	params["volume"] = strconv.Itoa(volume)
@@ -115,6 +124,7 @@ func (c Client) SetVolume(ctx context.Context, volume int) error {
 	return nil
 }
 
+// PowerOn turns on the Yamaha device.
 func (c Client) PowerOn(ctx context.Context) error {
 	params := map[string]string{}
 	params["power"] = "on"
@@ -134,6 +144,7 @@ func (c Client) PowerOn(ctx context.Context) error {
 	return nil
 }
 
+// PowerOff sets the Yamaha device to standby mode.
 func (c Client) PowerOff(ctx context.Context) error {
 	params := map[string]string{}
 	params["power"] = "standby"
@@ -153,6 +164,7 @@ func (c Client) PowerOff(ctx context.Context) error {
 	return nil
 }
 
+// SetInput sets the input source on the Yamaha device.
 func (c Client) SetInput(ctx context.Context, input string) error {
 	params := map[string]string{}
 	params["input"] = input

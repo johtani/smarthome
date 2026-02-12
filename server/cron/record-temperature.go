@@ -39,6 +39,7 @@ func init() {
 	}
 }
 
+// RecordTemp fetches temperature and humidity from SwitchBot and records it to InfluxDB.
 func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config) {
 	sCli := switchbot.NewClient(switchbotConfig)
 	iCli := influxdb.NewClient(influxdbConfig)
@@ -47,6 +48,7 @@ func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config
 	ExecuteRecordTemp(context.Background(), sCli, iCli)
 }
 
+// ExecuteRecordTemp executes the temperature recording logic.
 func ExecuteRecordTemp(ctx context.Context, sCli *switchbot.CachedClient, iCli influxdb.Client) {
 	ctx, span := otel.Tracer("cron").Start(ctx, "RecordTemp")
 	defer span.End()

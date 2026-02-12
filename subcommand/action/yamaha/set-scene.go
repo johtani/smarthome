@@ -6,12 +6,14 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// SetSceneAction represents an action to set the scene on the Yamaha device.
 type SetSceneAction struct {
 	name  string
 	scene int
 	c     YamahaAPI
 }
 
+// Run executes the SetSceneAction.
 func (a SetSceneAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("yamaha").Start(ctx, "SetSceneAction.Run")
 	defer span.End()
@@ -22,6 +24,7 @@ func (a SetSceneAction) Run(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Set scene to No.%v.", a.scene), nil
 }
 
+// NewSetSceneAction creates a new SetSceneAction.
 func NewSetSceneAction(client YamahaAPI, scene int) SetSceneAction {
 	return SetSceneAction{
 		name:  "Set Yamaha Scene",

@@ -9,6 +9,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// SearchAndPlayAction represents an action to search for music and play it on Owntone.
 type SearchAndPlayAction struct {
 	name string
 	c    *Client
@@ -24,6 +25,7 @@ func appendMessage(items Items, label string, msg []string, uris []string, loopF
 	return msg, uris
 }
 
+// Run executes the SearchAndPlayAction.
 func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, error) {
 	ctx, span := otel.Tracer("owntone").Start(ctx, "SearchAndPlayAction.Run")
 	defer span.End()
@@ -83,6 +85,7 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	return strings.Join(msg, "\n"), nil
 }
 
+// NewSearchAndPlayAction creates a new SearchAndPlayAction.
 func NewSearchAndPlayAction(client *Client) SearchAndPlayAction {
 	return SearchAndPlayAction{
 		name: "Search and Play music on Owntone by keyword",
@@ -90,11 +93,13 @@ func NewSearchAndPlayAction(client *Client) SearchAndPlayAction {
 	}
 }
 
+// SearchAndDisplayAction represents an action to search for music and display the results from Owntone.
 type SearchAndDisplayAction struct {
 	name string
 	c    *Client
 }
 
+// Run executes the SearchAndDisplayAction.
 func (a SearchAndDisplayAction) Run(ctx context.Context, query string) (string, error) {
 	ctx, span := otel.Tracer("owntone").Start(ctx, "SearchAndDisplayAction.Run")
 	defer span.End()
@@ -126,6 +131,7 @@ func (a SearchAndDisplayAction) Run(ctx context.Context, query string) (string, 
 	return strings.Join(msg, "\n"), nil
 }
 
+// NewSearchAndDisplayAction creates a new SearchAndDisplayAction.
 func NewSearchAndDisplayAction(client *Client) SearchAndDisplayAction {
 	return SearchAndDisplayAction{
 		name: "Search music by keyword on Owntone and display results",
@@ -134,6 +140,7 @@ func NewSearchAndDisplayAction(client *Client) SearchAndDisplayAction {
 
 }
 
+// SearchQuery represents a parsed music search query.
 type SearchQuery struct {
 	Terms  []string
 	Types  []SearchType
@@ -141,6 +148,7 @@ type SearchQuery struct {
 	Offset int
 }
 
+// TypeArray returns the list of search types to use, defaulting to all types if none are specified.
 func (sq SearchQuery) TypeArray() []SearchType {
 	if sq.Types == nil {
 		return []SearchType{artist, album, track, genre}
@@ -152,6 +160,7 @@ const limitPrefix = "limit:"
 const offsetPrefix = "offset:"
 const typePrefix = "type:"
 
+// Parse parses a search query string into a SearchQuery struct.
 func Parse(target string) *SearchQuery {
 	split := strings.Fields(target)
 	var queries []string

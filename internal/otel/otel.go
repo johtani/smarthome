@@ -1,3 +1,6 @@
+/*
+Package otel provides OpenTelemetry initialization and configuration for the application.
+*/
 package otel
 
 import (

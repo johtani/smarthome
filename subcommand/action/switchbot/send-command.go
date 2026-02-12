@@ -7,6 +7,7 @@ import (
 	"go.opentelemetry.io/otel"
 )
 
+// SendCommandAction represents an action to send a command to a SwitchBot device.
 type SendCommandAction struct {
 	name     string
 	deviceID string
@@ -14,6 +15,7 @@ type SendCommandAction struct {
 	client   *CachedClient
 }
 
+// Run executes the SendCommandAction.
 func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "SendCommandAction.Run")
 	defer span.End()
@@ -28,6 +30,7 @@ func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
 	return fmt.Sprintf("Send the command(%v) to the device(%v)", a.command, name), nil
 }
 
+// NewSendCommandAction creates a new SendCommandAction.
 func NewSendCommandAction(client *CachedClient, deviceId string, command switchbot.Command) SendCommandAction {
 	return SendCommandAction{
 		name:     "Send the command to the device on SwitchBot",

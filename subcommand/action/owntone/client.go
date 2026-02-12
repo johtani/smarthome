@@ -1,3 +1,6 @@
+/*
+Package owntone provides actions and a client for controlling Owntone (formerly forked-daapd) servers.
+*/
 package owntone
 
 import (
@@ -14,16 +17,19 @@ import (
 
 const DefaultTimeout = 10 * time.Second
 
+// Client is a client for the Owntone API.
 type Client struct {
 	config Config
 	http.Client
 }
 
+// Config is the configuration for the Owntone client.
 type Config struct {
 	URL     string `json:"url"`
 	Timeout int    `json:"timeout"`
 }
 
+// Validate validates the Owntone configuration.
 func (c Config) Validate() error {
 	if c.URL == "" {
 		return fmt.Errorf("owntone.url is required")
@@ -39,6 +45,7 @@ func (c Client) buildURL(path string) string {
 	return url + path
 }
 
+// NewClient creates a new Owntone client with the given configuration.
 func NewClient(config Config) *Client {
 	timeout := DefaultTimeout
 	if config.Timeout > 0 {
@@ -53,6 +60,7 @@ func NewClient(config Config) *Client {
 	}
 }
 
+// Pause pauses playback on the Owntone server.
 func (c Client) Pause(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildURL("api/player/pause"), nil)
 	if err != nil {
@@ -66,6 +74,7 @@ func (c Client) Pause(ctx context.Context) error {
 	return internal.HandleResponse(res, http.StatusNoContent)
 }
 
+// Play starts or resumes playback on the Owntone server.
 func (c Client) Play(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildURL("api/player/play"), nil)
 	if err != nil {
@@ -79,6 +88,7 @@ func (c Client) Play(ctx context.Context) error {
 	return internal.HandleResponse(res, http.StatusNoContent)
 }
 
+// SetVolume sets the volume level on the Owntone server.
 func (c Client) SetVolume(ctx context.Context, volume int) error {
 	params := map[string]string{}
 	params["volume"] = strconv.Itoa(volume)
@@ -94,6 +104,7 @@ func (c Client) SetVolume(ctx context.Context, volume int) error {
 	return internal.HandleResponse(res, http.StatusNoContent)
 }
 
+// Playlist represents a playlist on the Owntone server.
 type Playlist struct {
 	URI       string `json:"uri"`
 	Name      string `json:"name"`
@@ -101,6 +112,7 @@ type Playlist struct {
 	Path      string `json:"path"`
 }
 
+// GetPlaylists fetches the list of playlists from the Owntone server.
 func (c Client) GetPlaylists(ctx context.Context) ([]Playlist, error) {
 	type Playlists struct {
 		Items []Playlist `json:"items"`
@@ -129,6 +141,7 @@ func (c Client) GetPlaylists(ctx context.Context) ([]Playlist, error) {
 	return lists, nil
 }
 
+// AddItem2QueueAndPlay adds an item (by URI or expression) to the queue and starts playback.
 func (c Client) AddItem2QueueAndPlay(ctx context.Context, uri string, expression string) error {
 	params := map[string]string{"playback": "start"}
 	if len(uri) > 0 {
@@ -148,6 +161,7 @@ func (c Client) AddItem2QueueAndPlay(ctx context.Context, uri string, expression
 	return internal.HandleResponse(res, http.StatusOK)
 }
 
+// PlayerStatus represents the current status of the Owntone player.
 type PlayerStatus struct {
 	State          string `json:"state"`
 	Repeat         string `json:"repeat"`
@@ -159,6 +173,7 @@ type PlayerStatus struct {
 	ItemProgressMS int    `json:"item_progress_ms"`
 }
 
+// GetPlayerStatus fetches the current player status from the Owntone server.
 func (c Client) GetPlayerStatus(ctx context.Context) (*PlayerStatus, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildURL("api/player"), nil)
 	if err != nil {
@@ -176,6 +191,7 @@ func (c Client) GetPlayerStatus(ctx context.Context) (*PlayerStatus, error) {
 	return &p, nil
 }
 
+// ClearQueue clears the current playback queue on the Owntone server.
 func (c Client) ClearQueue(ctx context.Context) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, c.buildURL("api/queue/clear"), nil)
 	if err != nil {
@@ -189,8 +205,10 @@ func (c Client) ClearQueue(ctx context.Context) error {
 	return internal.HandleResponse(res, http.StatusNoContent)
 }
 
+// SearchType represents the type of search to perform.
 type SearchType string
 
+// SearchTypeFromString converts a string to a SearchType.
 func SearchTypeFromString(s string) (SearchType, error) {
 
 	switch s {
@@ -215,6 +233,7 @@ const (
 	genre  SearchType = "genre" // after https://github.com/owntone/owntone-server/commit/3e7e03b4c18b091b01b66e62467067e7cbf50da4
 )
 
+// SearchItem represents an item returned in search results.
 type SearchItem struct {
 	Title  string `json:"title"`
 	URI    string `json:"uri"`
@@ -222,6 +241,7 @@ type SearchItem struct {
 	Artist string `json:"artist"`
 }
 
+// Items represents a collection of search items with pagination info.
 type Items struct {
 	Items  []SearchItem `json:"items"`
 	Total  int          `json:"total"`
@@ -229,6 +249,7 @@ type Items struct {
 	Limit  int          `json:"limit"`
 }
 
+// SearchResult represents the results of a search operation.
 type SearchResult struct {
 	Tracks    Items `json:"tracks"`
 	Artists   Items `json:"artists"`
@@ -237,6 +258,7 @@ type SearchResult struct {
 	Playlists Items `json:"playlists"`
 }
 
+// Search performs a search on the Owntone server.
 func (c Client) Search(ctx context.Context, keyword string, resultType []SearchType, limit int) (*SearchResult, error) {
 	params := map[string]string{}
 	params["query"] = keyword
@@ -268,12 +290,14 @@ func (c Client) Search(ctx context.Context, keyword string, resultType []SearchT
 	return &results, nil
 }
 
+// Counts represents library statistics from the Owntone server.
 type Counts struct {
 	Songs   int `json:"songs"`
 	Artists int `json:"artists"`
 	Albums  int `json:"albums"`
 }
 
+// Counts fetches library statistics from the Owntone server.
 func (c Client) Counts(ctx context.Context) (*Counts, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildURL("api/library"), nil)
 	if err != nil {
@@ -291,16 +315,19 @@ func (c Client) Counts(ctx context.Context) (*Counts, error) {
 	return &p, nil
 }
 
+// Artists represents a collection of artists from the Owntone server.
 type Artists struct {
 	Items []Artist `json:"items"`
 }
 
+// Artist represents an artist in the Owntone library.
 type Artist struct {
 	Name       string `json:"name"`
 	URI        string `json:"uri"`
 	TrackCount int    `json:"track_count"`
 }
 
+// GetArtist fetches an artist from the Owntone library by offset.
 func (c Client) GetArtist(ctx context.Context, offset int) (*Artist, error) {
 
 	params := map[string]string{}
@@ -325,14 +352,18 @@ func (c Client) GetArtist(ctx context.Context, offset int) (*Artist, error) {
 	return &results.Items[0], nil
 }
 
+// Genres represents a collection of genres from the Owntone server.
 type Genres struct {
 	Items []Genre `json:"items"`
 }
+
+// Genre represents a genre in the Owntone library.
 type Genre struct {
 	Name       string `json:"name"`
 	TrackCount int    `json:"track_count"`
 }
 
+// GetGenres fetches the list of genres from the Owntone server.
 func (c Client) GetGenres(ctx context.Context) ([]Genre, error) {
 	params := map[string]string{}
 	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodGet, c.buildURL("api/library/genres"), params)
@@ -354,6 +385,7 @@ func (c Client) GetGenres(ctx context.Context) ([]Genre, error) {
 	return results.Items, nil
 }
 
+// Output represents an audio output on the Owntone server.
 type Output struct {
 	ID       string `json:"id"`
 	Name     string `json:"name"`
@@ -362,11 +394,13 @@ type Output struct {
 	Volume   int    `json:"volume"`
 }
 
+// Outputs represents a collection of audio outputs.
 type Outputs struct {
 	Outputs []Output `json:"outputs"`
 }
 
 // GetOutputs fetches the list of audio outputs (speakers) from Owntone.
+// GetOutputs fetches the list of audio outputs from the Owntone server.
 func (c Client) GetOutputs(ctx context.Context) ([]Output, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildURL("api/outputs"), nil)
 	if err != nil {
@@ -385,6 +419,7 @@ func (c Client) GetOutputs(ctx context.Context) ([]Output, error) {
 	return results.Outputs, nil
 }
 
+// UpdateLibrary triggers a library update on the Owntone server.
 func (c Client) UpdateLibrary(ctx context.Context) error {
 	req, err := internal.BuildHttpRequestWithParams(ctx, http.MethodPut, c.buildURL("api/update"), nil)
 	if err != nil {

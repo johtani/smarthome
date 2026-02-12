@@ -2,9 +2,7 @@ linters-settings:
   revive:
     rules:
       - name: package-comments
-        disabled: true
       - name: exported
-        disabled: true
 
 linters:
   enable:
