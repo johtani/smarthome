@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hbollon/go-edlib"
 	"github.com/johtani/smarthome/subcommand/action/internal"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
@@ -211,7 +212,24 @@ type SearchType string
 
 // SearchTypeFromString converts a string to a SearchType.
 func SearchTypeFromString(s string) (SearchType, error) {
+	st, err := searchTypeFromString(s)
+	if err == nil {
+		return st, nil
+	}
+	// Try fuzzy match
+	candidates := []string{string(artist), string(album), string(track), string(genre)}
+	res, err := edlib.FuzzySearch(s, candidates, edlib.Levenshtein)
+	if err == nil && res != "" {
+		distance := edlib.LevenshteinDistance(s, res)
+		if distance <= 2 {
+			return SearchType(res), nil
+		}
+	}
 
+	return artist, fmt.Errorf("not found %v", s)
+}
+
+func searchTypeFromString(s string) (SearchType, error) {
 	switch s {
 	case "artist":
 		return artist, nil

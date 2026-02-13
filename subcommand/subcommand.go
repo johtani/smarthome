@@ -66,6 +66,40 @@ type Arg struct {
 	Prefix      string
 }
 
+// Match checks if the given input matches the argument's prefix and enum values.
+func (a Arg) Match(input string) (string, bool) {
+	target := input
+	if a.Prefix != "" {
+		if strings.HasPrefix(input, a.Prefix) {
+			target = input[len(a.Prefix):]
+		} else {
+			return "", false
+		}
+	}
+
+	if len(a.Enum) == 0 {
+		return target, true
+	}
+
+	for _, e := range a.Enum {
+		if e == target {
+			return e, true
+		}
+	}
+
+	// Try fuzzy match for Enum
+	res, err := edlib.FuzzySearch(target, a.Enum, edlib.Levenshtein)
+	if err == nil && res != "" {
+		// 距離が離れすぎている場合はマッチとみなさない
+		distance := edlib.LevenshteinDistance(target, res)
+		if distance <= 2 {
+			return res, true
+		}
+	}
+
+	return "", false
+}
+
 // Init initializes a subcommand from its definition and configuration.
 func (d Definition) Init(config Config) Subcommand {
 	return d.Factory(d, config)
