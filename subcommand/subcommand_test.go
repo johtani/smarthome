@@ -310,3 +310,61 @@ func TestCommands_Find(t *testing.T) {
 		})
 	}
 }
+
+func TestArg_Match(t *testing.T) {
+	tests := []struct {
+		name    string
+		arg     Arg
+		input   string
+		wantVal string
+		wantOk  bool
+	}{
+		{
+			name:    "Enum match",
+			arg:     Arg{Name: "type", Enum: []string{"artist", "album"}},
+			input:   "artist",
+			wantVal: "artist",
+			wantOk:  true,
+		},
+		{
+			name:    "Enum fuzzy match",
+			arg:     Arg{Name: "type", Enum: []string{"artist", "album"}},
+			input:   "artst",
+			wantVal: "artist",
+			wantOk:  true,
+		},
+		{
+			name:    "Prefix and Enum match",
+			arg:     Arg{Name: "type", Prefix: "type:", Enum: []string{"artist", "album"}},
+			input:   "type:album",
+			wantVal: "album",
+			wantOk:  true,
+		},
+		{
+			name:    "Prefix and Enum fuzzy match",
+			arg:     Arg{Name: "type", Prefix: "type:", Enum: []string{"artist", "album"}},
+			input:   "type:alum",
+			wantVal: "album",
+			wantOk:  true,
+		},
+		{
+			name:    "No match",
+			arg:     Arg{Name: "type", Enum: []string{"artist", "album"}},
+			input:   "something",
+			wantVal: "",
+			wantOk:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotVal, gotOk := tt.arg.Match(tt.input)
+			if gotOk != tt.wantOk {
+				t.Errorf("Match() ok = %v, want %v", gotOk, tt.wantOk)
+			}
+			if gotVal != tt.wantVal {
+				t.Errorf("Match() val = %v, want %v", gotVal, tt.wantVal)
+			}
+		})
+	}
+}
