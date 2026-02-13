@@ -88,8 +88,14 @@ func (d Definition) Distance(input string) (int, string) {
 	distance := dymCandidateDistance + 1
 	command := ""
 	// TODO shortnameどうする？一番小さいDistanceでいいか？
+	inputs := strings.Fields(input)
 	for _, cmd := range append([]string{d.Name}, d.shortnames...) {
-		sd := edlib.LevenshteinDistance(input, cmd)
+		cmds := strings.Fields(cmd)
+		if len(inputs) < len(cmds) {
+			continue
+		}
+		target := strings.Join(inputs[:len(cmds)], " ")
+		sd := edlib.LevenshteinDistance(target, cmd)
 		if sd < distance {
 			distance = sd
 			command = cmd
@@ -120,7 +126,7 @@ func (d Definition) isPrefix(inputs []string, cmd []string) bool {
 	if len(inputs) == 0 || len(cmd) == 0 || len(inputs) < len(cmd) {
 		return false
 	}
-	for i := 0; i < len(cmd); i++ {
+	for i := range cmd {
 		if cmd[i] != inputs[i] {
 			return false
 		}
@@ -185,6 +191,10 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 		}
 		def = candidates[0]
 		dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
+
+		inputs := strings.Fields(text)
+		cmdsFields := strings.Fields(cmds[0])
+		args = strings.Join(inputs[len(cmdsFields):], " ")
 	}
 
 	return def, args, dymMsg, nil

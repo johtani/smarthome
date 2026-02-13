@@ -264,6 +264,19 @@ func TestCommands_Find(t *testing.T) {
 			dymMsg:   "",
 			wantErr:  false,
 		},
+		{
+			name: "Match Did you mean with Args",
+			fields: fields{
+				definitions: []Definition{
+					{Name: "abc", Description: "description", Factory: NewDummySubcommand},
+				},
+			},
+			args:     args{name: "abd arg1", withoutHyphen: false},
+			def:      Definition{Name: "abc", Description: "description", Factory: NewDummySubcommand},
+			wantArgs: "arg1",
+			dymMsg:   "Did you mean \"abc\"?",
+			wantErr:  false,
+		},
 		{name: "No match",
 			fields: fields{
 				definitions: []Definition{
@@ -271,7 +284,7 @@ func TestCommands_Find(t *testing.T) {
 					{Name: "de-f", Description: "description", Factory: NewDummySubcommand, shortnames: []string{"def"}},
 				},
 			},
-			args:    args{name: "ab cd     e"},
+			args:    args{name: "xyz"},
 			wantErr: true,
 		},
 	}
