@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/johtani/smarthome/server/cron/influxdb"
+	"github.com/johtani/smarthome/subcommand/action/llm"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
@@ -17,6 +18,7 @@ type Config struct {
 	Owntone   owntone.Config   `json:"Owntone"`
 	Switchbot switchbot.Config `json:"Switchbot"`
 	Yamaha    yamaha.Config    `json:"Yamaha"`
+	LLM       llm.Config       `json:"LLM"`
 	Influxdb  influxdb.Config  `json:"Influxdb"`
 	Commands  Commands
 }
@@ -36,6 +38,10 @@ func (c *Config) validate() error {
 		errs = append(errs, err.Error())
 	}
 	err = c.Yamaha.Validate()
+	if err != nil {
+		errs = append(errs, err.Error())
+	}
+	err = c.LLM.Validate()
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
@@ -74,6 +80,18 @@ func (c *Config) overrideWithEnv() {
 		if i, err := strconv.Atoi(val); err == nil {
 			c.Yamaha.Timeout = i
 		}
+	}
+	// SMARTHOME_LLM_API_KEY
+	if val, ok := os.LookupEnv("SMARTHOME_LLM_API_KEY"); ok {
+		c.LLM.APIKey = val
+	}
+	// SMARTHOME_LLM_ENDPOINT
+	if val, ok := os.LookupEnv("SMARTHOME_LLM_ENDPOINT"); ok {
+		c.LLM.Endpoint = val
+	}
+	// SMARTHOME_LLM_MODEL
+	if val, ok := os.LookupEnv("SMARTHOME_LLM_MODEL"); ok {
+		c.LLM.Model = val
 	}
 	// SMARTHOME_INFLUXDB_TOKEN
 	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_TOKEN"); ok {

@@ -293,7 +293,7 @@ func TestCommands_Find(t *testing.T) {
 			c := Commands{
 				Definitions: tt.fields.definitions,
 			}
-			got, got1, got2, err := c.Find(tt.args.name)
+			got, got1, got2, err := c.Find(context.Background(), Config{}, tt.args.name)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Find() error = %v, wantErr %v", err, tt.wantErr)
 				return

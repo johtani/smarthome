@@ -73,7 +73,7 @@ func findAndExec(ctx context.Context, config subcommand.Config, text string) (st
 	if len(name) == 0 {
 		return config.Commands.Help(), nil
 	}
-	d, args, dymMsg, err := config.Commands.Find(name)
+	d, args, dymMsg, err := config.Commands.Find(ctx, config, name)
 	if err != nil {
 		return "", err
 	}

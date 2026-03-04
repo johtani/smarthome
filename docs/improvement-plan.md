@@ -20,6 +20,14 @@
 - [x] パッケージレベルのドキュメント作成
     - 各主要ディレクトリへの `doc.go` 追加による構造の明確化
 
+### フェーズ5: AI/LLM統合
+- [x] 自然言語によるコマンド入力
+    - [GitHub Issue #118](https://github.com/johtani/smarthome/issues/118)
+    - [提案概要](issue-natural-language-command.md)
+    - [x] LLM Action の作成
+    - [x] `Commands.Find` の拡張
+    - [x] Slack/MCP への統合
+
 ---
 
 ## 2. 完了済みの項目
