@@ -13,6 +13,7 @@ import (
 
 	"github.com/hbollon/go-edlib"
 	"github.com/johtani/smarthome/subcommand/action"
+	"github.com/johtani/smarthome/subcommand/action/llm"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 )
@@ -205,7 +206,7 @@ func NewCommands() Commands {
 }
 
 // Find searches for a subcommand definition that matches the given text.
-func (c Commands) Find(text string) (Definition, string, string, error) {
+func (c Commands) Find(ctx context.Context, config Config, text string) (Definition, string, string, error) {
 	var def Definition
 	var args string
 	dymMsg := ""
@@ -220,15 +221,30 @@ func (c Commands) Find(text string) (Definition, string, string, error) {
 
 	if !find {
 		candidates, cmds := c.didYouMean(text)
-		if len(candidates) == 0 {
-			return Definition{}, "", "", fmt.Errorf("sorry, i cannot understand what you want from what you said '%v'", text)
-		}
-		def = candidates[0]
-		dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
+		if len(candidates) > 0 {
+			def = candidates[0]
+			dymMsg = fmt.Sprintf("Did you mean \"%v\"?", cmds[0])
 
-		inputs := strings.Fields(text)
-		cmdsFields := strings.Fields(cmds[0])
-		args = strings.Join(inputs[len(cmdsFields):], " ")
+			inputs := strings.Fields(text)
+			cmdsFields := strings.Fields(cmds[0])
+			args = strings.Join(inputs[len(cmdsFields):], " ")
+			return def, args, dymMsg, nil
+		}
+
+		// LLMによる解決を試みる
+		if config.LLM.Endpoint != "" {
+			client := llm.NewClient(config.LLM)
+			resolved, err := client.Resolve(ctx, text, c.Help())
+			if err == nil && resolved.Command != "" {
+				for _, d := range c.Definitions {
+					if d.Name == resolved.Command {
+						return d, resolved.Args, fmt.Sprintf("(LLM) %s", resolved.Thought), nil
+					}
+				}
+			}
+		}
+
+		return Definition{}, "", "", fmt.Errorf("sorry, i cannot understand what you want from what you said '%v'", text)
 	}
 
 	return def, args, dymMsg, nil

@@ -103,7 +103,7 @@ func runCmd(ctx context.Context, config subcommand.Config, cmdArgs []string) err
 		return fmt.Errorf("%s", printHelp(config.Commands.Help()))
 	}
 	name := strings.Join(cmdArgs, " ")
-	d, args, dymMsg, err := config.Commands.Find(name)
+	d, args, dymMsg, err := config.Commands.Find(ctx, config, name)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		printHelp(config.Commands.Help())

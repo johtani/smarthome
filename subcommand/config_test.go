@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/johtani/smarthome/subcommand/action/llm"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
@@ -21,6 +22,7 @@ func TestConfig_Validate(t *testing.T) {
 				Owntone:   owntone.Config{URL: "http://localhost:8000"},
 				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
 				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
+				LLM:       llm.Config{Endpoint: "http://localhost:8081", Model: "gpt-4o"},
 			},
 			wantErr: false,
 		},
@@ -30,6 +32,17 @@ func TestConfig_Validate(t *testing.T) {
 				Owntone:   owntone.Config{URL: ""},
 				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
 				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
+				LLM:       llm.Config{Endpoint: "http://localhost:8081", Model: "gpt-4o"},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid llm config",
+			config: Config{
+				Owntone:   owntone.Config{URL: "http://localhost:8000"},
+				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
+				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
+				LLM:       llm.Config{Endpoint: ""},
 			},
 			wantErr: true,
 		},
@@ -50,6 +63,9 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	_ = os.Setenv("SMARTHOME_SWITCHBOT_TOKEN", "env-token")
 	_ = os.Setenv("SMARTHOME_SWITCHBOT_SECRET", "env-secret")
 	_ = os.Setenv("SMARTHOME_YAMAHA_URL", "http://env-yamaha")
+	_ = os.Setenv("SMARTHOME_LLM_API_KEY", "env-llm-key")
+	_ = os.Setenv("SMARTHOME_LLM_ENDPOINT", "http://env-llm-endpoint")
+	_ = os.Setenv("SMARTHOME_LLM_MODEL", "env-llm-model")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
@@ -58,6 +74,9 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 		_ = os.Unsetenv("SMARTHOME_SWITCHBOT_TOKEN")
 		_ = os.Unsetenv("SMARTHOME_SWITCHBOT_SECRET")
 		_ = os.Unsetenv("SMARTHOME_YAMAHA_URL")
+		_ = os.Unsetenv("SMARTHOME_LLM_API_KEY")
+		_ = os.Unsetenv("SMARTHOME_LLM_ENDPOINT")
+		_ = os.Unsetenv("SMARTHOME_LLM_MODEL")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_TOKEN")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_URL")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_BUCKET")
@@ -77,6 +96,15 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	if config.Yamaha.URL != "http://env-yamaha" {
 		t.Errorf("expected http://env-yamaha, got %s", config.Yamaha.URL)
 	}
+	if config.LLM.APIKey != "env-llm-key" {
+		t.Errorf("expected env-llm-key, got %s", config.LLM.APIKey)
+	}
+	if config.LLM.Endpoint != "http://env-llm-endpoint" {
+		t.Errorf("expected http://env-llm-endpoint, got %s", config.LLM.Endpoint)
+	}
+	if config.LLM.Model != "env-llm-model" {
+		t.Errorf("expected env-llm-model, got %s", config.LLM.Model)
+	}
 	if config.Influxdb.Token != "env-influx-token" {
 		t.Errorf("expected env-influx-token, got %s", config.Influxdb.Token)
 	}
@@ -94,6 +122,7 @@ func TestLoadConfigWithPath(t *testing.T) {
 		"Owntone": {"url": "http://localhost:8000"},
 		"Switchbot": {"token": "token", "secret": "secret"},
 		"Yamaha": {"url": "http://localhost:8080"},
+		"LLM": {"endpoint": "http://localhost:8081", "model": "gpt-4o"},
 		"Influxdb": {"url": "http://localhost:8086", "token": "token", "bucket": "bucket", "org": "org"}
 	}`
 	tmpfile, err := os.CreateTemp("", "config_test.json")
