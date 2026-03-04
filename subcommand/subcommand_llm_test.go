@@ -72,7 +72,7 @@ func TestCommands_Find_LLM(t *testing.T) {
 		// Override server response for unknown command
 		server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"command\": \"unknown\", \"args\": \"\", \"thought\": \"unknown command\"}"}}]}`)
+			_, _ = fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"command\": \"unknown\", \"args\": \"\", \"thought\": \"unknown command\"}"}}]}`)
 		})
 
 		_, _, _, err := cmds.Find(t.Context(), config, "何か未知の操作")
@@ -84,7 +84,7 @@ func TestCommands_Find_LLM(t *testing.T) {
 	t.Run("LLM resolution empty command", func(t *testing.T) {
 		server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"command\": \"\", \"args\": \"\", \"thought\": \"no match\"}"}}]}`)
+			_, _ = fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"command\": \"\", \"args\": \"\", \"thought\": \"no match\"}"}}]}`)
 		})
 
 		_, _, _, err := cmds.Find(t.Context(), config, "何もしないで")
