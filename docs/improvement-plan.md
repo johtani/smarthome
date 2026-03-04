@@ -22,6 +22,7 @@
 
 ### フェーズ5: AI/LLM統合
 - [ ] 自然言語によるコマンド入力
+    - [GitHub Issue #118](https://github.com/johtani/smarthome/issues/118)
     - [提案概要](issue-natural-language-command.md)
     - LLM Action の作成
     - `Commands.Find` の拡張
