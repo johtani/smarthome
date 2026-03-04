@@ -20,6 +20,13 @@
 - [x] パッケージレベルのドキュメント作成
     - 各主要ディレクトリへの `doc.go` 追加による構造の明確化
 
+### フェーズ5: AI/LLM統合
+- [ ] 自然言語によるコマンド入力
+    - [提案概要](issue-natural-language-command.md)
+    - LLM Action の作成
+    - `Commands.Find` の拡張
+    - Slack/MCP への統合
+
 ---
 
 ## 2. 完了済みの項目
