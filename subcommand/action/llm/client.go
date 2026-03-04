@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -110,6 +111,7 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 	}()
 
 	if resp.StatusCode != http.StatusOK {
+		slog.Error("LLM API returned error status", "status", resp.StatusCode, "endpoint", c.config.Endpoint)
 		return ResolvedCommand{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
