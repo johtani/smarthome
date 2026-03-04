@@ -24,7 +24,7 @@ func PostMessage(ctx context.Context, client *socketmode.Client, channelID strin
 	return client.PostMessage(channelID, options...)
 }
 
-func newMessageSubcommandHandler(config subcommand.Config, botUserIDPrefix string) socketmode.SocketmodeHandlerFunc {
+func newMessageSubcommandHandler(config *subcommand.Config, botUserIDPrefix string) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
 		ctx, span := otel.Tracer("slack").Start(context.Background(), "AppMention")
 		defer span.End()
@@ -68,16 +68,16 @@ func newMessageSubcommandHandler(config subcommand.Config, botUserIDPrefix strin
 	}
 }
 
-func findAndExec(ctx context.Context, config subcommand.Config, text string) (string, error) {
+func findAndExec(ctx context.Context, config *subcommand.Config, text string) (string, error) {
 	name := strings.TrimSpace(text)
 	if len(name) == 0 {
 		return config.Commands.Help(), nil
 	}
-	d, args, dymMsg, err := config.Commands.Find(ctx, config, name)
+	d, args, dymMsg, err := config.Commands.Find(ctx, *config, name)
 	if err != nil {
 		return "", err
 	}
-	c := d.Init(config)
+	c := d.Init(*config)
 	msg, err := c.Exec(ctx, args)
 	if err != nil {
 		return "", err
@@ -88,7 +88,7 @@ func findAndExec(ctx context.Context, config subcommand.Config, text string) (st
 	return msg, nil
 }
 
-func newSlashCommandSubcommandHandler(config subcommand.Config) socketmode.SocketmodeHandlerFunc {
+func newSlashCommandSubcommandHandler(config *subcommand.Config) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
 		ctx, span := otel.Tracer("slack").Start(context.Background(), "SlashCommand")
 		defer span.End()

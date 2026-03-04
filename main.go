@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"github.com/johtani/smarthome/internal/otel"
 	"github.com/johtani/smarthome/server/cron"
@@ -59,18 +61,37 @@ func run() error {
 		_ = shutdown(ctx)
 	}()
 
+	config, err := subcommand.LoadConfigWithPath(configPath)
+	if err != nil {
+		return fmt.Errorf("設定の読み込みに失敗: %w", err)
+	}
+	cfgPtr := &config
+
+	// Hot Reload のためのシグナル監視
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGHUP)
+	go func() {
+		for range sigChan {
+			slog.Info("SIGHUP受信、設定を再読み込みします")
+			newConfig, err := subcommand.LoadConfigWithPath(configPath)
+			if err != nil {
+				slog.Error("設定の再読み込みに失敗（古い設定を維持します）", "error", err)
+				continue
+			}
+			// ポインタの中身を更新
+			*cfgPtr = newConfig
+			slog.Info("設定を更新しました")
+		}
+	}()
+
 	switch {
 	case serverFlag:
-		config, err := subcommand.LoadConfig()
-		if err != nil {
-			return fmt.Errorf("設定の読み込みに失敗: %w", err)
-		}
 		_, _ = fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
 
 		// cronはgoroutineで実行するため、エラーハンドリングが必要
 		errChan := make(chan error, 1)
 		go func() {
-			if err := cron.Run(config); err != nil {
+			if err := cron.Run(cfgPtr); err != nil {
 				errChan <- err
 			}
 		}()
@@ -82,34 +103,26 @@ func run() error {
 		default:
 		}
 
-		return slack.Run(config)
+		return slack.Run(cfgPtr)
 	case mcpFlag:
-		config, err := subcommand.LoadConfigWithPath(configPath)
-		if err != nil {
-			return fmt.Errorf("設定の読み込みに失敗: %w", err)
-		}
-		return mcp.Run(config)
+		return mcp.Run(cfgPtr)
 	default:
-		config, err := subcommand.LoadConfigWithPath(configPath)
-		if err != nil {
-			return fmt.Errorf("設定の読み込みに失敗: %w", err)
-		}
-		return runCmd(ctx, config, flag.Args())
+		return runCmd(ctx, cfgPtr, flag.Args())
 	}
 }
 
-func runCmd(ctx context.Context, config subcommand.Config, cmdArgs []string) error {
+func runCmd(ctx context.Context, config *subcommand.Config, cmdArgs []string) error {
 	if len(cmdArgs) < 2 {
 		return fmt.Errorf("%s", printHelp(config.Commands.Help()))
 	}
 	name := strings.Join(cmdArgs, " ")
-	d, args, dymMsg, err := config.Commands.Find(ctx, config, name)
+	d, args, dymMsg, err := config.Commands.Find(ctx, *config, name)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		printHelp(config.Commands.Help())
 		return nil
 	}
-	c := d.Init(config)
+	c := d.Init(*config)
 	msg, err := c.Exec(ctx, args)
 	if err != nil {
 		return err

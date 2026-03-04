@@ -12,7 +12,7 @@ import (
 )
 
 // Run starts the cron scheduler and runs scheduled jobs.
-func Run(config subcommand.Config) error {
+func Run(config *subcommand.Config) error {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		return fmt.Errorf("タイムゾーンの読み込みに失敗しました: %w", err)
@@ -25,8 +25,7 @@ func Run(config subcommand.Config) error {
 		gocron.CronJob("*/10 * * * *", false),
 		gocron.NewTask(
 			RecordTemp,
-			config.Influxdb,
-			config.Switchbot,
+			config,
 		),
 	)
 	if err != nil {

@@ -52,7 +52,7 @@ func TestRunCmd(t *testing.T) {
 			os.Stdout = w
 			os.Stderr = w
 
-			err := runCmd(ctx, config, tt.args)
+			err := runCmd(ctx, &config, tt.args)
 			_ = w.Close()
 			out, _ := io.ReadAll(r)
 			os.Stdout = oldStdout

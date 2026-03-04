@@ -59,6 +59,39 @@ Subcommand名をもとに、以下のようにSlash Command名として登録す
 
 [Slash Commandの詳細についてはSlackの公式ガイドを参考に](https://api.slack.com/interactivity/slash-commands)。
 
+### 設定の動的読み込み (Hot Reload)
+
+アプリケーション（Slackボット、MCPサーバー、Cronジョブ）の実行中に、設定ファイル（`config.json`）を編集して反映させることができます。
+UNIX系環境では、以下のコマンドを実行して `SIGHUP` シグナルを送信することで再読み込みが行われます。
+
+```bash
+kill -HUP <pid>
+```
+
+#### systemd を使用している場合
+
+systemd でサービス化している場合は、以下のコマンドで再読み込みを行うことができます。
+
+1. **`systemctl reload` を使用する方法** (推奨)
+   ユニットファイル（例：`/etc/systemd/system/smarthome.service`）に `ExecReload` が設定されている場合に使用できます。
+   ```ini
+   [Service]
+   ...
+   ExecReload=/bin/kill -HUP $MAINPID
+   ...
+   ```
+   設定されている場合は、以下のコマンドを実行します。
+   ```bash
+   sudo systemctl reload smarthome
+   ```
+
+2. **直接シグナルを送る方法**
+   ```bash
+   sudo systemctl kill -s HUP smarthome
+   ```
+
+再読み込みに成功すると、標準エラー出力（または `journalctl -u smarthome`）にログが表示され、新しい設定が即座に反映されます。
+
 ## ビルド
 
 ```

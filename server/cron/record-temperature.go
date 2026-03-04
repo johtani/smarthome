@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/johtani/smarthome/server/cron/influxdb"
+	"github.com/johtani/smarthome/subcommand"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -40,9 +41,9 @@ func init() {
 }
 
 // RecordTemp fetches temperature and humidity from SwitchBot and records it to InfluxDB.
-func RecordTemp(influxdbConfig influxdb.Config, switchbotConfig switchbot.Config) {
-	sCli := switchbot.NewClient(switchbotConfig)
-	iCli := influxdb.NewClient(influxdbConfig)
+func RecordTemp(config *subcommand.Config) {
+	sCli := switchbot.NewClient(config.Switchbot)
+	iCli := influxdb.NewClient(config.Influxdb)
 	defer iCli.Close()
 
 	ExecuteRecordTemp(context.Background(), sCli, iCli)
