@@ -5,6 +5,7 @@
 * [OwnTone API](https://owntone.github.io/owntone-server/json-api/)
 * [SwitchBot API](https://github.com/OpenWonderLabs/SwitchBotAPI)
 * [Yamaha Extended Control](https://github.com/rsc-dev/pyamaha/blob/master/doc/YXC_API_Spec_Basic_v2.0.pdf)
+* [OpenAI Chat Completion API](https://platform.openai.com/docs/api-reference/chat) (または互換API)
  
 ## 必要な設定
 
@@ -13,6 +14,9 @@
 * owntone.url : 例："http://localhost:3689"
 * switchbot.token : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started) 
 * switchbot.secret : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started)
+* llm.endpoint : OpenAI互換APIのエンドポイント（例: "https://api.openai.com/v1/chat/completions"）
+* llm.api_key : APIキー
+* llm.model : 使用するモデル名（例: "gpt-4o"）
 * yamaha.url : 例："http://IPアドレス"
 * influxdb
   * url : 例: "http://IPアドレス:ポート"
@@ -43,6 +47,7 @@ SlackのSocket Modeを利用したサーバー機能も用意しています。
 `smarthome -server`で起動します。
 Slackボットに対するメンションのみに対応しています。 
 `@slackbot start music`のようにメンションすることでサブコマンドが実行されます。
+また、自然言語（例：「エアコンをつけて」）での指示にも対応しており、既存のコマンドに一致しない場合はLLMが意図を解釈して適切なコマンドを実行します。
 
 #### Slash Command対応
 

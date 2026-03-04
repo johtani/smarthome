@@ -12,6 +12,9 @@ import (
 	"strings"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Config is the configuration for the LLM client.
@@ -61,6 +64,12 @@ type ResolvedCommand struct {
 
 // Resolve resolves the given text to a command using the LLM.
 func (c *Client) Resolve(ctx context.Context, text string, commandList string) (ResolvedCommand, error) {
+	ctx, span := otel.Tracer("llm").Start(ctx, "llm.Resolve", trace.WithAttributes(
+		attribute.String("llm.input_text", text),
+		attribute.String("llm.model", c.config.Model),
+	))
+	defer span.End()
+
 	// OpenAI Chat Completion API 互換のパラメータを構築
 	// Structured Outputs (JSON mode) を使用することを想定
 
@@ -131,10 +140,19 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 		return ResolvedCommand{}, fmt.Errorf("no choices in response")
 	}
 
+	content := result.Choices[0].Message.Content
+	span.SetAttributes(attribute.String("llm.response_content", content))
+
 	var resolved ResolvedCommand
-	if err := json.Unmarshal([]byte(result.Choices[0].Message.Content), &resolved); err != nil {
+	if err := json.Unmarshal([]byte(content), &resolved); err != nil {
 		return ResolvedCommand{}, fmt.Errorf("failed to unmarshal resolved command: %w", err)
 	}
+
+	span.SetAttributes(
+		attribute.String("llm.resolved_command", resolved.Command),
+		attribute.String("llm.resolved_args", resolved.Args),
+		attribute.String("llm.thought", resolved.Thought),
+	)
 
 	return resolved, nil
 }
