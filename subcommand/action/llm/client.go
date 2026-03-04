@@ -115,9 +115,7 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 	if err != nil {
 		return ResolvedCommand{}, fmt.Errorf("failed to send request: %w", err)
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		slog.Error("LLM API returned error status", "status", resp.StatusCode, "endpoint", c.config.Endpoint)

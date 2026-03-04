@@ -57,7 +57,7 @@ func TestNewMCPTool(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tool, _ := NewMCPTool(tt.definition, config)
+			tool, _ := NewMCPTool(tt.definition, &config)
 			if tool.Name != tt.wantName {
 				t.Errorf("tool.Name = %v, want %v", tool.Name, tt.wantName)
 			}
@@ -82,7 +82,7 @@ func TestMCPToolHandler(t *testing.T) {
 	// 既存のコマンドを使ってテストする
 	definition := config.Commands.Definitions[0]
 
-	_, handler := NewMCPTool(definition, config)
+	_, handler := NewMCPTool(definition, &config)
 	ctx := context.Background()
 	req := mcp.CallToolRequest{}
 	req.Params.Name = strings.ReplaceAll(definition.Name, " ", "_")

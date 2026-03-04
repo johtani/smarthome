@@ -70,7 +70,7 @@ func loadConfigFromFile() (Config, error) {
 }
 
 // Run starts the Slack bot server.
-func Run(config subcommand.Config) error {
+func Run(config *subcommand.Config) error {
 	slackConfig, err := loadConfigFromFile()
 	if err != nil {
 		return err

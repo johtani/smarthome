@@ -15,7 +15,7 @@ import (
 )
 
 // Run starts the MCP server.
-func Run(config subcommand.Config) error {
+func Run(config *subcommand.Config) error {
 	s := NewMCPServer()
 
 	// 登録してあるコマンドをMCPのツールとして登録していく
@@ -39,12 +39,12 @@ func NewMCPServer() *server.MCPServer {
 }
 
 // NewMCPTool creates an MCP tool and its handler from a subcommand definition.
-func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp.Tool, server.ToolHandlerFunc) {
+func NewMCPTool(definition subcommand.Definition, config *subcommand.Config) (mcp.Tool, server.ToolHandlerFunc) {
 	if definition.Args == nil {
 		tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description))
 		return tmp,
 			func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				msg, err := definition.Init(config).Exec(ctx, "")
+				msg, err := definition.Init(*config).Exec(ctx, "")
 				if err != nil {
 					return nil, errors.New(definition.Name + ": " + err.Error())
 				}
@@ -82,7 +82,7 @@ func NewMCPTool(definition subcommand.Definition, config subcommand.Config) (mcp
 					}
 				}
 			}
-			msg, err := definition.Init(config).Exec(ctx, strings.Join(params, " "))
+			msg, err := definition.Init(*config).Exec(ctx, strings.Join(params, " "))
 			if err != nil {
 				return nil, errors.New(definition.Name + ": " + err.Error())
 			}

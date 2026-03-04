@@ -59,6 +59,17 @@ Subcommand名をもとに、以下のようにSlash Command名として登録す
 
 [Slash Commandの詳細についてはSlackの公式ガイドを参考に](https://api.slack.com/interactivity/slash-commands)。
 
+### 設定の動的読み込み (Hot Reload)
+
+アプリケーション（Slackボット、MCPサーバー、Cronジョブ）の実行中に、設定ファイル（`config.json`）を編集して反映させることができます。
+UNIX系環境では、以下のコマンドを実行して `SIGHUP` シグナルを送信することで再読み込みが行われます。
+
+```bash
+kill -HUP <pid>
+```
+
+再読み込みに成功すると、標準エラー出力にログが表示され、新しい設定が即座に反映されます。
+
 ## ビルド
 
 ```
