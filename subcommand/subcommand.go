@@ -7,6 +7,7 @@ package subcommand
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strings"
 	"unicode"
@@ -241,6 +242,9 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 						return d, resolved.Args, fmt.Sprintf("(LLM) %s", resolved.Thought), nil
 					}
 				}
+				slog.Warn("LLM resolved to an unknown command", "command", resolved.Command)
+			} else if err != nil {
+				slog.Error("LLM resolution failed", "error", err)
 			}
 		}
 
