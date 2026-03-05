@@ -14,7 +14,7 @@ import (
 )
 
 func defaultHandler(event *socketmode.Event, _ *socketmode.Client) {
-	slog.Warn("Unexpected event type received", "type", event.Type)
+	slog.WarnContext(context.Background(), "Unexpected event type received", "type", event.Type)
 }
 
 // PostMessage sends a message to a Slack channel.
@@ -49,11 +49,11 @@ func newMessageSubcommandHandler(config *subcommand.Config, botUserIDPrefix stri
 			var err error
 			msg, err = findAndExec(ctx, config, strings.ReplaceAll(payloadEvent.Text, botUserIDPrefix, ""))
 			if err != nil {
-				slog.Error("Got error in findAndExec", "error", err)
+				slog.ErrorContext(ctx, "Got error in findAndExec", "error", err)
 				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
 			}
 		} else {
-			slog.Debug("Skipped message", "text", payloadEvent.Text)
+			slog.DebugContext(ctx, "Skipped message", "text", payloadEvent.Text)
 		}
 
 		if len(msg) == 0 {
@@ -62,7 +62,7 @@ func newMessageSubcommandHandler(config *subcommand.Config, botUserIDPrefix stri
 
 		_, _, err := PostMessage(ctx, client, payloadEvent.Channel, slack.MsgOptionText(msg, false))
 		if err != nil {
-			slog.Error("failed posting message", "error", err)
+			slog.ErrorContext(ctx, "failed posting message", "error", err)
 			return
 		}
 	}
@@ -110,7 +110,7 @@ func newSlashCommandSubcommandHandler(config *subcommand.Config) socketmode.Sock
 		msg, err := findAndExec(ctx, config, escaped+" "+ev.Text)
 
 		if err != nil {
-			slog.Error("Got error in findAndExec for slash command", "error", err)
+			slog.ErrorContext(ctx, "Got error in findAndExec for slash command", "error", err)
 			msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
 		}
 
@@ -119,7 +119,7 @@ func newSlashCommandSubcommandHandler(config *subcommand.Config) socketmode.Sock
 		}
 		_, _, err = PostMessage(ctx, client, ev.ChannelID, slack.MsgOptionText(msg, false))
 		if err != nil {
-			slog.Error("failed posting message for slash command", "error", err)
+			slog.ErrorContext(ctx, "failed posting message for slash command", "error", err)
 			return
 		}
 	}

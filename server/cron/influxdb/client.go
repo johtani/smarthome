@@ -71,7 +71,7 @@ func (c *clientImpl) WriteTemperature(data Temperature) {
 	point := write.NewPoint(measurement, tags, fields, time.Now())
 
 	if err := writeAPI.WritePoint(context.Background(), point); err != nil {
-		slog.Error("Error for writing data to InfluxDB", "error", err)
+		slog.ErrorContext(context.Background(), "Error for writing data to InfluxDB", "error", err)
 	}
 }
 

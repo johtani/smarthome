@@ -35,6 +35,7 @@ func main() {
 		Level: slog.LevelInfo,
 	}
 	var handler slog.Handler = slog.NewTextHandler(os.Stderr, opts)
+	handler = otel.NewTracingHandler(handler)
 	slog.SetDefault(slog.New(handler))
 
 	if err := run(); err != nil {
@@ -72,15 +73,15 @@ func run() error {
 	signal.Notify(sigChan, syscall.SIGHUP)
 	go func() {
 		for range sigChan {
-			slog.Info("SIGHUP受信、設定を再読み込みします")
+			slog.InfoContext(ctx, "SIGHUP受信、設定を再読み込みします")
 			newConfig, err := subcommand.LoadConfigWithPath(configPath)
 			if err != nil {
-				slog.Error("設定の再読み込みに失敗（古い設定を維持します）", "error", err)
+				slog.ErrorContext(ctx, "設定の再読み込みに失敗（古い設定を維持します）", "error", err)
 				continue
 			}
 			// ポインタの中身を更新
 			*cfgPtr = newConfig
-			slog.Info("設定を更新しました")
+			slog.InfoContext(ctx, "設定を更新しました")
 		}
 	}()
 

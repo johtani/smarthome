@@ -3,10 +3,11 @@ package subcommand
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/johtani/smarthome/subcommand/action/llm"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/johtani/smarthome/subcommand/action/llm"
 )
 
 func TestCommands_Find_LLM(t *testing.T) {

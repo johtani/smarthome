@@ -24,19 +24,19 @@ func init() {
 	var err error
 	tempGauge, err = meter.Float64Gauge("home.temperature", metric.WithDescription("Temperature from SwitchBot Meter"), metric.WithUnit("Celsius"))
 	if err != nil {
-		slog.Error("Failed to create temperature gauge", "error", err)
+		slog.ErrorContext(context.Background(), "Failed to create temperature gauge", "error", err)
 	}
 	humGauge, err = meter.Int64Gauge("home.humidity", metric.WithDescription("Humidity from SwitchBot Meter"), metric.WithUnit("%"))
 	if err != nil {
-		slog.Error("Failed to create humidity gauge", "error", err)
+		slog.ErrorContext(context.Background(), "Failed to create humidity gauge", "error", err)
 	}
 	battGauge, err = meter.Int64Gauge("home.battery", metric.WithDescription("Battery level from SwitchBot Meter"), metric.WithUnit("%"))
 	if err != nil {
-		slog.Error("Failed to create battery gauge", "error", err)
+		slog.ErrorContext(context.Background(), "Failed to create battery gauge", "error", err)
 	}
 	co2Gauge, err = meter.Int64Gauge("home.co2", metric.WithDescription("CO2 level from SwitchBot Meter"), metric.WithUnit("ppm"))
 	if err != nil {
-		slog.Error("Failed to create co2 gauge", "error", err)
+		slog.ErrorContext(context.Background(), "Failed to create co2 gauge", "error", err)
 	}
 }
 
@@ -58,14 +58,14 @@ func ExecuteRecordTemp(ctx context.Context, sCli *switchbot.CachedClient, iCli i
 
 	pdev, vdev, err := sCli.DeviceAPI.List(ctx)
 	if err != nil {
-		slog.Error("Cannot get device list", "error", err)
+		slog.ErrorContext(ctx, "Cannot get device list", "error", err)
 		return
 	}
 	for _, d := range pdev {
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
 			status, err := sCli.DeviceAPI.Status(ctx, d.ID)
 			if err != nil {
-				slog.Error("Something wrong on getting status", "device", d.Name, "error", err)
+				slog.ErrorContext(ctx, "Something wrong on getting status", "device", d.Name, "error", err)
 			}
 			data := influxdb.Temperature{
 				Room:        d.Name,
@@ -90,7 +90,7 @@ func ExecuteRecordTemp(ctx context.Context, sCli *switchbot.CachedClient, iCli i
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
 			status, err := sCli.DeviceAPI.Status(ctx, d.ID)
 			if err != nil {
-				slog.Error("Something wrong on getting status", "device", d.Name, "error", err)
+				slog.ErrorContext(ctx, "Something wrong on getting status", "device", d.Name, "error", err)
 			}
 
 			data := influxdb.Temperature{
