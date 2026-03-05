@@ -14,8 +14,28 @@ import (
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+	"go.opentelemetry.io/otel/trace"
+	"log/slog"
 	"time"
 )
+
+// TracingHandler is a slog.Handler that adds trace_id to log records from context.
+type TracingHandler struct {
+	slog.Handler
+}
+
+// Handle adds trace_id to the record if it exists in the context.
+func (h *TracingHandler) Handle(ctx context.Context, r slog.Record) error {
+	if sc := trace.SpanContextFromContext(ctx); sc.IsValid() {
+		r.AddAttrs(slog.String("trace_id", sc.TraceID().String()))
+	}
+	return h.Handler.Handle(ctx, r)
+}
+
+// NewTracingHandler creates a new TracingHandler.
+func NewTracingHandler(h slog.Handler) *TracingHandler {
+	return &TracingHandler{Handler: h}
+}
 
 // SetupOTEL OpenTelemetryの設定を行い、クリーンアップ関数を返します。
 func SetupOTEL(ctx context.Context, serviceName string) (func(context.Context) error, error) {
