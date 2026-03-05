@@ -23,6 +23,7 @@ type API interface {
 	PowerOn(ctx context.Context) error
 	PowerOff(ctx context.Context) error
 	SetInput(ctx context.Context, input string) error
+	GetDeviceInfo(ctx context.Context) error
 }
 
 // Client is a client for the Yamaha MusicCast API.
@@ -51,6 +52,14 @@ func (c Client) buildURL(path string) string {
 		url += "/"
 	}
 	return url + basePath + path
+}
+
+func (c Client) buildSystemURL(path string) string {
+	url := c.config.URL
+	if !strings.HasSuffix(url, "/") {
+		url += "/"
+	}
+	return url + "YamahaExtendedControl/v1/system/" + path
 }
 
 // NewClient creates a new Yamaha client with the given configuration.
@@ -178,6 +187,24 @@ func (c Client) SetInput(ctx context.Context, input string) error {
 		return err
 	}
 	err = parseHTTPResponse(res, "SetInput")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetDeviceInfo gets the device information from the Yamaha device.
+func (c Client) GetDeviceInfo(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildSystemURL("getDeviceInfo"), nil)
+	if err != nil {
+		return err
+	}
+	// #nosec G704
+	res, err := c.Do(req)
+	if err != nil {
+		return err
+	}
+	err = parseHTTPResponse(res, "GetDeviceInfo")
 	if err != nil {
 		return err
 	}

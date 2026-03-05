@@ -7,11 +7,12 @@ import (
 )
 
 type mockYamahaAPI struct {
-	setSceneFunc  func(ctx context.Context, scene int) error
-	setVolumeFunc func(ctx context.Context, volume int) error
-	powerOnFunc   func(ctx context.Context) error
-	powerOffFunc  func(ctx context.Context) error
-	setInputFunc  func(ctx context.Context, input string) error
+	setSceneFunc      func(ctx context.Context, scene int) error
+	setVolumeFunc     func(ctx context.Context, volume int) error
+	powerOnFunc       func(ctx context.Context) error
+	powerOffFunc      func(ctx context.Context) error
+	setInputFunc      func(ctx context.Context, input string) error
+	getDeviceInfoFunc func(ctx context.Context) error
 }
 
 func (m *mockYamahaAPI) SetScene(ctx context.Context, scene int) error {
@@ -28,6 +29,9 @@ func (m *mockYamahaAPI) PowerOff(ctx context.Context) error {
 }
 func (m *mockYamahaAPI) SetInput(ctx context.Context, input string) error {
 	return m.setInputFunc(ctx, input)
+}
+func (m *mockYamahaAPI) GetDeviceInfo(ctx context.Context) error {
+	return m.getDeviceInfoFunc(ctx)
 }
 
 func TestActions(t *testing.T) {
