@@ -194,6 +194,7 @@ func NewCommands() Commands {
 			NewLightOffDefinition(),
 			NewLightOnDefinition(),
 			NewHelpDefinition(),
+			NewHealthDefinition(),
 			NewStartSwitchDefinition(),
 			NewStartPS5Definition(),
 			NewAirConditionerOnDefinition(),
