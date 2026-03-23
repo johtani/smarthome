@@ -2,6 +2,7 @@ package subcommand
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/johtani/smarthome/subcommand/action/llm"
@@ -113,6 +114,56 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	}
 	if config.Influxdb.Bucket != "env-bucket" {
 		t.Errorf("expected env-bucket, got %s", config.Influxdb.Bucket)
+	}
+}
+
+func TestLoadConfigWithPath_JSONErrors(t *testing.T) {
+	tests := []struct {
+		name        string
+		content     string
+		errContains string
+	}{
+		{
+			name: "type mismatch",
+			content: `{
+				"Owntone": {"url": "http://localhost:8000", "timeout": "not-a-number"},
+				"Switchbot": {"token": "token", "secret": "secret"},
+				"Yamaha": {"url": "http://localhost:8080"},
+				"LLM": {"endpoint": "http://localhost:8081", "model": "gpt-4o"}
+			}`,
+			errContains: "invalid value for field",
+		},
+		{
+			name:        "syntax error",
+			content:     `{"Owntone": {invalid}}`,
+			errContains: "JSON syntax error at byte offset",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpfile, err := os.CreateTemp("", "config_test_*.json")
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer func() {
+				_ = os.Remove(tmpfile.Name())
+			}()
+			if _, err := tmpfile.Write([]byte(tt.content)); err != nil {
+				t.Fatal(err)
+			}
+			if err := tmpfile.Close(); err != nil {
+				t.Fatal(err)
+			}
+
+			_, err = LoadConfigWithPath(tmpfile.Name())
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if !strings.Contains(err.Error(), tt.errContains) {
+				t.Errorf("expected error to contain %q, got: %v", tt.errContains, err)
+			}
+		})
 	}
 }
 
