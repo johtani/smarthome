@@ -2,6 +2,7 @@ package subcommand
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/johtani/smarthome/server/cron/influxdb"
 	"github.com/johtani/smarthome/subcommand/action/llm"
@@ -135,7 +136,14 @@ func LoadConfigWithPath(configFile string) (Config, error) {
 	var config Config
 	decoder := json.NewDecoder(file)
 	if err := decoder.Decode(&config); err != nil {
-		return Config{}, fmt.Errorf("設定ファイルのJSON解析に失敗しました: %w", err)
+		var typeErr *json.UnmarshalTypeError
+		var syntaxErr *json.SyntaxError
+		if errors.As(err, &typeErr) {
+			return Config{}, fmt.Errorf("invalid value for field '%s': expected %s, got %s", typeErr.Field, typeErr.Type, typeErr.Value)
+		} else if errors.As(err, &syntaxErr) {
+			return Config{}, fmt.Errorf("JSON syntax error at byte offset %d: %w", syntaxErr.Offset, syntaxErr)
+		}
+		return Config{}, fmt.Errorf("failed to parse config file: %w", err)
 	}
 
 	config.overrideWithEnv()

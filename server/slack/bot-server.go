@@ -49,7 +49,7 @@ func (c Config) validate() error {
 func loadConfigFromFile() (Config, error) {
 	file, err := os.Open(ConfigFileName)
 	if err != nil {
-		return Config{}, fmt.Errorf("Slack設定ファイルの読み込みに失敗しました (%s): %w", ConfigFileName, err)
+		return Config{}, fmt.Errorf("slack設定ファイルの読み込みに失敗しました (%s): %w", ConfigFileName, err)
 	}
 	defer func() {
 		_ = file.Close()
@@ -63,7 +63,7 @@ func loadConfigFromFile() (Config, error) {
 	}
 
 	if err := config.validate(); err != nil {
-		return Config{}, fmt.Errorf("Slack設定のバリデーションに失敗しました: %w", err)
+		return Config{}, fmt.Errorf("slack設定のバリデーションに失敗しました: %w", err)
 	}
 
 	return config, nil

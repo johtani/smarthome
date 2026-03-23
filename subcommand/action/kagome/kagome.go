@@ -42,10 +42,10 @@ func (a Action) Run(ctx context.Context, args string) (string, error) {
 	_, span := otel.Tracer("kagome").Start(ctx, "Action.Run")
 	defer span.End()
 	var dict *dict.Dict
-	switch {
-	case a.dictionary == UNI:
+	switch a.dictionary {
+	case UNI:
 		dict = uni.Dict()
-	case a.dictionary == NEOLOGD:
+	case NEOLOGD:
 		dict = ipaneologd.Dict()
 	default:
 		dict = ipa.Dict()
