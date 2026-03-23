@@ -17,7 +17,7 @@ type ExecuteSceneAction struct {
 func (a ExecuteSceneAction) Run(ctx context.Context, _ string) (string, error) {
 	ctx, span := otel.Tracer("switchbot").Start(ctx, "ExecuteSceneAction.Run")
 	defer span.End()
-	err := a.client.SceneAPI.Execute(ctx, a.sceneID)
+	err := a.client.Execute(ctx, a.sceneID)
 	if err != nil {
 		return "", err
 	}

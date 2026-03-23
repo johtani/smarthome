@@ -63,7 +63,7 @@ func ExecuteRecordTemp(ctx context.Context, sCli *switchbot.CachedClient, iCli i
 	}
 	for _, d := range pdev {
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
-			status, err := sCli.DeviceAPI.Status(ctx, d.ID)
+			status, err := sCli.Status(ctx, d.ID)
 			if err != nil {
 				slog.ErrorContext(ctx, "Something wrong on getting status", "device", d.Name, "error", err)
 			}
@@ -88,7 +88,7 @@ func ExecuteRecordTemp(ctx context.Context, sCli *switchbot.CachedClient, iCli i
 	}
 	for _, d := range vdev {
 		if switchbot.IsTargetDevice(targetTypes, string(d.Type)) {
-			status, err := sCli.DeviceAPI.Status(ctx, d.ID)
+			status, err := sCli.Status(ctx, d.ID)
 			if err != nil {
 				slog.ErrorContext(ctx, "Something wrong on getting status", "device", d.Name, "error", err)
 			}
