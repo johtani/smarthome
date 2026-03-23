@@ -3,3 +3,5 @@
 tmp
 config/*.json
 .output.txt
+.claude/
+*.bck.yml
