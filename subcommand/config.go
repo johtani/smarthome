@@ -28,6 +28,7 @@ type Config struct {
 }
 
 // ConfigFileName is the default path to the configuration file.
+//
 // Deprecated: Use ConfigDirName and LoadConfigFromDir instead.
 const ConfigFileName = "./config/config.json"
 
@@ -154,6 +155,7 @@ func LoadConfigFromDir(dir string) (Config, error) {
 }
 
 // LoadConfigWithPath loads the configuration from the specified file path.
+//
 // Deprecated: Use LoadConfigFromDir instead.
 func LoadConfigWithPath(configFile string) (Config, error) {
 	config, err := loadConfigJSON(configFile)
