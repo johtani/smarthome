@@ -2,6 +2,7 @@
 *.exe
 tmp
 config/*.json
+!config/macros.json
 .output.txt
 .claude/
 *.bck.yml

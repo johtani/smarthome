@@ -176,35 +176,30 @@ type Commands struct {
 }
 
 // NewCommands creates a new collection of all available subcommand definitions.
-func NewCommands() Commands {
-	return Commands{
-		Definitions: []Definition{
-			NewStartMeetingDefinition(),
-			NewFinishMeetingDefinition(),
-			NewStartMusicCmdDefinition(),
-			NewStopMusicDefinition(),
-			NewChangePlaylistCmdDefinition(),
-			NewDisplayPalylistCmdDefinition(),
-			NewDisplayOutputsCmdDefinition(),
-			NewUpdateLibraryCmdDefinition(),
-			NewSearchMusicCmdDefinition(),
-			NewSearchAndPlayMusicCmdDefinition(),
-			NewSwitchBotDeviceListDefinition(),
-			NewSwitchBotSceneListDefinition(),
-			NewLightOffDefinition(),
-			NewLightOnDefinition(),
-			NewHelpDefinition(),
-			NewHealthDefinition(),
-			NewStartSwitchDefinition(),
-			NewStartPS5Definition(),
-			NewAirConditionerOnDefinition(),
-			NewAirConditionerOffDefinition(),
-			NewDisplayTemperatureDefinition(),
-			NewTokenizeIpaDefinition(),
-			NewTokenizeUniDefinition(),
-			NewTokenizeNeologdDefinition(),
-		},
+// Optionally pass MacroConfig values to register user-defined macros.
+func NewCommands(macros ...MacroConfig) Commands {
+	defs := []Definition{
+		NewStartMusicCmdDefinition(),
+		NewStopMusicDefinition(),
+		NewChangePlaylistCmdDefinition(),
+		NewDisplayPalylistCmdDefinition(),
+		NewDisplayOutputsCmdDefinition(),
+		NewUpdateLibraryCmdDefinition(),
+		NewSearchMusicCmdDefinition(),
+		NewSearchAndPlayMusicCmdDefinition(),
+		NewSwitchBotDeviceListDefinition(),
+		NewSwitchBotSceneListDefinition(),
+		NewHelpDefinition(),
+		NewHealthDefinition(),
+		NewDisplayTemperatureDefinition(),
+		NewTokenizeIpaDefinition(),
+		NewTokenizeUniDefinition(),
+		NewTokenizeNeologdDefinition(),
 	}
+	for _, macro := range macros {
+		defs = append(defs, newMacroDefinition(macro))
+	}
+	return Commands{Definitions: defs}
 }
 
 // Find searches for a subcommand definition that matches the given text.
