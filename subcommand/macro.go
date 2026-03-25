@@ -2,6 +2,7 @@ package subcommand
 
 import (
 	"fmt"
+	"log/slog"
 	"strconv"
 	"strings"
 	"time"
@@ -65,7 +66,10 @@ func newMacroDefinition(macro MacroConfig) Definition {
 		Description: macro.Description,
 		shortnames:  macro.Shortnames,
 		Factory: func(def Definition, config Config) Subcommand {
-			actions, _ := buildActionsFromSpecs(macro.Actions, config)
+			actions, err := buildActionsFromSpecs(macro.Actions, config)
+			if err != nil {
+				slog.Error("failed to build macro actions", "macro", macro.Name, "error", err)
+			}
 			return Subcommand{
 				Definition:  def,
 				actions:     actions,

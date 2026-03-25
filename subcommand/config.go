@@ -201,7 +201,7 @@ func loadMacrosFromFile(path string) ([]MacroConfig, error) {
 	// #nosec G304
 	file, err := os.Open(path)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if errors.Is(err, os.ErrNotExist) {
 			return nil, nil
 		}
 		return nil, fmt.Errorf("failed to open macros file (%s): %w", path, err)
