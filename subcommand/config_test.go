@@ -203,3 +203,158 @@ func TestLoadConfigWithPath(t *testing.T) {
 		t.Error("commands should be initialized")
 	}
 }
+
+const testConfigJSON = `{
+	"Owntone": {"url": "http://localhost:8000"},
+	"Switchbot": {"token": "token", "secret": "secret"},
+	"Yamaha": {"url": "http://localhost:8080"},
+	"LLM": {"endpoint": "http://localhost:8081", "model": "gpt-4o"}
+}`
+
+func TestLoadConfigFromDir(t *testing.T) {
+	t.Run("config only (no macros.json)", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.WriteFile(dir+"/config.json", []byte(testConfigJSON), 0600); err != nil {
+			t.Fatal(err)
+		}
+
+		config, err := LoadConfigFromDir(dir)
+		if err != nil {
+			t.Fatalf("LoadConfigFromDir failed: %v", err)
+		}
+		if config.Owntone.URL != "http://localhost:8000" {
+			t.Errorf("expected http://localhost:8000, got %s", config.Owntone.URL)
+		}
+		if len(config.Commands.Definitions) == 0 {
+			t.Error("commands should be initialized")
+		}
+	})
+
+	t.Run("with valid macros.json", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.WriteFile(dir+"/config.json", []byte(testConfigJSON), 0600); err != nil {
+			t.Fatal(err)
+		}
+		macrosJSON := `[{"name": "test macro", "description": "test", "ignore_error": true, "actions": [{"type": "owntone_pause"}]}]`
+		if err := os.WriteFile(dir+"/macros.json", []byte(macrosJSON), 0600); err != nil {
+			t.Fatal(err)
+		}
+
+		config, err := LoadConfigFromDir(dir)
+		if err != nil {
+			t.Fatalf("LoadConfigFromDir failed: %v", err)
+		}
+		found := false
+		for _, def := range config.Commands.Definitions {
+			if def.Name == "test macro" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("macro 'test macro' should be registered as a command")
+		}
+	})
+
+	t.Run("config.json not found", func(t *testing.T) {
+		dir := t.TempDir()
+		_, err := LoadConfigFromDir(dir)
+		if err == nil {
+			t.Fatal("expected error when config.json is missing")
+		}
+	})
+
+	t.Run("invalid macros.json", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.WriteFile(dir+"/config.json", []byte(testConfigJSON), 0600); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(dir+"/macros.json", []byte(`[{invalid}]`), 0600); err != nil {
+			t.Fatal(err)
+		}
+		_, err := LoadConfigFromDir(dir)
+		if err == nil {
+			t.Fatal("expected error for invalid macros.json")
+		}
+	})
+}
+
+func TestLoadMacrosFromFile(t *testing.T) {
+	t.Run("file not found returns nil", func(t *testing.T) {
+		macros, err := loadMacrosFromFile("/nonexistent/path/macros.json")
+		if err != nil {
+			t.Errorf("expected nil error, got %v", err)
+		}
+		if macros != nil {
+			t.Errorf("expected nil macros, got %v", macros)
+		}
+	})
+
+	t.Run("valid macros file", func(t *testing.T) {
+		content := `[
+			{"name": "macro1", "description": "test", "ignore_error": true, "actions": [{"type": "owntone_pause"}]},
+			{"name": "macro2", "description": "test2", "actions": [{"type": "yamaha_power_on"}]}
+		]`
+		f, err := os.CreateTemp("", "macros_test_*.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = os.Remove(f.Name()) }()
+		if _, err := f.WriteString(content); err != nil {
+			t.Fatal(err)
+		}
+		_ = f.Close()
+
+		macros, err := loadMacrosFromFile(f.Name())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(macros) != 2 {
+			t.Errorf("expected 2 macros, got %d", len(macros))
+		}
+		if macros[0].Name != "macro1" {
+			t.Errorf("expected macro1, got %s", macros[0].Name)
+		}
+	})
+
+	t.Run("JSON syntax error", func(t *testing.T) {
+		f, err := os.CreateTemp("", "macros_test_*.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = os.Remove(f.Name()) }()
+		if _, err := f.WriteString(`[{invalid}]`); err != nil {
+			t.Fatal(err)
+		}
+		_ = f.Close()
+
+		_, err = loadMacrosFromFile(f.Name())
+		if err == nil {
+			t.Fatal("expected error for invalid JSON")
+		}
+		if !strings.Contains(err.Error(), "JSON syntax error") {
+			t.Errorf("expected JSON syntax error message, got: %v", err)
+		}
+	})
+
+	t.Run("unknown action type", func(t *testing.T) {
+		content := `[{"name": "bad", "actions": [{"type": "unknown_action"}]}]`
+		f, err := os.CreateTemp("", "macros_test_*.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = os.Remove(f.Name()) }()
+		if _, err := f.WriteString(content); err != nil {
+			t.Fatal(err)
+		}
+		_ = f.Close()
+
+		_, err = loadMacrosFromFile(f.Name())
+		if err == nil {
+			t.Fatal("expected validation error for unknown action type")
+		}
+		if !strings.Contains(err.Error(), "unknown action type") {
+			t.Errorf("expected unknown action type error, got: %v", err)
+		}
+	})
+}

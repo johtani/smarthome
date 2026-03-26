@@ -1,0 +1,79 @@
+[
+  {
+    "name": "start meeting",
+    "description": "Actions before starting meeting",
+    "ignore_error": true,
+    "actions": [
+      {"type": "owntone_pause"},
+      {"type": "switchbot_execute_scene", "params": {"scene_id": "$LightSceneID"}},
+      {"type": "yamaha_power_off"}
+    ]
+  },
+  {
+    "name": "finish meeting",
+    "description": "Actions after meeting",
+    "ignore_error": true,
+    "actions": [
+      {"type": "yamaha_power_on"},
+      {"type": "yamaha_set_input", "params": {"input": "airplay"}},
+      {"type": "owntone_play"},
+      {"type": "wait", "params": {"seconds": "3"}},
+      {"type": "yamaha_set_volume", "params": {"volume": "39"}}
+    ]
+  },
+  {
+    "name": "light on",
+    "description": "Light on via SwitchBot",
+    "ignore_error": true,
+    "actions": [
+      {"type": "switchbot_send_command", "params": {"device_id": "$LightDeviceID", "command": "turn_on"}},
+      {"type": "switchbot_execute_scene", "params": {"scene_id": "$LightSceneID"}}
+    ]
+  },
+  {
+    "name": "light off",
+    "description": "Light off via SwitchBot",
+    "ignore_error": true,
+    "actions": [
+      {"type": "switchbot_send_command", "params": {"device_id": "$LightDeviceID", "command": "turn_off"}}
+    ]
+  },
+  {
+    "name": "start switch",
+    "description": "Actions before starting switch",
+    "ignore_error": true,
+    "actions": [
+      {"type": "yamaha_set_scene", "params": {"scene": "2"}},
+      {"type": "wait", "params": {"seconds": "1"}},
+      {"type": "yamaha_set_volume", "params": {"volume": "70"}}
+    ]
+  },
+  {
+    "name": "start ps5",
+    "description": "Actions before starting PS5",
+    "ignore_error": true,
+    "actions": [
+      {"type": "yamaha_set_scene", "params": {"scene": "1"}},
+      {"type": "wait", "params": {"seconds": "1"}},
+      {"type": "yamaha_set_volume", "params": {"volume": "70"}}
+    ]
+  },
+  {
+    "name": "air conditioner on",
+    "description": "Air Conditioner switch on via SwitchBot",
+    "shortnames": ["ac on"],
+    "ignore_error": true,
+    "actions": [
+      {"type": "switchbot_send_command", "params": {"device_id": "$AirConditionerID", "command": "turn_on"}}
+    ]
+  },
+  {
+    "name": "air conditioner off",
+    "description": "Air Conditioner switch off via SwitchBot",
+    "shortnames": ["ac off"],
+    "ignore_error": true,
+    "actions": [
+      {"type": "switchbot_send_command", "params": {"device_id": "$AirConditionerID", "command": "turn_off"}}
+    ]
+  }
+]

@@ -47,10 +47,12 @@ func main() {
 func run() error {
 	var serverFlag bool
 	var mcpFlag bool
-	var configPath string
+	var configDir string
+	var configFile string
 	flag.BoolVar(&serverFlag, "server", false, "SlackBot用Serverを起動するかどうか")
 	flag.BoolVar(&mcpFlag, "mcp", false, "MCPServerとして起動するかどうか")
-	flag.StringVar(&configPath, "config", subcommand.ConfigFileName, "MCPServerの時の設定ファイルのパス")
+	flag.StringVar(&configDir, "config-dir", subcommand.ConfigDirName, "設定ファイルのディレクトリパス")
+	flag.StringVar(&configFile, "config", "", "[deprecated] -config-dirを使用してください")
 	flag.Parse()
 
 	ctx := context.Background()
@@ -62,7 +64,15 @@ func run() error {
 		_ = shutdown(ctx)
 	}()
 
-	config, err := subcommand.LoadConfigWithPath(configPath)
+	loadConfig := func() (subcommand.Config, error) {
+		if configFile != "" {
+			slog.Warn("-config is deprecated, use -config-dir instead")
+			return subcommand.LoadConfigWithPath(configFile)
+		}
+		return subcommand.LoadConfigFromDir(configDir)
+	}
+
+	config, err := loadConfig()
 	if err != nil {
 		return fmt.Errorf("設定の読み込みに失敗: %w", err)
 	}
@@ -74,7 +84,7 @@ func run() error {
 	go func() {
 		for range sigChan {
 			slog.InfoContext(ctx, "SIGHUP受信、設定を再読み込みします")
-			newConfig, err := subcommand.LoadConfigWithPath(configPath)
+			newConfig, err := loadConfig()
 			if err != nil {
 				slog.ErrorContext(ctx, "設定の再読み込みに失敗（古い設定を維持します）", "error", err)
 				continue

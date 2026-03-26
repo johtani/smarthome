@@ -4,14 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+
 	"github.com/johtani/smarthome/server/cron/influxdb"
 	"github.com/johtani/smarthome/subcommand/action/llm"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
-	"os"
-	"strconv"
-	"strings"
 )
 
 // Config represents the application configuration.
@@ -25,7 +28,19 @@ type Config struct {
 }
 
 // ConfigFileName is the default path to the configuration file.
+// For backward compatibility with the -config flag.
 const ConfigFileName = "./config/config.json"
+
+// ConfigDirName is the default path to the configuration directory.
+const ConfigDirName = "./config"
+
+var knownConfigFiles = map[string]struct{}{
+	"config.json":        {},
+	"config.json.sample": {},
+	"macros.json":        {},
+	"slack.json":         {},
+	"slack.json.sample":  {},
+}
 
 func (c *Config) validate() error {
 	var errs []string
@@ -116,13 +131,43 @@ func (c *Config) overrideWithEnv() {
 	}
 }
 
-// LoadConfig loads the configuration from the default path.
+// LoadConfig loads the configuration from the default directory.
 func LoadConfig() (Config, error) {
-	return LoadConfigWithPath(ConfigFileName)
+	return LoadConfigFromDir(ConfigDirName)
 }
 
-// LoadConfigWithPath loads the configuration from the specified path.
+// LoadConfigFromDir loads configuration from a directory.
+// It reads config.json (required) and macros.json (optional) from the directory.
+// Unknown files in the directory are logged as warnings.
+func LoadConfigFromDir(dir string) (Config, error) {
+	config, err := loadConfigJSON(filepath.Join(dir, "config.json"))
+	if err != nil {
+		return Config{}, err
+	}
+
+	macros, err := loadMacrosFromFile(filepath.Join(dir, "macros.json"))
+	if err != nil {
+		return Config{}, err
+	}
+
+	warnUnknownFiles(dir)
+
+	config.Commands = NewCommands(macros...)
+	return config, nil
+}
+
+// LoadConfigWithPath loads the configuration from the specified file path.
+// For backward compatibility with the -config flag.
 func LoadConfigWithPath(configFile string) (Config, error) {
+	config, err := loadConfigJSON(configFile)
+	if err != nil {
+		return Config{}, err
+	}
+	config.Commands = NewCommands()
+	return config, nil
+}
+
+func loadConfigJSON(configFile string) (Config, error) {
 	// #nosec G304
 	file, err := os.Open(configFile)
 	if err != nil {
@@ -152,6 +197,53 @@ func LoadConfigWithPath(configFile string) (Config, error) {
 		return Config{}, fmt.Errorf("設定のバリデーションに失敗しました:\n%w", err)
 	}
 
-	config.Commands = NewCommands()
 	return config, nil
+}
+
+func loadMacrosFromFile(path string) ([]MacroConfig, error) {
+	// #nosec G304
+	file, err := os.Open(path)
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to open macros file (%s): %w", path, err)
+	}
+	defer func() {
+		_ = file.Close()
+	}()
+
+	var macros []MacroConfig
+	decoder := json.NewDecoder(file)
+	if err := decoder.Decode(&macros); err != nil {
+		var typeErr *json.UnmarshalTypeError
+		var syntaxErr *json.SyntaxError
+		if errors.As(err, &typeErr) {
+			return nil, fmt.Errorf("invalid value for field '%s' in macros: expected %s, got %s", typeErr.Field, typeErr.Type, typeErr.Value)
+		} else if errors.As(err, &syntaxErr) {
+			return nil, fmt.Errorf("JSON syntax error in macros file at byte offset %d: %w", syntaxErr.Offset, syntaxErr)
+		}
+		return nil, fmt.Errorf("failed to parse macros file: %w", err)
+	}
+
+	if err := validateMacros(macros); err != nil {
+		return nil, err
+	}
+
+	return macros, nil
+}
+
+func warnUnknownFiles(dir string) {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return
+	}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		if _, ok := knownConfigFiles[entry.Name()]; !ok {
+			slog.Warn("unknown file in config directory, ignored", "file", entry.Name(), "dir", dir)
+		}
+	}
 }
