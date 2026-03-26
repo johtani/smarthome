@@ -9,10 +9,19 @@
  
 ## 必要な設定
 
+設定ファイルはデフォルトで `./config/` ディレクトリに格納します。
+`-config-dir` フラグでディレクトリを変更できます。
+
+```
+smarthome -config-dir /path/to/config
+```
+
+### config.json
+
 [config/config.json.sample](./config/config.json.sample)を`config.json`に変更して、各種設定を行います。
 
 * owntone.url : 例："http://localhost:3689"
-* switchbot.token : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started) 
+* switchbot.token : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started)
 * switchbot.secret : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started)
 * llm.endpoint : OpenAI互換APIのエンドポイント（例: "https://api.openai.com/v1/chat/completions"）
 * llm.api_key : APIキー
@@ -33,6 +42,45 @@ smarthome device list
 ```
 
 ※デバイスの追加や家電の買い替えの後にIDの追加や入れ替えが必要になります。
+
+### macros.json（マクロ定義）
+
+`macros.json` に複数のアクションをまとめたマクロ（シーケンス）を定義できます。
+このファイルは任意で、存在しない場合はスキップされます。
+
+```json
+[
+  {
+    "name": "start meeting",
+    "description": "会議開始：音楽停止 → ヤマハ電源ON",
+    "shortnames": ["sm"],
+    "ignore_error": false,
+    "actions": [
+      { "type": "owntone_pause" },
+      { "type": "yamaha_power_on" }
+    ]
+  }
+]
+```
+
+#### アクションタイプ一覧
+
+| タイプ | 説明 | パラメータ |
+|--------|------|-----------|
+| `owntone_pause` | 音楽を一時停止 | - |
+| `owntone_play` | 音楽を再生 | - |
+| `owntone_clear_queue` | キューをクリア | - |
+| `owntone_display_outputs` | 出力デバイスを表示 | `only_selected`: "true"/"false" |
+| `yamaha_power_on` | ヤマハ電源ON | - |
+| `yamaha_power_off` | ヤマハ電源OFF | - |
+| `yamaha_set_input` | 入力切替 | `input`: 入力名 |
+| `yamaha_set_volume` | 音量設定 | `volume`: 数値 |
+| `yamaha_set_scene` | シーン設定 | `scene`: 数値 |
+| `switchbot_send_command` | SwitchBotデバイス操作 | `device_id`, `command`: "turn_on"/"turn_off" |
+| `switchbot_execute_scene` | SwitchBotシーン実行 | `scene_id` |
+| `wait` | 待機 | `seconds`: 秒数（小数点可） |
+
+`device_id` や `scene_id` には `$LightDeviceID`、`$LightSceneID`、`$AirConditionerID` のように `config.json` の値を参照できます。
 
 
 ### SlackのSocket Mode
@@ -61,7 +109,7 @@ Subcommand名をもとに、以下のようにSlash Command名として登録す
 
 ### 設定の動的読み込み (Hot Reload)
 
-アプリケーション（Slackボット、MCPサーバー、Cronジョブ）の実行中に、設定ファイル（`config.json`）を編集して反映させることができます。
+アプリケーション（Slackボット、MCPサーバー、Cronジョブ）の実行中に、設定ファイル（`config.json`、`macros.json`）を編集して反映させることができます。
 UNIX系環境では、以下のコマンドを実行して `SIGHUP` シグナルを送信することで再読み込みが行われます。
 
 ```bash
@@ -112,7 +160,8 @@ smarthome start meeting
 
 サブコマンド単位で、いくつかの操作をまとめて実行することを想定しています。
 利用できるサブコマンド一覧は`smarthome help`で表示されます。
-サブコマンドは完全に自分好みに実装しています。。。
+
+組み込みのサブコマンドのほか、`macros.json` に定義したマクロもサブコマンドとして使用できます。
 
 ## 定期実行処理
 
