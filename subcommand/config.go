@@ -35,8 +35,11 @@ const ConfigFileName = "./config/config.json"
 const ConfigDirName = "./config"
 
 var knownConfigFiles = map[string]struct{}{
-	"config.json": {},
-	"macros.json": {},
+	"config.json":        {},
+	"config.json.sample": {},
+	"macros.json":        {},
+	"slack.json":         {},
+	"slack.json.sample":  {},
 }
 
 func (c *Config) validate() error {
