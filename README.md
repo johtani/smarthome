@@ -155,12 +155,27 @@ Bitwarden Secrets Manager
 2. Machine Account を作成し、アクセストークン（`BWS_ACCESS_TOKEN`）を取得
 3. サーバーに [`bws` CLI](https://bitwarden.com/help/secrets-manager-cli/) をインストール
 4. アクセストークンを専用ファイルに保存し、権限を制限:
+   - systemd `--user` の場合（推奨）:
+   ```bash
+   mkdir -p ~/.config/smarthome
+   echo "BWS_ACCESS_TOKEN=<your_access_token>" > ~/.config/smarthome/bws.env
+   chmod 600 ~/.config/smarthome/bws.env
+   ```
+   - systemd システムサービス（`--system`）の場合:
    ```bash
    echo "BWS_ACCESS_TOKEN=<your_access_token>" > /etc/smarthome/bws.env
    chmod 600 /etc/smarthome/bws.env
    chown root:root /etc/smarthome/bws.env
    ```
 5. systemd service ファイルを設定:
+   - systemd `--user` の例:
+   ```ini
+   [Service]
+   EnvironmentFile=%h/.config/smarthome/bws.env
+   ExecStart=bws run -- /path/to/smarthome -server
+   ExecReload=/bin/kill -HUP $MAINPID
+   ```
+   - systemd システムサービス（`--system`）の例:
    ```ini
    [Service]
    EnvironmentFile=/etc/smarthome/bws.env
