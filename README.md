@@ -164,7 +164,7 @@ Bitwarden Secrets Manager
    ```ini
    [Service]
    EnvironmentFile=/etc/smarthome/bws.env
-   ExecStart=bws run -- /path/to/smarthome server
+   ExecStart=bws run -- /path/to/smarthome -server
    ExecReload=/bin/kill -HUP $MAINPID
    ```
 
