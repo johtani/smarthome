@@ -196,8 +196,18 @@ func NewCommands(macros ...MacroConfig) Commands {
 		NewTokenizeUniDefinition(),
 		NewTokenizeNeologdDefinition(),
 	}
+	existingNames := make(map[string]struct{})
+	for _, d := range defs {
+		existingNames[d.Name] = struct{}{}
+	}
+
 	for _, macro := range macros {
+		if _, exists := existingNames[macro.Name]; exists {
+			slog.Warn("macro skipped: name already registered", "macro_name", macro.Name)
+			continue
+		}
 		defs = append(defs, newMacroDefinition(macro))
+		existingNames[macro.Name] = struct{}{}
 	}
 	return Commands{Definitions: defs}
 }

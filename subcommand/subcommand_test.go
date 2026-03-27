@@ -26,6 +26,36 @@ func NewDummySubcommand(definition Definition, _ Config) Subcommand {
 	}
 }
 
+func TestNewCommands(t *testing.T) {
+	base := NewCommands()
+	baseCount := len(base.Definitions)
+
+	t.Run("no conflict macro is registered", func(t *testing.T) {
+		cmds := NewCommands(MacroConfig{Name: "unique-macro", Description: "test"})
+		if got := len(cmds.Definitions); got != baseCount+1 {
+			t.Errorf("expected %d definitions, got %d", baseCount+1, got)
+		}
+	})
+
+	t.Run("macro conflicting with static command is skipped", func(t *testing.T) {
+		// "help" is a static command registered by NewHelpDefinition
+		cmds := NewCommands(MacroConfig{Name: "help", Description: "test"})
+		if got := len(cmds.Definitions); got != baseCount {
+			t.Errorf("expected %d definitions (no change), got %d", baseCount, got)
+		}
+	})
+
+	t.Run("second macro with duplicate name is skipped", func(t *testing.T) {
+		cmds := NewCommands(
+			MacroConfig{Name: "my-macro", Description: "first"},
+			MacroConfig{Name: "my-macro", Description: "second"},
+		)
+		if got := len(cmds.Definitions); got != baseCount+1 {
+			t.Errorf("expected %d definitions, got %d", baseCount+1, got)
+		}
+	})
+}
+
 func TestSubcommand_Exec(t *testing.T) {
 	type fields struct {
 		Name        string
