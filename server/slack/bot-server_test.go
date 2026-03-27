@@ -1,6 +1,7 @@
 package slack
 
 import (
+	"os"
 	"testing"
 )
 
@@ -58,5 +59,39 @@ func TestConfig_Validate(t *testing.T) {
 				t.Errorf("Config.validate() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestConfig_OverrideWithEnv(t *testing.T) {
+	_ = os.Setenv("SMARTHOME_SLACK_APP_TOKEN", "xapp-env-token")
+	_ = os.Setenv("SMARTHOME_SLACK_BOT_TOKEN", "xoxb-env-token")
+	defer func() {
+		_ = os.Unsetenv("SMARTHOME_SLACK_APP_TOKEN")
+		_ = os.Unsetenv("SMARTHOME_SLACK_BOT_TOKEN")
+	}()
+
+	config := Config{}
+	config.overrideWithEnv()
+
+	if config.AppToken != "xapp-env-token" {
+		t.Errorf("expected xapp-env-token, got %s", config.AppToken)
+	}
+	if config.BotToken != "xoxb-env-token" {
+		t.Errorf("expected xoxb-env-token, got %s", config.BotToken)
+	}
+}
+
+func TestConfig_OverrideWithEnv_NoEnv(t *testing.T) {
+	_ = os.Unsetenv("SMARTHOME_SLACK_APP_TOKEN")
+	_ = os.Unsetenv("SMARTHOME_SLACK_BOT_TOKEN")
+
+	config := Config{AppToken: "xapp-original", BotToken: "xoxb-original"}
+	config.overrideWithEnv()
+
+	if config.AppToken != "xapp-original" {
+		t.Errorf("expected xapp-original, got %s", config.AppToken)
+	}
+	if config.BotToken != "xoxb-original" {
+		t.Errorf("expected xoxb-original, got %s", config.BotToken)
 	}
 }

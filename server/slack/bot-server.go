@@ -6,13 +6,14 @@ package slack
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"os"
+	"strings"
+
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
-	"log"
-	"os"
-	"strings"
 )
 
 // Config represents the configuration for the Slack bot.
@@ -24,6 +25,17 @@ type Config struct {
 
 // ConfigFileName is the default path to the Slack configuration file.
 const ConfigFileName = "./config/slack.json"
+
+func (c *Config) overrideWithEnv() {
+	// SMARTHOME_SLACK_APP_TOKEN
+	if val, ok := os.LookupEnv("SMARTHOME_SLACK_APP_TOKEN"); ok {
+		c.AppToken = val
+	}
+	// SMARTHOME_SLACK_BOT_TOKEN
+	if val, ok := os.LookupEnv("SMARTHOME_SLACK_BOT_TOKEN"); ok {
+		c.BotToken = val
+	}
+}
 
 func (c Config) validate() error {
 	var errs []string
@@ -61,6 +73,8 @@ func loadConfigFromFile() (Config, error) {
 	if err := decoder.Decode(&config); err != nil {
 		return Config{}, fmt.Errorf("Slack設定ファイルのJSON解析に失敗しました: %w", err)
 	}
+
+	config.overrideWithEnv()
 
 	if err := config.validate(); err != nil {
 		return Config{}, fmt.Errorf("slack設定のバリデーションに失敗しました: %w", err)
