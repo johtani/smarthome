@@ -63,6 +63,16 @@ smarthome device list
 ]
 ```
 
+#### 注意：マクロ名の重複
+
+マクロの `name` に既存の組み込みコマンド名、または他のマクロと同じ名前を指定した場合、そのマクロは**スキップ**されます（起動時にwarningログが出力されます）。
+
+```
+WARN macro skipped: name already registered macro_name=help
+```
+
+組み込みコマンドの一覧は `help` コマンドで確認できます。
+
 #### アクションタイプ一覧
 
 | タイプ | 説明 | パラメータ |
