@@ -1,7 +1,5 @@
 {
   "switchbot": {
-    "token": "",
-    "secret": "",
     "light_device_id": "",
     "light_scene_id": "",
     "air_conditioner_id": ""
@@ -15,12 +13,10 @@
     "timeout": 10
   },
   "llm": {
-    "api_key": "",
     "endpoint": "",
     "model": ""
   },
   "influxdb": {
-    "token": "",
     "url": "",
     "bucket": "",
     "org": "personal",

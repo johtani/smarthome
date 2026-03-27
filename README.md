@@ -21,16 +21,15 @@ smarthome -config-dir /path/to/config
 [config/config.json.sample](./config/config.json.sample)を`config.json`に変更して、各種設定を行います。
 
 * owntone.url : 例："http://localhost:3689"
-* switchbot.token : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started)
-* switchbot.secret : [See detail on API doc](https://github.com/OpenWonderLabs/SwitchBotAPI#getting-started)
 * llm.endpoint : OpenAI互換APIのエンドポイント（例: "https://api.openai.com/v1/chat/completions"）
-* llm.api_key : APIキー
 * llm.model : 使用するモデル名（例: "gpt-4o"）
 * yamaha.url : 例："http://IPアドレス"
 * influxdb
   * url : 例: "http://IPアドレス:ポート"
-  * token : [See detail on API doc](https://docs.influxdata.com/influxdb/v2/admin/tokens/)
   * bucket : 例："バケット名"
+
+> **注意**: トークン・シークレット等の秘匿情報（`switchbot.token`, `switchbot.secret`, `llm.api_key`, `influxdb.token`）は設定ファイルへの記載を非推奨とします。
+> 後述の「[環境変数によるシークレットの上書き](#環境変数によるシークレットの上書き)」を使って設定してください。
 
 ### SwitchbotのデバイスのID
 
@@ -98,9 +97,10 @@ WARN macro skipped: name already registered macro_name=help
 SlackのSocket Modeを利用したサーバー機能も用意しています。
 [config/slack.json.sample](./config/slack.json.sample)を`slack.json`に変更して値を設定します。
 
-* bot_token : "xoxb-"で始まるトークン
-* app_token : "xapp-"で始まるトークン
 * debug : デバッグログ出力のtrue/false
+
+> **注意**: `bot_token` および `app_token` は設定ファイルへの記載を非推奨とします。
+> 後述の「[環境変数によるシークレットの上書き](#環境変数によるシークレットの上書き)」を使って設定してください。
 
 `smarthome -server`で起動します。
 Slackボットに対するメンションのみに対応しています。 
@@ -116,6 +116,60 @@ Subcommand名をもとに、以下のようにSlash Command名として登録す
 * 先頭に"/"に（Slash Commandが自動的に付与する）
 
 [Slash Commandの詳細についてはSlackの公式ガイドを参考に](https://api.slack.com/interactivity/slash-commands)。
+
+### 環境変数によるシークレットの上書き
+
+設定ファイルに記載したシークレット情報は、以下の環境変数で上書きできます。
+環境変数が設定されている場合は、設定ファイルの値より優先されます。
+
+| 環境変数名 | 対応するフィールド |
+|---|---|
+| `SMARTHOME_SWITCHBOT_TOKEN` | `config.json` の `switchbot.token` |
+| `SMARTHOME_SWITCHBOT_SECRET` | `config.json` の `switchbot.secret` |
+| `SMARTHOME_LLM_API_KEY` | `config.json` の `llm.api_key` |
+| `SMARTHOME_INFLUXDB_TOKEN` | `config.json` の `influxdb.token` |
+| `SMARTHOME_SLACK_APP_TOKEN` | `slack.json` の `app_token` |
+| `SMARTHOME_SLACK_BOT_TOKEN` | `slack.json` の `bot_token` |
+
+その他の環境変数（URLやタイムアウト等）については [subcommand/config.go](./subcommand/config.go) を参照してください。
+
+### Bitwarden Secrets Manager を使った秘匿情報管理
+
+[Bitwarden Secrets Manager](https://bitwarden.com/products/secrets-manager/) と `bws` CLI を使うことで、トークン等の秘匿情報をサーバー上に平文で保存せずに管理できます。
+
+#### 仕組み
+
+```
+Bitwarden Secrets Manager
+        ↓ (BWS_ACCESS_TOKEN で認証)
+    bws run
+        ↓ (SMARTHOME_* を環境変数として展開)
+    smarthome server
+        ↓ (環境変数オーバーライドで各クライアントに設定)
+    SwitchBot / Slack / LLM / InfluxDB ...
+```
+
+#### 設定手順
+
+1. Bitwarden Secrets Manager にシークレットを登録（`SMARTHOME_SWITCHBOT_TOKEN` 等のキー名で）
+2. Machine Account を作成し、アクセストークン（`BWS_ACCESS_TOKEN`）を取得
+3. サーバーに [`bws` CLI](https://bitwarden.com/help/secrets-manager-cli/) をインストール
+4. アクセストークンを専用ファイルに保存し、権限を制限:
+   ```bash
+   echo "BWS_ACCESS_TOKEN=<your_access_token>" > /etc/smarthome/bws.env
+   chmod 600 /etc/smarthome/bws.env
+   chown root:root /etc/smarthome/bws.env
+   ```
+5. systemd service ファイルを設定:
+   ```ini
+   [Service]
+   EnvironmentFile=/etc/smarthome/bws.env
+   ExecStart=bws run -- /path/to/smarthome -server
+   ExecReload=/bin/kill -HUP $MAINPID
+   ```
+
+`bws run` はシークレットを環境変数として展開した状態でコマンドを起動します。
+`smarthome` は起動時にこれらの環境変数を読み込み、設定ファイルの値を上書きします。
 
 ### 設定の動的読み込み (Hot Reload)
 
