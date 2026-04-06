@@ -14,6 +14,7 @@ import (
 type PlayAction struct {
 	name string
 	c    *Client
+	intn func(int) int
 }
 
 // Run
@@ -35,12 +36,11 @@ func (a PlayAction) Run(ctx context.Context, args string) (string, error) {
 
 func (a PlayAction) playRandomGenre(ctx context.Context) (string, error) {
 	msg := []string{"Add"}
-	rand.New(rand.NewSource(time.Now().UnixNano()))
 	genres, err := a.c.GetGenres(ctx)
 	if err != nil {
 		return "", fmt.Errorf("error in playRandomGenre\n %v", err)
 	}
-	index := rand.Intn(len(genres))
+	index := a.intn(len(genres))
 	genre := genres[index]
 	msg = append(msg, fmt.Sprintf("Genre : %v", genre.Name))
 	expression := fmt.Sprintf("genre is \"%s\"", genre.Name)
@@ -58,8 +58,7 @@ func (a PlayAction) playRandomArtists(ctx context.Context) (string, error) {
 		return "", err
 	}
 	if counts.Artists > 0 {
-		rand.New(rand.NewSource(time.Now().UnixNano()))
-		offset := rand.Intn(counts.Artists)
+		offset := a.intn(counts.Artists)
 		artist, err := a.c.GetArtist(ctx, offset)
 		if err != nil {
 			return "", fmt.Errorf("error in playRandomArtists\n %v", err)
@@ -91,8 +90,7 @@ func (a PlayAction) playPlaylist(ctx context.Context) (string, error) {
 			return "", fmt.Errorf("error in playPlaylist\n %v", err)
 		}
 		if len(playlists) > 0 {
-			rand.New(rand.NewSource(time.Now().UnixNano()))
-			index := rand.Intn(len(playlists))
+			index := a.intn(len(playlists))
 			target := playlists[index]
 			msg = append(msg, "from "+target.Name+".")
 			err := a.c.AddItem2QueueAndPlay(ctx, target.URI, "")
@@ -114,8 +112,10 @@ func (a PlayAction) playPlaylist(ctx context.Context) (string, error) {
 
 // NewPlayAction creates a new PlayAction.
 func NewPlayAction(client *Client) PlayAction {
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return PlayAction{
 		name: "Play music on Owntone",
 		c:    client,
+		intn: rng.Intn,
 	}
 }
