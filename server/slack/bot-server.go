@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/johtani/smarthome/subcommand"
+	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -84,7 +84,7 @@ func loadConfigFromFile() (Config, error) {
 }
 
 // Run starts the Slack bot server.
-func Run(config *subcommand.Config) error {
+func Run(configStore *configstore.Store) error {
 	slackConfig, err := loadConfigFromFile()
 	if err != nil {
 		return err
@@ -108,8 +108,8 @@ func Run(config *subcommand.Config) error {
 	botUserIDPrefix := fmt.Sprintf("<@%v>", botUserID)
 
 	socketModeHandler := socketmode.NewSocketmodeHandler(client)
-	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(config, botUserIDPrefix))
-	socketModeHandler.Handle(socketmode.EventTypeSlashCommand, newSlashCommandSubcommandHandler(config))
+	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(configStore, botUserIDPrefix))
+	socketModeHandler.Handle(socketmode.EventTypeSlashCommand, newSlashCommandSubcommandHandler(configStore))
 	socketModeHandler.HandleDefault(defaultHandler)
 	err = socketModeHandler.RunEventLoop()
 	if err != nil {

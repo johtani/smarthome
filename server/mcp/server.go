@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
@@ -15,12 +16,13 @@ import (
 )
 
 // Run starts the MCP server.
-func Run(config *subcommand.Config) error {
+func Run(configStore *configstore.Store) error {
 	s := NewMCPServer()
+	config := configStore.Get()
 
 	// 登録してあるコマンドをMCPのツールとして登録していく
 	for _, definition := range config.Commands.Definitions {
-		s.AddTool(NewMCPTool(definition, config))
+		s.AddTool(NewMCPTool(definition, configStore))
 	}
 
 	if err := server.ServeStdio(s); err != nil {
@@ -39,12 +41,13 @@ func NewMCPServer() *server.MCPServer {
 }
 
 // NewMCPTool creates an MCP tool and its handler from a subcommand definition.
-func NewMCPTool(definition subcommand.Definition, config *subcommand.Config) (mcp.Tool, server.ToolHandlerFunc) {
+func NewMCPTool(definition subcommand.Definition, configStore *configstore.Store) (mcp.Tool, server.ToolHandlerFunc) {
 	if definition.Args == nil {
 		tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description))
 		return tmp,
 			func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				msg, err := definition.Init(*config).Exec(ctx, "")
+				config := configStore.Get()
+				msg, err := definition.Init(config).Exec(ctx, "")
 				if err != nil {
 					return nil, errors.New(definition.Name + ": " + err.Error())
 				}
@@ -72,6 +75,7 @@ func NewMCPTool(definition subcommand.Definition, config *subcommand.Config) (mc
 	tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), args...)
 	return tmp,
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+			config := configStore.Get()
 			params := []string{}
 			for _, arg := range definition.Args {
 				if p, ok := request.Params.Arguments[arg.Name]; ok {
@@ -82,7 +86,7 @@ func NewMCPTool(definition subcommand.Definition, config *subcommand.Config) (mc
 					}
 				}
 			}
-			msg, err := definition.Init(*config).Exec(ctx, strings.Join(params, " "))
+			msg, err := definition.Init(config).Exec(ctx, strings.Join(params, " "))
 			if err != nil {
 				return nil, errors.New(definition.Name + ": " + err.Error())
 			}

@@ -7,12 +7,12 @@ package cron
 import (
 	"fmt"
 	"github.com/go-co-op/gocron/v2"
-	"github.com/johtani/smarthome/subcommand"
+	"github.com/johtani/smarthome/internal/configstore"
 	"time"
 )
 
 // Run starts the cron scheduler and runs scheduled jobs.
-func Run(config *subcommand.Config) error {
+func Run(configStore *configstore.Store) error {
 	jst, err := time.LoadLocation("Asia/Tokyo")
 	if err != nil {
 		return fmt.Errorf("タイムゾーンの読み込みに失敗しました: %w", err)
@@ -25,7 +25,7 @@ func Run(config *subcommand.Config) error {
 		gocron.CronJob("*/10 * * * *", false),
 		gocron.NewTask(
 			RecordTemp,
-			config,
+			configStore,
 		),
 	)
 	if err != nil {

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
@@ -20,6 +21,7 @@ func TestRunCmd(t *testing.T) {
 		Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 		Commands:  subcommand.NewCommands(),
 	}
+	store := configstore.New(config)
 
 	ctx := context.Background()
 
@@ -52,7 +54,7 @@ func TestRunCmd(t *testing.T) {
 			os.Stdout = w
 			os.Stderr = w
 
-			err := runCmd(ctx, &config, tt.args)
+			err := runCmd(ctx, store, tt.args)
 			_ = w.Close()
 			out, _ := io.ReadAll(r)
 			os.Stdout = oldStdout
