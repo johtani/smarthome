@@ -115,6 +115,25 @@ func (d Definition) Help() string {
 	} else {
 		help = fmt.Sprintf("  %s : %s\n", d.Name, d.Description)
 	}
+	if len(d.Args) > 0 {
+		var items []string
+		for _, arg := range d.Args {
+			var details []string
+			if arg.Required {
+				details = append(details, "required")
+			} else {
+				details = append(details, "optional")
+			}
+			if arg.Prefix != "" {
+				details = append(details, "prefix="+arg.Prefix)
+			}
+			if len(arg.Enum) > 0 {
+				details = append(details, "enum="+strings.Join(arg.Enum, "|"))
+			}
+			items = append(items, fmt.Sprintf("%s(%s)", arg.Name, strings.Join(details, ",")))
+		}
+		help += fmt.Sprintf("    args: %s\n", strings.Join(items, ", "))
+	}
 	return help
 }
 
@@ -180,6 +199,9 @@ type Commands struct {
 func NewCommands(macros ...MacroConfig) Commands {
 	defs := []Definition{
 		NewStartMusicCmdDefinition(),
+		NewPlayRandomPlaylistCmdDefinition(),
+		NewPlayRandomArtistCmdDefinition(),
+		NewPlayRandomGenreCmdDefinition(),
 		NewStopMusicDefinition(),
 		NewChangePlaylistCmdDefinition(),
 		NewDisplayPalylistCmdDefinition(),
@@ -243,6 +265,14 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 			client := llm.NewClient(config.LLM)
 			resolved, err := client.Resolve(ctx, text, c.Help())
 			if err == nil && resolved.Command != "" {
+				// Backward-compatible safety fallback:
+				// if LLM resolves to start music with free-text args, use search and play.
+				if resolved.Command == StartMusicCmd &&
+					strings.TrimSpace(resolved.Args) != "" &&
+					!strings.HasPrefix(strings.TrimSpace(resolved.Args), "artist") &&
+					!strings.HasPrefix(strings.TrimSpace(resolved.Args), "genre") {
+					resolved.Command = SearchAndPlayMusicCmd
+				}
 				for _, d := range c.Definitions {
 					if d.Name == resolved.Command {
 						return d, resolved.Args, fmt.Sprintf("(LLM) %s", resolved.Thought), nil

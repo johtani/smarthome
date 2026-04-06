@@ -94,3 +94,39 @@ func TestCommands_Find_LLM(t *testing.T) {
 		}
 	})
 }
+
+func TestCommands_Find_LLM_FallbackStartMusicArgsToSearchAndPlay(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"command\": \"start music\", \"args\": \"Meja\", \"thought\": \"music request\"}"}}]}`)
+	}))
+	defer server.Close()
+
+	config := Config{
+		LLM: llm.Config{
+			Endpoint: server.URL,
+			Model:    "test-model",
+		},
+	}
+
+	cmds := Commands{
+		Definitions: []Definition{
+			{Name: StartMusicCmd, Description: "legacy random music", Factory: NewDummySubcommand},
+			{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+		},
+	}
+
+	def, args, msg, err := cmds.Find(t.Context(), config, "Mejaを再生して")
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if def.Name != SearchAndPlayMusicCmd {
+		t.Fatalf("expected command %q, got %q", SearchAndPlayMusicCmd, def.Name)
+	}
+	if args != "Meja" {
+		t.Fatalf("expected args %q, got %q", "Meja", args)
+	}
+	if msg != "(LLM) music request" {
+		t.Fatalf("unexpected msg: %s", msg)
+	}
+}

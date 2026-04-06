@@ -155,6 +155,21 @@ func TestCommands_Help(t *testing.T) {
 				},
 			},
 			want: "  a : description\n  b [c]: description\n"},
+		{name: "command help with args",
+			fields: fields{
+				definitions: []Definition{
+					{
+						Name:        "search and play",
+						Description: "Search Music by keyword And play",
+						Factory:     NewDummySubcommand,
+						Args: []Arg{
+							{Name: "keyword", Required: true},
+							{Name: "type", Required: false, Enum: []string{"artist", "album"}, Prefix: "type:"},
+						},
+					},
+				},
+			},
+			want: "  search and play : Search Music by keyword And play\n    args: keyword(required), type(optional,prefix=type:,enum=artist|album)\n"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
