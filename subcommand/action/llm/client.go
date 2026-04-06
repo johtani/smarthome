@@ -87,6 +87,12 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 以下のコマンドリストから、ユーザーの意図に最も合致するものを選び、JSON形式で返してください。
 合致するものがない場合は、commandに空文字列を入れてください。
 
+選択ルール:
+- コマンドの args 指定に必ず従ってください（required/optional/enum/prefix）。
+- ユーザー入力に固有名詞（アーティスト名/曲名/アルバム名など）が含まれる再生要求は search and play を優先してください。
+- start music はランダム再生用途としてのみ使ってください。
+- 使うコマンドで解釈できない自由文字列を args に入れないでください。
+
 コマンドリスト:
 %s
 

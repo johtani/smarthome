@@ -2,6 +2,7 @@ package llm
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -16,6 +17,7 @@ import (
 func TestClient_Resolve(t *testing.T) {
 	exporter, shutdown := setupTestTracerProvider(t)
 	defer shutdown()
+	var requestBody string
 
 	mockResponse := struct {
 		Choices []struct {
@@ -46,6 +48,8 @@ func TestClient_Resolve(t *testing.T) {
 		if r.Header.Get("Content-Type") != "application/json" {
 			t.Errorf("expected application/json content-type, got %s", r.Header.Get("Content-Type"))
 		}
+		body, _ := io.ReadAll(r.Body)
+		requestBody = string(body)
 
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(mockResponse)
@@ -68,6 +72,9 @@ func TestClient_Resolve(t *testing.T) {
 	}
 	if resolved.Thought == "" {
 		t.Error("expected thought to be non-empty")
+	}
+	if !strings.Contains(requestBody, "コマンドの args 指定に必ず従ってください") {
+		t.Errorf("expected prompt rule in request body, got %s", requestBody)
 	}
 
 	span := findResolveSpan(t, exporter)
