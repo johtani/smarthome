@@ -357,4 +357,25 @@ func TestLoadMacrosFromFile(t *testing.T) {
 			t.Errorf("expected unknown action type error, got: %v", err)
 		}
 	})
+
+	t.Run("empty actions", func(t *testing.T) {
+		content := `[{"name": "bad", "actions": []}]`
+		f, err := os.CreateTemp("", "macros_test_*.json")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer func() { _ = os.Remove(f.Name()) }()
+		if _, err := f.WriteString(content); err != nil {
+			t.Fatal(err)
+		}
+		_ = f.Close()
+
+		_, err = loadMacrosFromFile(f.Name())
+		if err == nil {
+			t.Fatal("expected validation error for empty actions")
+		}
+		if !strings.Contains(err.Error(), "actions must not be empty") {
+			t.Errorf("expected empty actions error, got: %v", err)
+		}
+	})
 }
