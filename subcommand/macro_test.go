@@ -60,6 +60,25 @@ func TestValidateMacros(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "empty actions",
+			macros: []MacroConfig{
+				{
+					Name:    "empty actions macro",
+					Actions: []ActionSpec{},
+				},
+			},
+			wantErr: true,
+		},
+		{
+			name: "nil actions",
+			macros: []MacroConfig{
+				{
+					Name: "nil actions macro",
+				},
+			},
+			wantErr: true,
+		},
 	}
 
 	for _, tt := range tests {

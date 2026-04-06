@@ -48,6 +48,9 @@ var knownActionTypes = map[string]struct{}{
 func validateMacros(macros []MacroConfig) error {
 	var errs []string
 	for _, macro := range macros {
+		if len(macro.Actions) == 0 {
+			errs = append(errs, fmt.Sprintf("macro %q: actions must not be empty", macro.Name))
+		}
 		for _, spec := range macro.Actions {
 			if _, ok := knownActionTypes[spec.Type]; !ok {
 				errs = append(errs, fmt.Sprintf("macro %q: unknown action type %q", macro.Name, spec.Type))
