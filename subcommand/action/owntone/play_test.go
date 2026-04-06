@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 )
 
@@ -41,6 +40,12 @@ func TestPlayAction_Run(t *testing.T) {
 	defer server.Close()
 	client := NewClient(Config{URL: server.URL})
 	action := NewPlayAction(client)
+	action.intn = func(n int) int {
+		if n <= 1 {
+			return 0
+		}
+		return n - 1
+	}
 
 	tests := []struct {
 		name    string
@@ -61,7 +66,7 @@ func TestPlayAction_Run(t *testing.T) {
 		{
 			name: "Play random genre",
 			args: "genre",
-			want: "Add Genre : Abstract", // rand may select others, but with fixed seed or simple test it's fine for now
+			want: "Add Genre : Alternative",
 		},
 	}
 
@@ -72,9 +77,8 @@ func TestPlayAction_Run(t *testing.T) {
 				t.Errorf("Run() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			// Since there's randomness in some cases, we check if it starts with the expected prefix or contains parts
-			if !strings.Contains(got, "Add") && !strings.Contains(got, "Playing music") {
-				t.Errorf("Run() got = %v, want to contain 'Add' or 'Playing music'", got)
+			if got != tt.want {
+				t.Errorf("Run() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

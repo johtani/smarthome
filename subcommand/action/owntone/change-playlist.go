@@ -14,6 +14,7 @@ import (
 type ChangePlaylistAction struct {
 	name string
 	c    *Client
+	intn func(int) int
 }
 
 // Run executes the ChangePlaylistAction.
@@ -27,8 +28,7 @@ func (a ChangePlaylistAction) Run(ctx context.Context, _ string) (string, error)
 		return "", fmt.Errorf("error in GetPlaylists\n %v", err)
 	}
 	if len(playlists) > 0 {
-		rand.New(rand.NewSource(time.Now().UnixNano()))
-		index := rand.Intn(len(playlists))
+		index := a.intn(len(playlists))
 		target := playlists[index]
 		msg = append(msg, target.Name+".")
 		err := a.c.AddItem2QueueAndPlay(ctx, target.URI, "")
@@ -43,8 +43,10 @@ func (a ChangePlaylistAction) Run(ctx context.Context, _ string) (string, error)
 
 // NewChangePlaylistAction creates a new ChangePlaylistAction.
 func NewChangePlaylistAction(client *Client) ChangePlaylistAction {
+	rng := rand.New(rand.NewSource(time.Now().UnixNano()))
 	return ChangePlaylistAction{
 		name: "Change playlist on Owntone",
 		c:    client,
+		intn: rng.Intn,
 	}
 }
