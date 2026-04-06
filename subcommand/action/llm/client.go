@@ -7,6 +7,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -62,6 +63,15 @@ type ResolvedCommand struct {
 	Thought string `json:"thought"`
 }
 
+const maxTraceBodyLength = 4096
+
+func truncateForTrace(v string) string {
+	if len(v) <= maxTraceBodyLength {
+		return v
+	}
+	return v[:maxTraceBodyLength] + "...truncated"
+}
+
 // Resolve resolves the given text to a command using the LLM.
 func (c *Client) Resolve(ctx context.Context, text string, commandList string) (ResolvedCommand, error) {
 	ctx, span := otel.Tracer("llm").Start(ctx, "llm.Resolve", trace.WithAttributes(
@@ -100,6 +110,10 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 	if err != nil {
 		return ResolvedCommand{}, fmt.Errorf("failed to marshal payload: %w", err)
 	}
+	span.SetAttributes(
+		attribute.String("llm.endpoint", c.config.Endpoint),
+		attribute.String("llm.request_body", truncateForTrace(string(jsonData))),
+	)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.config.Endpoint, strings.NewReader(string(jsonData)))
 	if err != nil {
@@ -119,8 +133,26 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 		_ = resp.Body.Close()
 	}()
 
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return ResolvedCommand{}, fmt.Errorf("failed to read response body: %w", err)
+	}
+	span.SetAttributes(
+		attribute.Int("llm.response_status_code", resp.StatusCode),
+		attribute.String("llm.response_body", truncateForTrace(string(responseBody))),
+	)
+
 	if resp.StatusCode != http.StatusOK {
-		slog.ErrorContext(ctx, "LLM API returned error status", "status", resp.StatusCode, "endpoint", c.config.Endpoint)
+		slog.ErrorContext(
+			ctx,
+			"LLM API returned error status",
+			"status",
+			resp.StatusCode,
+			"endpoint",
+			c.config.Endpoint,
+			"response_body",
+			truncateForTrace(string(responseBody)),
+		)
 		return ResolvedCommand{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
@@ -132,7 +164,7 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 		} `json:"choices"`
 	}
 
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.Unmarshal(responseBody, &result); err != nil {
 		return ResolvedCommand{}, fmt.Errorf("failed to decode response: %w", err)
 	}
 

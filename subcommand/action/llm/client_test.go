@@ -4,10 +4,19 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestClient_Resolve(t *testing.T) {
+	exporter, shutdown := setupTestTracerProvider(t)
+	defer shutdown()
+
 	mockResponse := struct {
 		Choices []struct {
 			Message struct {
@@ -60,6 +69,88 @@ func TestClient_Resolve(t *testing.T) {
 	if resolved.Thought == "" {
 		t.Error("expected thought to be non-empty")
 	}
+
+	span := findResolveSpan(t, exporter)
+	attrs := attrsAsMap(span.Attributes)
+
+	if attrs["llm.endpoint"] != server.URL {
+		t.Errorf("expected llm.endpoint %q, got %q", server.URL, attrs["llm.endpoint"])
+	}
+	if attrs["llm.request_body"] == "" {
+		t.Error("expected llm.request_body to be set")
+	}
+	if attrs["llm.response_body"] == "" {
+		t.Error("expected llm.response_body to be set")
+	}
+	if attrs["llm.response_status_code"] != "200" {
+		t.Errorf("expected llm.response_status_code 200, got %q", attrs["llm.response_status_code"])
+	}
+}
+
+func TestClient_ResolveErrorSetsResponseTraceAttributes(t *testing.T) {
+	exporter, shutdown := setupTestTracerProvider(t)
+	defer shutdown()
+
+	const errorBody = `{"error":"bad request"}`
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, errorBody, http.StatusBadRequest)
+	}))
+	defer server.Close()
+
+	config := Config{
+		Endpoint: server.URL,
+		Model:    "test-model",
+	}
+	client := NewClient(config)
+
+	_, err := client.Resolve(t.Context(), "電気をつけて", "light on: turn on the light")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	span := findResolveSpan(t, exporter)
+	attrs := attrsAsMap(span.Attributes)
+
+	if attrs["llm.response_status_code"] != "400" {
+		t.Errorf("expected llm.response_status_code 400, got %q", attrs["llm.response_status_code"])
+	}
+	if !strings.Contains(attrs["llm.response_body"], "bad request") {
+		t.Errorf("expected llm.response_body to contain error payload, got %q", attrs["llm.response_body"])
+	}
+}
+
+func TestClient_ResolveTruncatesLargeResponseBodyInTrace(t *testing.T) {
+	exporter, shutdown := setupTestTracerProvider(t)
+	defer shutdown()
+
+	longBody := strings.Repeat("x", maxTraceBodyLength+10)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusBadRequest)
+		_, _ = w.Write([]byte(longBody))
+	}))
+	defer server.Close()
+
+	config := Config{
+		Endpoint: server.URL,
+		Model:    "test-model",
+	}
+	client := NewClient(config)
+
+	_, err := client.Resolve(t.Context(), "電気をつけて", "light on: turn on the light")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	span := findResolveSpan(t, exporter)
+	attrs := attrsAsMap(span.Attributes)
+	got := attrs["llm.response_body"]
+
+	if !strings.HasSuffix(got, "...truncated") {
+		t.Errorf("expected truncated suffix, got %q", got)
+	}
+	if len(got) != maxTraceBodyLength+len("...truncated") {
+		t.Errorf("expected truncated length %d, got %d", maxTraceBodyLength+len("...truncated"), len(got))
+	}
 }
 
 func TestConfig_Validate(t *testing.T) {
@@ -99,4 +190,41 @@ func TestConfig_Validate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func setupTestTracerProvider(t *testing.T) (*tracetest.InMemoryExporter, func()) {
+	t.Helper()
+	exporter := tracetest.NewInMemoryExporter()
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithSyncer(exporter),
+	)
+
+	prev := otel.GetTracerProvider()
+	otel.SetTracerProvider(tp)
+
+	return exporter, func() {
+		_ = tp.Shutdown(t.Context())
+		otel.SetTracerProvider(prev)
+	}
+}
+
+func findResolveSpan(t *testing.T, exporter *tracetest.InMemoryExporter) tracetest.SpanStub {
+	t.Helper()
+	spans := exporter.GetSpans()
+	for _, s := range spans {
+		if s.Name == "llm.Resolve" {
+			return s
+		}
+	}
+	t.Fatalf("expected llm.Resolve span, got %d spans", len(spans))
+	return tracetest.SpanStub{}
+}
+
+func attrsAsMap(attrs []attribute.KeyValue) map[string]string {
+	m := make(map[string]string, len(attrs))
+	for _, kv := range attrs {
+		m[string(kv.Key)] = kv.Value.Emit()
+	}
+	return m
 }
