@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/johtani/smarthome/subcommand"
+	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/slack-go/slack"
 	"github.com/slack-go/slack/slackevents"
 	"github.com/slack-go/slack/socketmode"
@@ -24,7 +24,7 @@ func PostMessage(ctx context.Context, client *socketmode.Client, channelID strin
 	return client.PostMessage(channelID, options...)
 }
 
-func newMessageSubcommandHandler(config *subcommand.Config, botUserIDPrefix string) socketmode.SocketmodeHandlerFunc {
+func newMessageSubcommandHandler(configStore *configstore.Store, botUserIDPrefix string) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
 		ctx, span := otel.Tracer("slack").Start(context.Background(), "AppMention")
 		defer span.End()
@@ -47,7 +47,7 @@ func newMessageSubcommandHandler(config *subcommand.Config, botUserIDPrefix stri
 		// とりあえずBotのUserIDが最初にあるメッセージだけ対象とする
 		if strings.HasPrefix(payloadEvent.Text, botUserIDPrefix) {
 			var err error
-			msg, err = findAndExec(ctx, config, strings.ReplaceAll(payloadEvent.Text, botUserIDPrefix, ""))
+			msg, err = findAndExec(ctx, configStore, strings.ReplaceAll(payloadEvent.Text, botUserIDPrefix, ""))
 			if err != nil {
 				slog.ErrorContext(ctx, "Got error in findAndExec", "error", err)
 				msg = fmt.Sprintf("%v\nError: %v", msg, err.Error())
@@ -68,16 +68,17 @@ func newMessageSubcommandHandler(config *subcommand.Config, botUserIDPrefix stri
 	}
 }
 
-func findAndExec(ctx context.Context, config *subcommand.Config, text string) (string, error) {
+func findAndExec(ctx context.Context, configStore *configstore.Store, text string) (string, error) {
+	config := configStore.Get()
 	name := strings.TrimSpace(text)
 	if len(name) == 0 {
 		return config.Commands.Help(), nil
 	}
-	d, args, dymMsg, err := config.Commands.Find(ctx, *config, name)
+	d, args, dymMsg, err := config.Commands.Find(ctx, config, name)
 	if err != nil {
 		return "", err
 	}
-	c := d.Init(*config)
+	c := d.Init(config)
 	msg, err := c.Exec(ctx, args)
 	if err != nil {
 		return "", err
@@ -88,7 +89,7 @@ func findAndExec(ctx context.Context, config *subcommand.Config, text string) (s
 	return msg, nil
 }
 
-func newSlashCommandSubcommandHandler(config *subcommand.Config) socketmode.SocketmodeHandlerFunc {
+func newSlashCommandSubcommandHandler(configStore *configstore.Store) socketmode.SocketmodeHandlerFunc {
 	return func(event *socketmode.Event, client *socketmode.Client) {
 		ctx, span := otel.Tracer("slack").Start(context.Background(), "SlashCommand")
 		defer span.End()
@@ -107,7 +108,7 @@ func newSlashCommandSubcommandHandler(config *subcommand.Config) socketmode.Sock
 
 		escaped := strings.TrimLeft(ev.Command, "/")
 		escaped = strings.ReplaceAll(escaped, "-", " ")
-		msg, err := findAndExec(ctx, config, escaped+" "+ev.Text)
+		msg, err := findAndExec(ctx, configStore, escaped+" "+ev.Text)
 
 		if err != nil {
 			slog.ErrorContext(ctx, "Got error in findAndExec for slash command", "error", err)

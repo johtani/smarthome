@@ -14,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/johtani/smarthome/internal/otel"
 	"github.com/johtani/smarthome/server/cron"
 	"github.com/johtani/smarthome/server/mcp"
@@ -76,7 +77,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("設定の読み込みに失敗: %w", err)
 	}
-	cfgPtr := &config
+	configStore := configstore.New(config)
 
 	// Hot Reload のためのシグナル監視
 	sigChan := make(chan os.Signal, 1)
@@ -89,8 +90,8 @@ func run() error {
 				slog.ErrorContext(ctx, "設定の再読み込みに失敗（古い設定を維持します）", "error", err)
 				continue
 			}
-			// ポインタの中身を更新
-			*cfgPtr = newConfig
+			// 設定は不変スナップショットとして atomic に差し替える。
+			configStore.Set(newConfig)
 			slog.InfoContext(ctx, "設定を更新しました")
 		}
 	}()
@@ -102,7 +103,7 @@ func run() error {
 		// cronはgoroutineで実行するため、エラーハンドリングが必要
 		errChan := make(chan error, 1)
 		go func() {
-			if err := cron.Run(cfgPtr); err != nil {
+			if err := cron.Run(configStore); err != nil {
 				errChan <- err
 			}
 		}()
@@ -114,26 +115,27 @@ func run() error {
 		default:
 		}
 
-		return slack.Run(cfgPtr)
+		return slack.Run(configStore)
 	case mcpFlag:
-		return mcp.Run(cfgPtr)
+		return mcp.Run(configStore)
 	default:
-		return runCmd(ctx, cfgPtr, flag.Args())
+		return runCmd(ctx, configStore, flag.Args())
 	}
 }
 
-func runCmd(ctx context.Context, config *subcommand.Config, cmdArgs []string) error {
+func runCmd(ctx context.Context, configStore *configstore.Store, cmdArgs []string) error {
+	config := configStore.Get()
 	if len(cmdArgs) < 2 {
 		return fmt.Errorf("%s", printHelp(config.Commands.Help()))
 	}
 	name := strings.Join(cmdArgs, " ")
-	d, args, dymMsg, err := config.Commands.Find(ctx, *config, name)
+	d, args, dymMsg, err := config.Commands.Find(ctx, config, name)
 	if err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v\n", err)
 		printHelp(config.Commands.Help())
 		return nil
 	}
-	c := d.Init(*config)
+	c := d.Init(config)
 	msg, err := c.Exec(ctx, args)
 	if err != nil {
 		return err

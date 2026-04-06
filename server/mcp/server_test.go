@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
@@ -18,6 +19,7 @@ func TestNewMCPTool(t *testing.T) {
 		Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
 		Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 	}
+	store := configstore.New(config)
 
 	tests := []struct {
 		name       string
@@ -57,7 +59,7 @@ func TestNewMCPTool(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tool, _ := NewMCPTool(tt.definition, &config)
+			tool, _ := NewMCPTool(tt.definition, store)
 			if tool.Name != tt.wantName {
 				t.Errorf("tool.Name = %v, want %v", tool.Name, tt.wantName)
 			}
@@ -78,11 +80,12 @@ func TestMCPToolHandler(t *testing.T) {
 		Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 		Commands:  subcommand.NewCommands(),
 	}
+	store := configstore.New(config)
 
 	// 既存のコマンドを使ってテストする
 	definition := config.Commands.Definitions[0]
 
-	_, handler := NewMCPTool(definition, &config)
+	_, handler := NewMCPTool(definition, store)
 	ctx := context.Background()
 	req := mcp.CallToolRequest{}
 	req.Params.Name = strings.ReplaceAll(definition.Name, " ", "_")
