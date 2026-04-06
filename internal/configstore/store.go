@@ -1,3 +1,4 @@
+// Package configstore provides atomic access to runtime-reloadable configuration snapshots.
 package configstore
 
 import (
