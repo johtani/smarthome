@@ -2,6 +2,7 @@ package subcommand
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -214,7 +215,7 @@ const testConfigJSON = `{
 func TestLoadConfigFromDir(t *testing.T) {
 	t.Run("config only (no macros.json)", func(t *testing.T) {
 		dir := t.TempDir()
-		if err := os.WriteFile(dir+"/config.json", []byte(testConfigJSON), 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(testConfigJSON), 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -232,11 +233,11 @@ func TestLoadConfigFromDir(t *testing.T) {
 
 	t.Run("with valid macros.json", func(t *testing.T) {
 		dir := t.TempDir()
-		if err := os.WriteFile(dir+"/config.json", []byte(testConfigJSON), 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(testConfigJSON), 0600); err != nil {
 			t.Fatal(err)
 		}
 		macrosJSON := `[{"name": "test macro", "description": "test", "ignore_error": true, "actions": [{"type": "owntone_pause"}]}]`
-		if err := os.WriteFile(dir+"/macros.json", []byte(macrosJSON), 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "macros.json"), []byte(macrosJSON), 0600); err != nil {
 			t.Fatal(err)
 		}
 
@@ -266,10 +267,10 @@ func TestLoadConfigFromDir(t *testing.T) {
 
 	t.Run("invalid macros.json", func(t *testing.T) {
 		dir := t.TempDir()
-		if err := os.WriteFile(dir+"/config.json", []byte(testConfigJSON), 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(testConfigJSON), 0600); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(dir+"/macros.json", []byte(`[{invalid}]`), 0600); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "macros.json"), []byte(`[{invalid}]`), 0600); err != nil {
 			t.Fatal(err)
 		}
 		_, err := LoadConfigFromDir(dir)
