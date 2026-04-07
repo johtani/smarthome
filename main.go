@@ -133,7 +133,7 @@ func logLLMDisabled(config subcommand.Config) {
 
 func runCmd(ctx context.Context, configStore *configstore.Store, cmdArgs []string) error {
 	config := configStore.Get()
-	if len(cmdArgs) < 2 {
+	if len(cmdArgs) < 1 {
 		return fmt.Errorf("%s", printHelp(config.Commands.Help()))
 	}
 	name := strings.Join(cmdArgs, " ")
