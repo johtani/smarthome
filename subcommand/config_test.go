@@ -1,6 +1,7 @@
 package subcommand
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"strings"
@@ -290,6 +291,38 @@ func TestLoadConfigFromDir(t *testing.T) {
 		}
 		if !found {
 			t.Error("macro 'test macro' should be registered as a command")
+		}
+	})
+
+	t.Run("macro action build failure returns explicit runtime error", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(testConfigJSON), 0600); err != nil {
+			t.Fatal(err)
+		}
+		macrosJSON := `[{"name":"broken macro","description":"broken","ignore_error":true,"actions":[{"type":"wait","params":{"seconds":"abc"}}]}]`
+		if err := os.WriteFile(filepath.Join(dir, "macros.json"), []byte(macrosJSON), 0600); err != nil {
+			t.Fatal(err)
+		}
+
+		config, err := LoadConfigFromDir(dir)
+		if err != nil {
+			t.Fatalf("LoadConfigFromDir failed: %v", err)
+		}
+
+		def, args, _, err := config.Commands.Find(context.Background(), config, "broken macro")
+		if err != nil {
+			t.Fatalf("Find failed: %v", err)
+		}
+
+		_, err = def.Init(config).Exec(context.Background(), args)
+		if err == nil {
+			t.Fatal("expected execution error for broken macro")
+		}
+		if !strings.Contains(err.Error(), `macro "broken macro" initialization failed`) {
+			t.Fatalf("expected macro initialization error, got %v", err)
+		}
+		if !strings.Contains(err.Error(), `invalid seconds "abc"`) {
+			t.Fatalf("expected root cause in error, got %v", err)
 		}
 	})
 

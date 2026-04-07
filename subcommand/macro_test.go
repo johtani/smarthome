@@ -1,6 +1,7 @@
 package subcommand
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/johtani/smarthome/subcommand/action/owntone"
@@ -88,6 +89,36 @@ func TestValidateMacros(t *testing.T) {
 				t.Errorf("validateMacros() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestNewMacroDefinition_BuildFailureReturnsExplicitError(t *testing.T) {
+	config := Config{
+		Owntone:   owntone.Config{URL: "http://localhost:8000"},
+		Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
+		Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
+	}
+	macro := MacroConfig{
+		Name:        "broken macro",
+		Description: "broken",
+		IgnoreError: true,
+		Actions: []ActionSpec{
+			{Type: "wait", Params: map[string]string{"seconds": "abc"}},
+		},
+	}
+
+	def := newMacroDefinition(macro)
+	cmd := def.Init(config)
+
+	_, err := cmd.Exec(t.Context(), "")
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !strings.Contains(err.Error(), `macro "broken macro" initialization failed`) {
+		t.Fatalf("expected macro initialization error, got %v", err)
+	}
+	if !strings.Contains(err.Error(), `invalid seconds "abc"`) {
+		t.Fatalf("expected root cause in error, got %v", err)
 	}
 }
 

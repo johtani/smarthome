@@ -71,7 +71,13 @@ func newMacroDefinition(macro MacroConfig) Definition {
 		Factory: func(def Definition, config Config) Subcommand {
 			actions, err := buildActionsFromSpecs(macro.Actions, config)
 			if err != nil {
-				slog.Error("failed to build macro actions", "macro", macro.Name, "error", err)
+				buildErr := fmt.Errorf("macro %q initialization failed: %w", macro.Name, err)
+				slog.Error("failed to build macro actions", "macro", macro.Name, "error", buildErr)
+				return Subcommand{
+					Definition:  def,
+					actions:     []action.Action{action.NewErrorAction(buildErr)},
+					ignoreError: false,
+				}
 			}
 			return Subcommand{
 				Definition:  def,
