@@ -6,6 +6,12 @@
 * [SwitchBot API](https://github.com/OpenWonderLabs/SwitchBotAPI)
 * [Yamaha Extended Control](https://github.com/rsc-dev/pyamaha/blob/master/doc/YXC_API_Spec_Basic_v2.0.pdf)
 * [OpenAI Chat Completion API](https://platform.openai.com/docs/api-reference/chat) (または互換API)
+
+## ドキュメント方針
+
+このリポジトリの一次情報は `README.md` を正とします。
+`docs/` は最小限の補助情報のみを置き、現状は [docs/architecture.md](./docs/architecture.md) のみを管理対象とします。
+過去の `agent-prompt-*` 系ドキュメントは廃止しました。
  
 ## 必要な設定
 
