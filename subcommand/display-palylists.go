@@ -11,18 +11,18 @@ const DisplayPlaylistsCmd = "display playlist"
 // DispPlaylistsCmd is a short name for the display playlists command.
 const DispPlaylistsCmd = "disp playlists"
 
-// NewDisplayPalylistCmdDefinition creates the definition for the display playlists command.
-func NewDisplayPalylistCmdDefinition() Definition {
+// NewDisplayPlaylistCmdDefinition creates the definition for the display playlists command.
+func NewDisplayPlaylistCmdDefinition() Definition {
 	return Definition{
 		Name:        DisplayPlaylistsCmd,
 		shortnames:  []string{DispPlaylistsCmd},
 		Description: "Display playlists",
-		Factory:     NewDisplayPalylistsSubcommand,
+		Factory:     NewDisplayPlaylistsSubcommand,
 	}
 }
 
-// NewDisplayPalylistsSubcommand creates a new Subcommand for the display playlists command.
-func NewDisplayPalylistsSubcommand(definition Definition, config Config) Subcommand {
+// NewDisplayPlaylistsSubcommand creates a new Subcommand for the display playlists command.
+func NewDisplayPlaylistsSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	return Subcommand{
 		Definition: definition,

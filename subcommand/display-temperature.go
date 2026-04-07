@@ -16,13 +16,13 @@ func NewDisplayTemperatureDefinition() Definition {
 	return Definition{
 		Name:        DisplayTemperatureCmd,
 		Description: "Display temperature/humidity",
-		Factory:     NewDisplayTemperatureSubcommnad,
+		Factory:     NewDisplayTemperatureSubcommand,
 		shortnames:  []string{DispTempCmd},
 	}
 }
 
-// NewDisplayTemperatureSubcommnad creates a new Subcommand for the display temperature command.
-func NewDisplayTemperatureSubcommnad(definition Definition, config Config) Subcommand {
+// NewDisplayTemperatureSubcommand creates a new Subcommand for the display temperature command.
+func NewDisplayTemperatureSubcommand(definition Definition, config Config) Subcommand {
 	switchbotClient := switchbot.NewClient(config.Switchbot)
 	return Subcommand{
 		Definition: definition,
