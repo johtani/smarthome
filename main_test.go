@@ -32,15 +32,21 @@ func TestRunCmd(t *testing.T) {
 		wantErr  bool
 	}{
 		{
-			name:     "too few args",
-			args:     []string{"smarthome"},
+			name:     "no args",
+			args:     []string{},
 			wantCont: "コマンドを指定してください",
 			wantErr:  true,
 		},
 		{
 			name:     "help command",
-			args:     []string{"smarthome", "help"},
+			args:     []string{"help"},
 			wantCont: "利用可能なコマンドは次の通りです",
+			wantErr:  false,
+		},
+		{
+			name:     "multi word command is accepted by arg guard",
+			args:     []string{"unknown", "command"},
+			wantCont: "sorry, i cannot understand",
 			wantErr:  false,
 		},
 	}
