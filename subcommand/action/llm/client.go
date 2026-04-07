@@ -28,11 +28,14 @@ type Config struct {
 // Validate validates the LLM configuration.
 func (c Config) Validate() error {
 	var errs []string
-	if len(c.Endpoint) == 0 {
-		errs = append(errs, "llm.endpoint is required")
+	if c.Endpoint == "" && c.Model == "" {
+		return nil
 	}
-	if len(c.Model) == 0 {
-		errs = append(errs, "llm.model is required")
+	if c.Endpoint != "" && c.Model == "" {
+		errs = append(errs, "llm.model is required when llm.endpoint is set")
+	}
+	if c.Endpoint == "" && c.Model != "" {
+		errs = append(errs, "llm.endpoint is required when llm.model is set")
 	}
 	if len(errs) > 0 {
 		return fmt.Errorf("llm config validation failed: %s", strings.Join(errs, ", "))

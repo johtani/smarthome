@@ -44,7 +44,7 @@ func TestConfig_Validate(t *testing.T) {
 				Owntone:   owntone.Config{URL: "http://localhost:8000"},
 				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
 				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
-				LLM:       llm.Config{Endpoint: ""},
+				LLM:       llm.Config{Endpoint: "http://localhost:8081"},
 			},
 			wantErr: true,
 		},
@@ -202,6 +202,42 @@ func TestLoadConfigWithPath(t *testing.T) {
 	}
 	if len(config.Commands.Definitions) == 0 {
 		t.Error("commands should be initialized")
+	}
+}
+
+func TestLoadConfigWithPath_LLMDisabled(t *testing.T) {
+	content := `{
+		"Owntone": {"url": "http://localhost:8000"},
+		"Switchbot": {"token": "token", "secret": "secret"},
+		"Yamaha": {"url": "http://localhost:8080"},
+		"LLM": {},
+		"Influxdb": {"url": "http://localhost:8086", "token": "token", "bucket": "bucket", "org": "org"}
+	}`
+	tmpfile, err := os.CreateTemp("", "config_test_no_llm.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = os.Remove(tmpfile.Name())
+	}()
+
+	if _, err := tmpfile.Write([]byte(content)); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	config, err := LoadConfigWithPath(tmpfile.Name())
+	if err != nil {
+		t.Fatalf("LoadConfigWithPath failed: %v", err)
+	}
+
+	if config.LLM.Endpoint != "" {
+		t.Errorf("expected empty llm endpoint, got %s", config.LLM.Endpoint)
+	}
+	if config.LLM.Model != "" {
+		t.Errorf("expected empty llm model, got %s", config.LLM.Model)
 	}
 }
 

@@ -77,6 +77,7 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("設定の読み込みに失敗: %w", err)
 	}
+	logLLMDisabled(config)
 	configStore := configstore.New(config)
 
 	// Hot Reload のためのシグナル監視
@@ -92,6 +93,7 @@ func run() error {
 			}
 			// 設定は不変スナップショットとして atomic に差し替える。
 			configStore.Set(newConfig)
+			logLLMDisabled(newConfig)
 			slog.InfoContext(ctx, "設定を更新しました")
 		}
 	}()
@@ -120,6 +122,12 @@ func run() error {
 		return mcp.Run(configStore)
 	default:
 		return runCmd(ctx, configStore, flag.Args())
+	}
+}
+
+func logLLMDisabled(config subcommand.Config) {
+	if strings.TrimSpace(config.LLM.Endpoint) == "" {
+		slog.Info("LLM is disabled; natural language resolution is unavailable (command matching only)")
 	}
 }
 
