@@ -21,8 +21,8 @@ smarthome -config-dir /path/to/config
 [config/config.json.sample](./config/config.json.sample)を`config.json`に変更して、各種設定を行います。
 
 * owntone.url : 例："http://localhost:3689"
-* llm.endpoint : OpenAI互換APIのエンドポイント（例: "https://api.openai.com/v1/chat/completions"）
-* llm.model : 使用するモデル名（例: "gpt-4o"）
+* llm.endpoint : （任意）OpenAI互換APIのエンドポイント（例: "https://api.openai.com/v1/chat/completions"）
+* llm.model : （任意）使用するモデル名（例: "gpt-4o"）
 * yamaha.url : 例："http://IPアドレス"
 * influxdb
   * url : 例: "http://IPアドレス:ポート"
@@ -30,6 +30,8 @@ smarthome -config-dir /path/to/config
 
 > **注意**: トークン・シークレット等の秘匿情報（`switchbot.token`, `switchbot.secret`, `llm.api_key`, `influxdb.token`）は設定ファイルへの記載を非推奨とします。
 > 後述の「[環境変数によるシークレットの上書き](#環境変数によるシークレットの上書き)」を使って設定してください。
+
+`llm.endpoint` と `llm.model` は自然言語解決を使う場合のみ設定してください。両方未設定の場合はLLM機能を無効化し、既存のコマンド一致/あいまい一致のみで動作します。
 
 ### SwitchbotのデバイスのID
 

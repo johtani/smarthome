@@ -175,16 +175,21 @@ func TestConfig_Validate(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "missing endpoint",
+			name:    "disabled config (both empty)",
+			config:  Config{},
+			wantErr: false,
+		},
+		{
+			name: "missing model when endpoint is set",
 			config: Config{
-				Model: "gpt-4o",
+				Endpoint: "http://localhost:8080",
 			},
 			wantErr: true,
 		},
 		{
-			name: "missing model",
+			name: "missing endpoint when model is set",
 			config: Config{
-				Endpoint: "http://localhost:8080",
+				Model: "gpt-4o",
 			},
 			wantErr: true,
 		},
