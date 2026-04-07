@@ -3,7 +3,7 @@ package yamaha
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // SetInputAction represents an action to set the input source on the Yamaha device.
@@ -14,8 +14,8 @@ type SetInputAction struct {
 }
 
 // Run executes the SetInputAction.
-func (a SetInputAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("yamaha").Start(ctx, "SetInputAction.Run")
+func (a SetInputAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "yamaha", "SetInputAction.Run", args)
 	defer span.End()
 	err := a.c.SetInput(ctx, a.input)
 	if err != nil {

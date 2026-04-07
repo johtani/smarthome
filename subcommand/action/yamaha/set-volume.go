@@ -3,7 +3,7 @@ package yamaha
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // SetVolumeAction represents an action to set the volume on the Yamaha device.
@@ -14,8 +14,8 @@ type SetVolumeAction struct {
 }
 
 // Run executes the SetVolumeAction.
-func (a SetVolumeAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("yamaha").Start(ctx, "SetVolumeAction.Run")
+func (a SetVolumeAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "yamaha", "SetVolumeAction.Run", args)
 	defer span.End()
 	err := a.c.SetVolume(ctx, a.volume)
 	if err != nil {

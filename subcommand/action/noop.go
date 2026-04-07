@@ -3,7 +3,6 @@ package action
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel"
 	"time"
 )
 
@@ -13,8 +12,8 @@ type NoOpAction struct {
 }
 
 // Run executes the NoOpAction by sleeping for the specified interval.
-func (a NoOpAction) Run(ctx context.Context, _ string) (string, error) {
-	_, span := otel.Tracer("action").Start(ctx, "NoOpAction.Run")
+func (a NoOpAction) Run(ctx context.Context, args string) (string, error) {
+	_, span := StartRunSpan(ctx, "action", "NoOpAction.Run", args)
 	defer span.End()
 	time.Sleep(a.interval)
 	return fmt.Sprintf("Paused for %v", a.interval), nil

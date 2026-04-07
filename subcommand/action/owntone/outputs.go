@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // DisplayOutputsAction lists Owntone outputs ordered by Selected=true first, then false.
@@ -33,8 +33,8 @@ func NewDisplayOutputsAction(client *Client, opts ...bool) DisplayOutputsAction 
 }
 
 // Run fetches outputs and returns a formatted string.
-func (a DisplayOutputsAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "DisplayOutputsAction.Run")
+func (a DisplayOutputsAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "owntone", "DisplayOutputsAction.Run", args)
 	defer span.End()
 	outputs, err := a.c.GetOutputs(ctx)
 	if err != nil {

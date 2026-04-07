@@ -2,7 +2,7 @@ package owntone
 
 import (
 	"context"
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // PauseAction represents an action to pause playback on Owntone.
@@ -12,8 +12,8 @@ type PauseAction struct {
 }
 
 // Run executes the PauseAction.
-func (a PauseAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "PauseAction.Run")
+func (a PauseAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "owntone", "PauseAction.Run", args)
 	defer span.End()
 	err := a.c.Pause(ctx)
 	if err != nil {

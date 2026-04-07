@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // SearchAndPlayAction represents an action to search for music and play it on Owntone.
@@ -27,7 +27,7 @@ func appendMessage(items Items, label string, msg []string, uris []string, loopF
 
 // Run executes the SearchAndPlayAction.
 func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "SearchAndPlayAction.Run")
+	ctx, span := action.StartRunSpan(ctx, "owntone", "SearchAndPlayAction.Run", query)
 	defer span.End()
 	msg := []string{"Search Results..."}
 	searchQuery := Parse(query)
@@ -101,7 +101,7 @@ type SearchAndDisplayAction struct {
 
 // Run executes the SearchAndDisplayAction.
 func (a SearchAndDisplayAction) Run(ctx context.Context, query string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "SearchAndDisplayAction.Run")
+	ctx, span := action.StartRunSpan(ctx, "owntone", "SearchAndDisplayAction.Run", query)
 	defer span.End()
 	msg := []string{"Search Results..."}
 	// fmt.Println("original query... " + query)

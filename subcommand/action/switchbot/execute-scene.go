@@ -3,7 +3,7 @@ package switchbot
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // ExecuteSceneAction represents an action to execute a SwitchBot scene.
@@ -14,8 +14,8 @@ type ExecuteSceneAction struct {
 }
 
 // Run executes the ExecuteSceneAction.
-func (a ExecuteSceneAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("switchbot").Start(ctx, "ExecuteSceneAction.Run")
+func (a ExecuteSceneAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "switchbot", "ExecuteSceneAction.Run", args)
 	defer span.End()
 	err := a.client.Execute(ctx, a.sceneID)
 	if err != nil {

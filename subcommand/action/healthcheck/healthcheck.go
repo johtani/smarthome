@@ -6,10 +6,10 @@ package healthcheck
 import (
 	"context"
 
+	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
-	"go.opentelemetry.io/otel"
 )
 
 // SwitchBotHealthCheckAction checks the health of the SwitchBot API.
@@ -18,8 +18,8 @@ type SwitchBotHealthCheckAction struct {
 }
 
 // Run executes the SwitchBotHealthCheckAction.
-func (a SwitchBotHealthCheckAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("healthcheck").Start(ctx, "SwitchBotHealthCheckAction.Run")
+func (a SwitchBotHealthCheckAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "healthcheck", "SwitchBotHealthCheckAction.Run", args)
 	defer span.End()
 	_, _, err := a.client.DeviceAPI.List(ctx)
 	if err != nil {
@@ -39,8 +39,8 @@ type OwnToneHealthCheckAction struct {
 }
 
 // Run executes the OwnToneHealthCheckAction.
-func (a OwnToneHealthCheckAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("healthcheck").Start(ctx, "OwnToneHealthCheckAction.Run")
+func (a OwnToneHealthCheckAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "healthcheck", "OwnToneHealthCheckAction.Run", args)
 	defer span.End()
 	_, err := a.client.Counts(ctx)
 	if err != nil {
@@ -60,8 +60,8 @@ type YamahaHealthCheckAction struct {
 }
 
 // Run executes the YamahaHealthCheckAction.
-func (a YamahaHealthCheckAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("healthcheck").Start(ctx, "YamahaHealthCheckAction.Run")
+func (a YamahaHealthCheckAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "healthcheck", "YamahaHealthCheckAction.Run", args)
 	defer span.End()
 	err := a.client.GetDeviceInfo(ctx)
 	if err != nil {

@@ -3,7 +3,7 @@ package owntone
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // UpdateLibraryAction represents an action to update the Owntone library.
@@ -13,8 +13,8 @@ type UpdateLibraryAction struct {
 }
 
 // Run executes the UpdateLibraryAction.
-func (a UpdateLibraryAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "UpdateLibraryAction.Run")
+func (a UpdateLibraryAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "owntone", "UpdateLibraryAction.Run", args)
 	defer span.End()
 	err := a.c.UpdateLibrary(ctx)
 	if err != nil {

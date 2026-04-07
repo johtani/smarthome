@@ -27,3 +27,9 @@
 2. 入力（CLI/Slack/MCP）をサブコマンドに解決する
 3. サブコマンドが複数 Action を順次実行する
 4. 実行結果を呼び出し元へ返す
+
+## Action のトレース方針
+
+- `Action.Run` のスパン作成は `subcommand/action.StartRunSpan` を使って共通化する
+- `StartRunSpan` は `action.args` 属性を付与する
+- 新しい Action を追加するときは、`otel.Tracer(...).Start(...)` を直接呼ばずに `StartRunSpan` を使う

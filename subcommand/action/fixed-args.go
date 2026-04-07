@@ -9,7 +9,7 @@ type FixedArgsAction struct {
 }
 
 // Run executes the wrapped action with fixed args.
-func (a FixedArgsAction) Run(ctx context.Context, _ string) (string, error) {
+func (a FixedArgsAction) Run(ctx context.Context, args string) (string, error) {
 	return a.action.Run(ctx, a.args)
 }
 

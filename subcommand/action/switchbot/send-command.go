@@ -3,8 +3,8 @@ package switchbot
 import (
 	"context"
 	"fmt"
+	"github.com/johtani/smarthome/subcommand/action"
 	"github.com/nasa9084/go-switchbot/v3"
-	"go.opentelemetry.io/otel"
 )
 
 // SendCommandAction represents an action to send a command to a SwitchBot device.
@@ -16,8 +16,8 @@ type SendCommandAction struct {
 }
 
 // Run executes the SendCommandAction.
-func (a SendCommandAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("switchbot").Start(ctx, "SendCommandAction.Run")
+func (a SendCommandAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "switchbot", "SendCommandAction.Run", args)
 	defer span.End()
 	err := a.client.Command(ctx, a.deviceID, a.command)
 	if err != nil {

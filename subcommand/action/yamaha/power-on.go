@@ -3,7 +3,7 @@ package yamaha
 import (
 	"context"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // PowerOnAction represents an action to turn on the Yamaha device.
@@ -13,8 +13,8 @@ type PowerOnAction struct {
 }
 
 // Run executes the PowerOnAction.
-func (a PowerOnAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("yamaha").Start(ctx, "PowerOnAction.Run")
+func (a PowerOnAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "yamaha", "PowerOnAction.Run", args)
 	defer span.End()
 	err := a.c.PowerOn(ctx)
 	if err != nil {
