@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // DefaultDeviceTypes is the default list of device types for which temperature and humidity are fetched.
@@ -20,8 +20,8 @@ type GetTemperatureAndHumidityAction struct {
 }
 
 // Run executes the GetTemperatureAndHumidityAction.
-func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("switchbot").Start(ctx, "GetTemperatureAndHumidityAction.Run")
+func (a GetTemperatureAndHumidityAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "switchbot", "GetTemperatureAndHumidityAction.Run", args)
 	defer span.End()
 	msg := map[string]string{}
 	//goland:noinspection SpellCheckingInspection

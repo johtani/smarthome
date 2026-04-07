@@ -2,7 +2,7 @@ package yamaha
 
 import (
 	"context"
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // PowerOffAction represents an action to turn off the Yamaha device.
@@ -12,8 +12,8 @@ type PowerOffAction struct {
 }
 
 // Run executes the PowerOffAction.
-func (a PowerOffAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("yamaha").Start(ctx, "PowerOffAction.Run")
+func (a PowerOffAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "yamaha", "PowerOffAction.Run", args)
 	defer span.End()
 	err := a.c.PowerOff(ctx)
 	if err != nil {

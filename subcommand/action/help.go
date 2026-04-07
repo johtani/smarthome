@@ -2,7 +2,6 @@ package action
 
 import (
 	"context"
-	"go.opentelemetry.io/otel"
 )
 
 // HelpAction represents an action that displays the help message.
@@ -11,8 +10,8 @@ type HelpAction struct {
 }
 
 // Run executes the HelpAction by returning the help string.
-func (a HelpAction) Run(ctx context.Context, _ string) (string, error) {
-	_, span := otel.Tracer("action").Start(ctx, "HelpAction.Run")
+func (a HelpAction) Run(ctx context.Context, args string) (string, error) {
+	_, span := StartRunSpan(ctx, "action", "HelpAction.Run", args)
 	defer span.End()
 	return a.help, nil
 }

@@ -3,7 +3,7 @@ package owntone
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // ClearQueueAction represents an action to clear the playback queue on Owntone.
@@ -13,8 +13,8 @@ type ClearQueueAction struct {
 }
 
 // Run executes the ClearQueueAction.
-func (a ClearQueueAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "ClearQueueAction.Run")
+func (a ClearQueueAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "owntone", "ClearQueueAction.Run", args)
 	defer span.End()
 	err := a.c.ClearQueue(ctx)
 	if err != nil {

@@ -16,7 +16,7 @@ import (
 	"github.com/ikawaha/kagome/v2/tokenizer"
 	"strings"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // Dict represents the type of dictionary used by Kagome.
@@ -39,7 +39,7 @@ type Action struct {
 
 // Run executes the Kagome tokenization action.
 func (a Action) Run(ctx context.Context, args string) (string, error) {
-	_, span := otel.Tracer("kagome").Start(ctx, "Action.Run")
+	_, span := action.StartRunSpan(ctx, "kagome", "Action.Run", args)
 	defer span.End()
 	var dict *dict.Dict
 	switch a.dictionary {

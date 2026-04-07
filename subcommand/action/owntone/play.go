@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // PlayAction represents an action to play music on Owntone.
@@ -22,7 +22,7 @@ type PlayAction struct {
 // Run executes the PlayAction.
 // It can play a random artist, random genre, or a random playlist depending on args.
 func (a PlayAction) Run(ctx context.Context, args string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "PlayAction.Run")
+	ctx, span := action.StartRunSpan(ctx, "owntone", "PlayAction.Run", args)
 	defer span.End()
 	switch {
 	case strings.HasPrefix(args, "artist"):

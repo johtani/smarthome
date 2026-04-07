@@ -3,7 +3,7 @@ package yamaha
 import (
 	"context"
 	"fmt"
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // SetSceneAction represents an action to set the scene on the Yamaha device.
@@ -14,8 +14,8 @@ type SetSceneAction struct {
 }
 
 // Run executes the SetSceneAction.
-func (a SetSceneAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("yamaha").Start(ctx, "SetSceneAction.Run")
+func (a SetSceneAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "yamaha", "SetSceneAction.Run", args)
 	defer span.End()
 	err := a.c.SetScene(ctx, a.scene)
 	if err != nil {

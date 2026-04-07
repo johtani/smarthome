@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // DisplayPlaylistsAction represents an action to displayplaylists from Owntone.
@@ -16,7 +16,7 @@ type DisplayPlaylistsAction struct {
 
 // Run executes the DisplayPlaylistsAction and returns a formatted string of playlists.
 func (a DisplayPlaylistsAction) Run(ctx context.Context, category string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "DisplayPlaylistsAction.Run")
+	ctx, span := action.StartRunSpan(ctx, "owntone", "DisplayPlaylistsAction.Run", category)
 	defer span.End()
 	msg := []string{"Playlists are..."}
 	flg := onlySpotify(category)

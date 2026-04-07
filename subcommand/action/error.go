@@ -2,8 +2,6 @@ package action
 
 import (
 	"context"
-
-	"go.opentelemetry.io/otel"
 )
 
 // ErrorAction always returns the configured error when executed.
@@ -12,8 +10,8 @@ type ErrorAction struct {
 }
 
 // Run executes the ErrorAction and returns the configured error.
-func (a ErrorAction) Run(ctx context.Context, _ string) (string, error) {
-	_, span := otel.Tracer("action").Start(ctx, "ErrorAction.Run")
+func (a ErrorAction) Run(ctx context.Context, args string) (string, error) {
+	_, span := StartRunSpan(ctx, "action", "ErrorAction.Run", args)
 	defer span.End()
 	return "", a.err
 }

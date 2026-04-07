@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // ChangePlaylistAction represents an action to change the current playlist on Owntone.
@@ -19,8 +19,8 @@ type ChangePlaylistAction struct {
 
 // Run executes the ChangePlaylistAction.
 // It picks a random playlist and starts playback.
-func (a ChangePlaylistAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("owntone").Start(ctx, "ChangePlaylistAction.Run")
+func (a ChangePlaylistAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "owntone", "ChangePlaylistAction.Run", args)
 	defer span.End()
 	msg := []string{"Change playlist to"}
 	playlists, err := a.c.GetPlaylists(ctx)

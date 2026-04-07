@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // ListScenesAction represents an action to list all SwitchBot scenes.
@@ -15,8 +15,8 @@ type ListScenesAction struct {
 }
 
 // Run executes the ListScenesAction.
-func (a ListScenesAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListScenesAction.Run")
+func (a ListScenesAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "switchbot", "ListScenesAction.Run", args)
 	defer span.End()
 	scenes, err := a.client.SceneAPI.List(ctx)
 	var msg []string

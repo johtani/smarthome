@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"go.opentelemetry.io/otel"
+	"github.com/johtani/smarthome/subcommand/action"
 )
 
 // ListDevicesAction represents an action to list all SwitchBot devices.
@@ -15,8 +15,8 @@ type ListDevicesAction struct {
 }
 
 // Run executes the ListDevicesAction.
-func (a ListDevicesAction) Run(ctx context.Context, _ string) (string, error) {
-	ctx, span := otel.Tracer("switchbot").Start(ctx, "ListDevicesAction.Run")
+func (a ListDevicesAction) Run(ctx context.Context, args string) (string, error) {
+	ctx, span := action.StartRunSpan(ctx, "switchbot", "ListDevicesAction.Run", args)
 	defer span.End()
 	var msg []string
 	pdev, vdev, err := a.client.DeviceAPI.List(ctx)
