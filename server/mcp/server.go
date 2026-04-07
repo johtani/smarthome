@@ -34,7 +34,7 @@ func Run(configStore *configstore.Store) error {
 // NewMCPServer creates and returns a new MCPServer instance.
 func NewMCPServer() *server.MCPServer {
 	return server.NewMCPServer(
-		"Smrat Home MCP",
+		"Smart Home MCP",
 		"0.1.0",
 		server.WithLogging(),
 	)

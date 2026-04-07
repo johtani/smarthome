@@ -204,7 +204,7 @@ func NewCommands(macros ...MacroConfig) Commands {
 		NewPlayRandomGenreCmdDefinition(),
 		NewStopMusicDefinition(),
 		NewChangePlaylistCmdDefinition(),
-		NewDisplayPalylistCmdDefinition(),
+		NewDisplayPlaylistCmdDefinition(),
 		NewDisplayOutputsCmdDefinition(),
 		NewUpdateLibraryCmdDefinition(),
 		NewSearchMusicCmdDefinition(),
