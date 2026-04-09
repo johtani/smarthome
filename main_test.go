@@ -40,7 +40,7 @@ func TestRunCmd(t *testing.T) {
 		{
 			name:     "help command",
 			args:     []string{"help"},
-			wantCont: "利用可能なコマンドは次の通りです",
+			wantCont: "commit:",
 			wantErr:  false,
 		},
 		{
