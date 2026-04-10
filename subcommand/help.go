@@ -19,7 +19,7 @@ func NewHelpDefinition() Definition {
 
 // NewHelpSubcommand creates a new Subcommand for the help command.
 func NewHelpSubcommand(definition Definition, config Config) Subcommand {
-	helpMessage := fmt.Sprintf("%scommit: %s\n", config.Commands.Help(), currentRevision())
+	helpMessage := fmt.Sprintf("利用可能なコマンドは次の通りです\n%scommit: %s\n", config.Commands.Help(), currentRevision())
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{

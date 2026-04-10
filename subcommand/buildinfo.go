@@ -1,21 +1,43 @@
 package subcommand
 
-import "runtime/debug"
+import (
+	"runtime/debug"
+	"strings"
+)
 
 const (
 	unknownRevision  = "unknown"
 	revisionShortLen = 12
+	develVersion     = "(devel)"
 )
 
 // currentRevision returns the current VCS revision from Go build info.
-// When unavailable, it falls back to "unknown".
+// If unavailable, it falls back to module version, then "unknown".
 func currentRevision() string {
 	bi, ok := debug.ReadBuildInfo()
 	if !ok || bi == nil {
 		return unknownRevision
 	}
 
-	return revisionFromBuildSettings(bi.Settings)
+	return revisionOrVersion(bi)
+}
+
+func revisionOrVersion(bi *debug.BuildInfo) string {
+	revision := revisionFromBuildSettings(bi.Settings)
+	if revision != unknownRevision {
+		return revision
+	}
+
+	return versionFromBuildInfo(bi)
+}
+
+func versionFromBuildInfo(bi *debug.BuildInfo) string {
+	version := strings.TrimSpace(bi.Main.Version)
+	if version == "" || version == develVersion {
+		return unknownRevision
+	}
+
+	return version
 }
 
 func revisionFromBuildSettings(settings []debug.BuildSetting) string {
