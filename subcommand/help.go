@@ -1,6 +1,7 @@
 package subcommand
 
 import (
+	"fmt"
 	"github.com/johtani/smarthome/subcommand/action"
 )
 
@@ -18,10 +19,11 @@ func NewHelpDefinition() Definition {
 
 // NewHelpSubcommand creates a new Subcommand for the help command.
 func NewHelpSubcommand(definition Definition, config Config) Subcommand {
+	helpMessage := fmt.Sprintf("%scommit: %s\n", config.Commands.Help(), currentRevision())
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
-			action.NewHelpAction(config.Commands.Help()),
+			action.NewHelpAction(helpMessage),
 		},
 	}
 }
