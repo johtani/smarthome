@@ -50,3 +50,50 @@ func TestRevisionFromBuildSettings(t *testing.T) {
 		})
 	}
 }
+
+func TestRevisionOrVersion(t *testing.T) {
+	tests := []struct {
+		name string
+		info *debug.BuildInfo
+		want string
+	}{
+		{
+			name: "uses vcs revision when available",
+			info: &debug.BuildInfo{
+				Main: debug.Module{Version: "v9.9.9"},
+				Settings: []debug.BuildSetting{
+					{Key: "vcs.revision", Value: "0123456789abcdef"},
+				},
+			},
+			want: "0123456789ab",
+		},
+		{
+			name: "falls back to main version when revision is unavailable",
+			info: &debug.BuildInfo{
+				Main: debug.Module{Version: "v1.2.3"},
+				Settings: []debug.BuildSetting{
+					{Key: "vcs.time", Value: "2026-04-10T00:00:00Z"},
+				},
+			},
+			want: "v1.2.3",
+		},
+		{
+			name: "returns unknown when main version is devel",
+			info: &debug.BuildInfo{
+				Main: debug.Module{Version: develVersion},
+				Settings: []debug.BuildSetting{
+					{Key: "vcs.time", Value: "2026-04-10T00:00:00Z"},
+				},
+			},
+			want: unknownRevision,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := revisionOrVersion(tt.info); got != tt.want {
+				t.Errorf("revisionOrVersion() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
