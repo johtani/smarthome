@@ -352,6 +352,8 @@ pwsh tools/resolver-events/extract-from-collector-file.ps1 `
 pwsh tools/dspy/run-batch.ps1 -ResolverEventsCsv .\tmp\resolver-events\resolver-events.csv
 ```
 
+Docker実行にも対応しています。詳細は [tools/dspy/README.md](./tools/dspy/README.md) を参照してください。
+
 ## 開発ガイドライン
 
 * **ブランチ作成**: 作業を開始する前に、必ず新しいブランチを作成してください。
