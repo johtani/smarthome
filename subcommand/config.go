@@ -23,8 +23,39 @@ type Config struct {
 	Switchbot switchbot.Config `json:"Switchbot"`
 	Yamaha    yamaha.Config    `json:"Yamaha"`
 	LLM       llm.Config       `json:"LLM"`
+	Resolver  ResolverConfig   `json:"Resolver"`
 	Influxdb  influxdb.Config  `json:"Influxdb"`
 	Commands  Commands
+}
+
+// ResolverConfig controls resolver behavior and observability options.
+type ResolverConfig struct {
+	Mode            string `json:"mode"`
+	FeedbackEnabled bool   `json:"feedback_enabled"`
+	PromptVersion   string `json:"prompt_version"`
+}
+
+const (
+	// ResolverModeLegacy uses the current built-in resolution flow.
+	ResolverModeLegacy = "legacy"
+	// ResolverModeDSPy uses an external DSPy-based resolver flow.
+	ResolverModeDSPy = "dspy"
+)
+
+func (c *ResolverConfig) applyDefaults() {
+	if strings.TrimSpace(c.Mode) == "" {
+		c.Mode = ResolverModeLegacy
+	}
+}
+
+// Validate validates ResolverConfig.
+func (c ResolverConfig) Validate() error {
+	switch c.Mode {
+	case "", ResolverModeLegacy, ResolverModeDSPy:
+		return nil
+	default:
+		return fmt.Errorf("resolver.mode must be one of %q or %q", ResolverModeLegacy, ResolverModeDSPy)
+	}
 }
 
 // ConfigFileName is the default path to the configuration file.
@@ -58,6 +89,10 @@ func (c *Config) validate() error {
 		errs = append(errs, err.Error())
 	}
 	err = c.LLM.Validate()
+	if err != nil {
+		errs = append(errs, err.Error())
+	}
+	err = c.Resolver.Validate()
 	if err != nil {
 		errs = append(errs, err.Error())
 	}
@@ -108,6 +143,20 @@ func (c *Config) overrideWithEnv() {
 	// SMARTHOME_LLM_MODEL
 	if val, ok := os.LookupEnv("SMARTHOME_LLM_MODEL"); ok {
 		c.LLM.Model = val
+	}
+	// SMARTHOME_RESOLVER_MODE
+	if val, ok := os.LookupEnv("SMARTHOME_RESOLVER_MODE"); ok {
+		c.Resolver.Mode = val
+	}
+	// SMARTHOME_RESOLVER_FEEDBACK_ENABLED
+	if val, ok := os.LookupEnv("SMARTHOME_RESOLVER_FEEDBACK_ENABLED"); ok {
+		if b, err := strconv.ParseBool(val); err == nil {
+			c.Resolver.FeedbackEnabled = b
+		}
+	}
+	// SMARTHOME_RESOLVER_PROMPT_VERSION
+	if val, ok := os.LookupEnv("SMARTHOME_RESOLVER_PROMPT_VERSION"); ok {
+		c.Resolver.PromptVersion = val
 	}
 	// SMARTHOME_INFLUXDB_TOKEN
 	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_TOKEN"); ok {
@@ -192,6 +241,7 @@ func loadConfigJSON(configFile string) (Config, error) {
 	}
 
 	config.overrideWithEnv()
+	config.Resolver.applyDefaults()
 
 	if err := config.validate(); err != nil {
 		return Config{}, fmt.Errorf("設定のバリデーションに失敗しました:\n%w", err)

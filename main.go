@@ -16,6 +16,7 @@ import (
 
 	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/johtani/smarthome/internal/otel"
+	"github.com/johtani/smarthome/internal/resolver"
 	"github.com/johtani/smarthome/server/cron"
 	"github.com/johtani/smarthome/server/mcp"
 	"github.com/johtani/smarthome/server/slack"
@@ -132,6 +133,9 @@ func logLLMDisabled(config subcommand.Config) {
 }
 
 func runCmd(ctx context.Context, configStore *configstore.Store, cmdArgs []string) error {
+	ctx, _ = resolver.EnsureRequestID(ctx)
+	ctx = resolver.WithChannel(ctx, "cli")
+
 	config := configStore.Get()
 	if len(cmdArgs) < 1 {
 		return fmt.Errorf("%s", printHelp(config.Commands.Help()))

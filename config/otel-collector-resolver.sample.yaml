@@ -1,0 +1,33 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+      http:
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 256
+    spike_limit_mib: 64
+  batch:
+    timeout: 5s
+    send_batch_size: 512
+
+exporters:
+  # Primary export destination (adjust for your backend).
+  otlphttp:
+    endpoint: http://localhost:4318
+    tls:
+      insecure: true
+
+  # Secondary export for periodic resolver dataset extraction.
+  file/resolver_traces:
+    path: ./tmp/otel/resolver-traces.jsonl
+    format: json
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [otlphttp, file/resolver_traces]

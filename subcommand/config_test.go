@@ -26,6 +26,7 @@ func TestConfig_Validate(t *testing.T) {
 				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
 				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 				LLM:       llm.Config{Endpoint: "http://localhost:8081", Model: "gpt-4o"},
+				Resolver:  ResolverConfig{Mode: ResolverModeLegacy},
 			},
 			wantErr: false,
 		},
@@ -36,6 +37,7 @@ func TestConfig_Validate(t *testing.T) {
 				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
 				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 				LLM:       llm.Config{Endpoint: "http://localhost:8081", Model: "gpt-4o"},
+				Resolver:  ResolverConfig{Mode: ResolverModeLegacy},
 			},
 			wantErr: true,
 		},
@@ -46,6 +48,18 @@ func TestConfig_Validate(t *testing.T) {
 				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
 				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
 				LLM:       llm.Config{Endpoint: "http://localhost:8081"},
+				Resolver:  ResolverConfig{Mode: ResolverModeLegacy},
+			},
+			wantErr: true,
+		},
+		{
+			name: "invalid resolver mode",
+			config: Config{
+				Owntone:   owntone.Config{URL: "http://localhost:8000"},
+				Switchbot: switchbot.Config{Token: "token", Secret: "secret"},
+				Yamaha:    yamaha.Config{URL: "http://localhost:8080"},
+				LLM:       llm.Config{Endpoint: "http://localhost:8081", Model: "gpt-4o"},
+				Resolver:  ResolverConfig{Mode: "unknown"},
 			},
 			wantErr: true,
 		},
@@ -69,6 +83,9 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	_ = os.Setenv("SMARTHOME_LLM_API_KEY", "env-llm-key")
 	_ = os.Setenv("SMARTHOME_LLM_ENDPOINT", "http://env-llm-endpoint")
 	_ = os.Setenv("SMARTHOME_LLM_MODEL", "env-llm-model")
+	_ = os.Setenv("SMARTHOME_RESOLVER_MODE", ResolverModeDSPy)
+	_ = os.Setenv("SMARTHOME_RESOLVER_FEEDBACK_ENABLED", "true")
+	_ = os.Setenv("SMARTHOME_RESOLVER_PROMPT_VERSION", "2026-04-14")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
@@ -80,6 +97,9 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 		_ = os.Unsetenv("SMARTHOME_LLM_API_KEY")
 		_ = os.Unsetenv("SMARTHOME_LLM_ENDPOINT")
 		_ = os.Unsetenv("SMARTHOME_LLM_MODEL")
+		_ = os.Unsetenv("SMARTHOME_RESOLVER_MODE")
+		_ = os.Unsetenv("SMARTHOME_RESOLVER_FEEDBACK_ENABLED")
+		_ = os.Unsetenv("SMARTHOME_RESOLVER_PROMPT_VERSION")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_TOKEN")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_URL")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_BUCKET")
@@ -107,6 +127,15 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	}
 	if config.LLM.Model != "env-llm-model" {
 		t.Errorf("expected env-llm-model, got %s", config.LLM.Model)
+	}
+	if config.Resolver.Mode != ResolverModeDSPy {
+		t.Errorf("expected %s, got %s", ResolverModeDSPy, config.Resolver.Mode)
+	}
+	if !config.Resolver.FeedbackEnabled {
+		t.Error("expected feedback enabled to be true")
+	}
+	if config.Resolver.PromptVersion != "2026-04-14" {
+		t.Errorf("expected prompt version 2026-04-14, got %s", config.Resolver.PromptVersion)
 	}
 	if config.Influxdb.Token != "env-influx-token" {
 		t.Errorf("expected env-influx-token, got %s", config.Influxdb.Token)
@@ -203,6 +232,9 @@ func TestLoadConfigWithPath(t *testing.T) {
 	}
 	if len(config.Commands.Definitions) == 0 {
 		t.Error("commands should be initialized")
+	}
+	if config.Resolver.Mode != ResolverModeLegacy {
+		t.Errorf("expected resolver mode %s, got %s", ResolverModeLegacy, config.Resolver.Mode)
 	}
 }
 

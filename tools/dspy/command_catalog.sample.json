@@ -1,0 +1,22 @@
+[
+  {
+    "name": "start music",
+    "description": "Legacy random playback",
+    "args": "artist:<name> | genre:<name> | (empty)"
+  },
+  {
+    "name": "search and play",
+    "description": "Search and play by free text",
+    "args": "<query>"
+  },
+  {
+    "name": "stop music",
+    "description": "Stop playback",
+    "args": "(empty)"
+  },
+  {
+    "name": "help",
+    "description": "Show command help",
+    "args": "(empty)"
+  }
+]

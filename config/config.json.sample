@@ -16,6 +16,11 @@
     "endpoint": "",
     "model": ""
   },
+  "resolver": {
+    "mode": "legacy",
+    "feedback_enabled": false,
+    "prompt_version": ""
+  },
   "influxdb": {
     "url": "",
     "bucket": "",
