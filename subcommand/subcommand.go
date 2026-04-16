@@ -17,7 +17,6 @@ import (
 	"github.com/hbollon/go-edlib"
 	"github.com/johtani/smarthome/internal/resolver"
 	"github.com/johtani/smarthome/subcommand/action"
-	"github.com/johtani/smarthome/subcommand/action/llm"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -297,43 +296,46 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 			return def, args, dymMsg, nil
 		}
 
-		// LLMによる解決を試みる
-		if config.LLM.Endpoint != "" {
-			span.SetAttributes(attribute.String("resolver.path", "llm"))
-			client := llm.NewClient(config.LLM)
-			resolved, err := client.Resolve(ctx, text, c.Help(), config.Resolver.PromptVersion)
-			if err == nil && resolved.Command != "" {
-				// Backward-compatible safety fallback:
-				// if LLM resolves to start music with free-text args, use search and play.
-				if resolved.Command == StartMusicCmd &&
-					strings.TrimSpace(resolved.Args) != "" &&
-					!strings.HasPrefix(strings.TrimSpace(resolved.Args), "artist") &&
-					!strings.HasPrefix(strings.TrimSpace(resolved.Args), "genre") {
-					resolved.Command = SearchAndPlayMusicCmd
-				}
-				for _, d := range c.Definitions {
-					if d.Name == resolved.Command {
-						span.SetAttributes(
-							attribute.String("resolver.resolved_command", resolved.Command),
-							attribute.String("resolver.resolved_args", resolved.Args),
-						)
-						resolver.RecordDecision(ctx, resolver.DecisionRecord{
-							InputTextHash:   inputHash,
-							ResolverPath:    "llm",
-							ResolverMode:    config.Resolver.Mode,
-							LLMModel:        config.LLM.Model,
-							ResolvedCommand: resolved.Command,
-							ResolvedArgs:    resolved.Args,
-						})
-						return d, resolved.Args, fmt.Sprintf("(LLM) %s", resolved.Thought), nil
-					}
-				}
-				slog.WarnContext(ctx, "LLM resolved to an unknown command", "command", resolved.Command)
-				span.SetAttributes(attribute.Bool("resolver.llm_unknown_command", true))
-			} else if err != nil {
-				slog.ErrorContext(ctx, "LLM resolution failed", "error", err)
+		for _, nlr := range naturalLanguageResolvers(config) {
+			span.SetAttributes(attribute.String("resolver.path", nlr.Path()))
+			resolved, err := nlr.Resolve(ctx, text, c.Help(), config.Resolver.PromptVersion)
+			if err != nil {
+				slog.WarnContext(ctx, "natural language resolver failed", "resolver", nlr.Path(), "error", err)
 				span.RecordError(err)
+				continue
 			}
+			if resolved.Command == "" {
+				continue
+			}
+
+			// Backward-compatible safety fallback:
+			// if resolver resolves to start music with free-text args, use search and play.
+			if resolved.Command == StartMusicCmd &&
+				strings.TrimSpace(resolved.Args) != "" &&
+				!strings.HasPrefix(strings.TrimSpace(resolved.Args), "artist") &&
+				!strings.HasPrefix(strings.TrimSpace(resolved.Args), "genre") {
+				resolved.Command = SearchAndPlayMusicCmd
+			}
+
+			for _, d := range c.Definitions {
+				if d.Name == resolved.Command {
+					span.SetAttributes(
+						attribute.String("resolver.resolved_command", resolved.Command),
+						attribute.String("resolver.resolved_args", resolved.Args),
+					)
+					resolver.RecordDecision(ctx, resolver.DecisionRecord{
+						InputTextHash:   inputHash,
+						ResolverPath:    nlr.Path(),
+						ResolverMode:    config.Resolver.Mode,
+						LLMModel:        config.LLM.Model,
+						ResolvedCommand: resolved.Command,
+						ResolvedArgs:    resolved.Args,
+					})
+					return d, resolved.Args, fmt.Sprintf("(%s) %s", nlr.Prefix(), resolved.Thought), nil
+				}
+			}
+			slog.WarnContext(ctx, "resolver returned an unknown command", "resolver", nlr.Path(), "command", resolved.Command)
+			span.SetAttributes(attribute.Bool("resolver.nl_unknown_command", true))
 		}
 
 		err := fmt.Errorf("sorry, i cannot understand what you want from what you said '%v'", text)

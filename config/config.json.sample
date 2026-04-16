@@ -19,7 +19,9 @@
   "resolver": {
     "mode": "legacy",
     "feedback_enabled": false,
-    "prompt_version": ""
+    "prompt_version": "",
+    "dspy_endpoint": "",
+    "dspy_timeout_seconds": 5
   },
   "influxdb": {
     "url": "",

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 
 	"github.com/johtani/smarthome/subcommand/action/llm"
@@ -91,6 +92,95 @@ func TestCommands_Find_LLM(t *testing.T) {
 		_, _, _, err := cmds.Find(t.Context(), config, "何もしないで")
 		if err == nil {
 			t.Fatal("expected error for empty command, got nil")
+		}
+	})
+}
+
+func TestCommands_Find_DSPyMode(t *testing.T) {
+	t.Run("dspy success", func(t *testing.T) {
+		dspyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"command":"light on","args":"","thought":"resolved by DSPy"}`)
+		}))
+		defer dspyServer.Close()
+
+		config := Config{
+			Resolver: ResolverConfig{
+				Mode:               ResolverModeDSPy,
+				DSPyEndpoint:       dspyServer.URL,
+				DSPyTimeoutSeconds: 3,
+			},
+			LLM: llm.Config{
+				Endpoint: "http://unused",
+				Model:    "test-model",
+			},
+		}
+
+		cmds := Commands{
+			Definitions: []Definition{
+				{Name: "light on", Description: "turn on the light", Factory: NewDummySubcommand},
+			},
+		}
+
+		def, args, msg, err := cmds.Find(t.Context(), config, "あかりをつけて")
+		if err != nil {
+			t.Fatalf("Find failed: %v", err)
+		}
+		if def.Name != "light on" {
+			t.Fatalf("expected command 'light on', got %q", def.Name)
+		}
+		if args != "" {
+			t.Fatalf("expected empty args, got %q", args)
+		}
+		if msg != "(DSPy) resolved by DSPy" {
+			t.Fatalf("unexpected msg: %q", msg)
+		}
+	})
+
+	t.Run("dspy failure falls back to llm", func(t *testing.T) {
+		var llmCalled atomic.Int32
+		dspyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, "dspy unavailable", http.StatusServiceUnavailable)
+		}))
+		defer dspyServer.Close()
+
+		llmServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			llmCalled.Add(1)
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"command\": \"light on\", \"args\": \"\", \"thought\": \"resolved by LLM\"}"}}]}`)
+		}))
+		defer llmServer.Close()
+
+		config := Config{
+			Resolver: ResolverConfig{
+				Mode:               ResolverModeDSPy,
+				DSPyEndpoint:       dspyServer.URL,
+				DSPyTimeoutSeconds: 3,
+			},
+			LLM: llm.Config{
+				Endpoint: llmServer.URL,
+				Model:    "test-model",
+			},
+		}
+
+		cmds := Commands{
+			Definitions: []Definition{
+				{Name: "light on", Description: "turn on the light", Factory: NewDummySubcommand},
+			},
+		}
+
+		def, _, msg, err := cmds.Find(t.Context(), config, "あかりをつけて")
+		if err != nil {
+			t.Fatalf("Find failed: %v", err)
+		}
+		if def.Name != "light on" {
+			t.Fatalf("expected command 'light on', got %q", def.Name)
+		}
+		if llmCalled.Load() != 1 {
+			t.Fatalf("expected llm fallback to be called once, got %d", llmCalled.Load())
+		}
+		if msg != "(LLM) resolved by LLM" {
+			t.Fatalf("unexpected msg: %q", msg)
 		}
 	})
 }

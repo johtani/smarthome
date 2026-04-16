@@ -86,6 +86,8 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	_ = os.Setenv("SMARTHOME_RESOLVER_MODE", ResolverModeDSPy)
 	_ = os.Setenv("SMARTHOME_RESOLVER_FEEDBACK_ENABLED", "true")
 	_ = os.Setenv("SMARTHOME_RESOLVER_PROMPT_VERSION", "2026-04-14")
+	_ = os.Setenv("SMARTHOME_RESOLVER_DSPY_ENDPOINT", "http://env-dspy-endpoint")
+	_ = os.Setenv("SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS", "9")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
@@ -100,6 +102,8 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 		_ = os.Unsetenv("SMARTHOME_RESOLVER_MODE")
 		_ = os.Unsetenv("SMARTHOME_RESOLVER_FEEDBACK_ENABLED")
 		_ = os.Unsetenv("SMARTHOME_RESOLVER_PROMPT_VERSION")
+		_ = os.Unsetenv("SMARTHOME_RESOLVER_DSPY_ENDPOINT")
+		_ = os.Unsetenv("SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_TOKEN")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_URL")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_BUCKET")
@@ -136,6 +140,12 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	}
 	if config.Resolver.PromptVersion != "2026-04-14" {
 		t.Errorf("expected prompt version 2026-04-14, got %s", config.Resolver.PromptVersion)
+	}
+	if config.Resolver.DSPyEndpoint != "http://env-dspy-endpoint" {
+		t.Errorf("expected dspy endpoint http://env-dspy-endpoint, got %s", config.Resolver.DSPyEndpoint)
+	}
+	if config.Resolver.DSPyTimeoutSeconds != 9 {
+		t.Errorf("expected dspy timeout 9, got %d", config.Resolver.DSPyTimeoutSeconds)
 	}
 	if config.Influxdb.Token != "env-influx-token" {
 		t.Errorf("expected env-influx-token, got %s", config.Influxdb.Token)
@@ -235,6 +245,9 @@ func TestLoadConfigWithPath(t *testing.T) {
 	}
 	if config.Resolver.Mode != ResolverModeLegacy {
 		t.Errorf("expected resolver mode %s, got %s", ResolverModeLegacy, config.Resolver.Mode)
+	}
+	if config.Resolver.DSPyTimeoutSeconds != 5 {
+		t.Errorf("expected default dspy timeout 5, got %d", config.Resolver.DSPyTimeoutSeconds)
 	}
 }
 

@@ -131,6 +131,59 @@ func TestCommandsFindTracing_LLMPath(t *testing.T) {
 	}
 }
 
+func TestCommandsFindTracing_DSPyPath(t *testing.T) {
+	exporter := tracetest.NewInMemoryExporter()
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithSyncer(exporter),
+	)
+	defer func() { _ = tp.Shutdown(t.Context()) }()
+
+	prev := otel.GetTracerProvider()
+	otel.SetTracerProvider(tp)
+	defer otel.SetTracerProvider(prev)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"command":"light on","args":"","thought":"resolved by DSPy"}`))
+	}))
+	defer server.Close()
+
+	cmds := Commands{
+		Definitions: []Definition{
+			{Name: "light on", Description: "turn on light", Factory: NewDummySubcommand},
+		},
+	}
+	config := Config{
+		Resolver: ResolverConfig{
+			Mode:               ResolverModeDSPy,
+			DSPyEndpoint:       server.URL,
+			DSPyTimeoutSeconds: 3,
+			PromptVersion:      "v2",
+		},
+	}
+
+	_, _, _, err := cmds.Find(t.Context(), config, "あかりをつけて")
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+
+	span := findSpanByName(t, exporter, "Commands.Find")
+	attrs := toAttrMap(span.Attributes)
+	if attrs["resolver.path"] != "dspy" {
+		t.Fatalf("expected resolver.path dspy, got %q", attrs["resolver.path"])
+	}
+	if attrs["resolver.resolved_command"] != "light on" {
+		t.Fatalf("expected resolver.resolved_command light on, got %q", attrs["resolver.resolved_command"])
+	}
+
+	dspySpan := findSpanByName(t, exporter, "dspy.Resolve")
+	dspyAttrs := toAttrMap(dspySpan.Attributes)
+	if dspyAttrs["resolver.prompt_version"] != "v2" {
+		t.Fatalf("expected resolver.prompt_version v2, got %q", dspyAttrs["resolver.prompt_version"])
+	}
+}
+
 func findSpanByName(t *testing.T, exporter *tracetest.InMemoryExporter, name string) tracetest.SpanStub {
 	t.Helper()
 	spans := exporter.GetSpans()

@@ -30,9 +30,11 @@ type Config struct {
 
 // ResolverConfig controls resolver behavior and observability options.
 type ResolverConfig struct {
-	Mode            string `json:"mode"`
-	FeedbackEnabled bool   `json:"feedback_enabled"`
-	PromptVersion   string `json:"prompt_version"`
+	Mode               string `json:"mode"`
+	FeedbackEnabled    bool   `json:"feedback_enabled"`
+	PromptVersion      string `json:"prompt_version"`
+	DSPyEndpoint       string `json:"dspy_endpoint"`
+	DSPyTimeoutSeconds int    `json:"dspy_timeout_seconds"`
 }
 
 const (
@@ -46,12 +48,18 @@ func (c *ResolverConfig) applyDefaults() {
 	if strings.TrimSpace(c.Mode) == "" {
 		c.Mode = ResolverModeLegacy
 	}
+	if c.DSPyTimeoutSeconds <= 0 {
+		c.DSPyTimeoutSeconds = 5
+	}
 }
 
 // Validate validates ResolverConfig.
 func (c ResolverConfig) Validate() error {
 	switch c.Mode {
 	case "", ResolverModeLegacy, ResolverModeDSPy:
+		if c.DSPyTimeoutSeconds < 0 {
+			return fmt.Errorf("resolver.dspy_timeout_seconds must be >= 0")
+		}
 		return nil
 	default:
 		return fmt.Errorf("resolver.mode must be one of %q or %q", ResolverModeLegacy, ResolverModeDSPy)
@@ -157,6 +165,16 @@ func (c *Config) overrideWithEnv() {
 	// SMARTHOME_RESOLVER_PROMPT_VERSION
 	if val, ok := os.LookupEnv("SMARTHOME_RESOLVER_PROMPT_VERSION"); ok {
 		c.Resolver.PromptVersion = val
+	}
+	// SMARTHOME_RESOLVER_DSPY_ENDPOINT
+	if val, ok := os.LookupEnv("SMARTHOME_RESOLVER_DSPY_ENDPOINT"); ok {
+		c.Resolver.DSPyEndpoint = val
+	}
+	// SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS
+	if val, ok := os.LookupEnv("SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS"); ok {
+		if i, err := strconv.Atoi(val); err == nil {
+			c.Resolver.DSPyTimeoutSeconds = i
+		}
 	}
 	// SMARTHOME_INFLUXDB_TOKEN
 	if val, ok := os.LookupEnv("SMARTHOME_INFLUXDB_TOKEN"); ok {
