@@ -359,6 +359,28 @@ pwsh tools/dspy/run-batch.ps1 -ResolverEventsCsv .\tmp\resolver-events\resolver-
 
 Docker実行にも対応しています。詳細は [tools/dspy/README.md](./tools/dspy/README.md) を参照してください。
 
+### 外部DSPy resolver（Phase E）
+
+`resolver.mode=dspy` で使う外部HTTP resolver の最小実装は [tools/dspy-resolver/README.md](./tools/dspy-resolver/README.md) を参照してください。
+
+Docker Compose での起動例:
+
+```powershell
+docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
+```
+
+`config.json` 例:
+
+```json
+{
+  "resolver": {
+    "mode": "dspy",
+    "dspy_endpoint": "http://localhost:8089/resolve",
+    "dspy_timeout_seconds": 5
+  }
+}
+```
+
 ## 開発ガイドライン
 
 * **ブランチ作成**: 作業を開始する前に、必ず新しいブランチを作成してください。
