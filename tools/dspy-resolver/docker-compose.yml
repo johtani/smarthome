@@ -1,0 +1,12 @@
+services:
+  dspy-resolver:
+    build:
+      context: ../../
+      dockerfile: tools/dspy-resolver/Dockerfile
+    container_name: smarthome-dspy-resolver
+    environment:
+      MODEL: ${MODEL:-openai/gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    ports:
+      - "${DSPY_RESOLVER_PORT:-8089}:8080"
+    restart: unless-stopped

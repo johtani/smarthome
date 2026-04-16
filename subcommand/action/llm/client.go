@@ -5,6 +5,8 @@ package llm
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,6 +14,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/johtani/smarthome/internal/resolver"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -75,13 +78,42 @@ func truncateForTrace(v string) string {
 	return v[:maxTraceBodyLength] + "...truncated"
 }
 
+func hashText(v string) string {
+	sum := sha256.Sum256([]byte(strings.TrimSpace(v)))
+	return hex.EncodeToString(sum[:12])
+}
+
+func traceRequestBody(payload map[string]any) string {
+	tracePayload := map[string]any{
+		"model": payload["model"],
+		"messages": []map[string]string{
+			{"role": "system", "content": "<redacted>"},
+			{"role": "user", "content": "<redacted>"},
+		},
+		"response_format": payload["response_format"],
+	}
+	b, err := json.Marshal(tracePayload)
+	if err != nil {
+		return `{"error":"failed to marshal trace payload"}`
+	}
+	return string(b)
+}
+
 // Resolve resolves the given text to a command using the LLM.
-func (c *Client) Resolve(ctx context.Context, text string, commandList string) (ResolvedCommand, error) {
+func (c *Client) Resolve(ctx context.Context, text string, commandList string, promptVersion string) (ResolvedCommand, error) {
 	ctx, span := otel.Tracer("llm").Start(ctx, "llm.Resolve", trace.WithAttributes(
-		attribute.String("llm.input_text", text),
+		attribute.String("llm.input_text_hash", hashText(text)),
 		attribute.String("llm.model", c.config.Model),
+		attribute.String("resolver.path", "llm"),
+		attribute.String("resolver.prompt_version", promptVersion),
 	))
 	defer span.End()
+	if requestID, ok := resolver.RequestIDFromContext(ctx); ok {
+		span.SetAttributes(attribute.String("resolver.request_id", requestID))
+	}
+	if channel, ok := resolver.ChannelFromContext(ctx); ok {
+		span.SetAttributes(attribute.String("resolver.channel", channel))
+	}
 
 	// OpenAI Chat Completion API 互換のパラメータを構築
 	// Structured Outputs (JSON mode) を使用することを想定
@@ -121,7 +153,7 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 	}
 	span.SetAttributes(
 		attribute.String("llm.endpoint", c.config.Endpoint),
-		attribute.String("llm.request_body", truncateForTrace(string(jsonData))),
+		attribute.String("llm.request_body", truncateForTrace(traceRequestBody(payload))),
 	)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.config.Endpoint, strings.NewReader(string(jsonData)))
@@ -193,6 +225,8 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string) (
 		attribute.String("llm.resolved_command", resolved.Command),
 		attribute.String("llm.resolved_args", resolved.Args),
 		attribute.String("llm.thought", resolved.Thought),
+		attribute.String("resolver.resolved_command", resolved.Command),
+		attribute.String("resolver.resolved_args", resolved.Args),
 	)
 
 	return resolved, nil

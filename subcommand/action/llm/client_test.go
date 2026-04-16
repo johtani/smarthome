@@ -62,7 +62,7 @@ func TestClient_Resolve(t *testing.T) {
 	}
 	client := NewClient(config)
 
-	resolved, err := client.Resolve(t.Context(), "電気をつけて", "light on: turn on the light")
+	resolved, err := client.Resolve(t.Context(), "電気をつけて", "light on: turn on the light", "v1")
 	if err != nil {
 		t.Fatalf("Resolve failed: %v", err)
 	}
@@ -92,6 +92,9 @@ func TestClient_Resolve(t *testing.T) {
 	if attrs["llm.response_status_code"] != "200" {
 		t.Errorf("expected llm.response_status_code 200, got %q", attrs["llm.response_status_code"])
 	}
+	if attrs["resolver.prompt_version"] != "v1" {
+		t.Errorf("expected resolver.prompt_version v1, got %q", attrs["resolver.prompt_version"])
+	}
 }
 
 func TestClient_ResolveErrorSetsResponseTraceAttributes(t *testing.T) {
@@ -110,7 +113,7 @@ func TestClient_ResolveErrorSetsResponseTraceAttributes(t *testing.T) {
 	}
 	client := NewClient(config)
 
-	_, err := client.Resolve(t.Context(), "電気をつけて", "light on: turn on the light")
+	_, err := client.Resolve(t.Context(), "電気をつけて", "light on: turn on the light", "")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -143,7 +146,7 @@ func TestClient_ResolveTruncatesLargeResponseBodyInTrace(t *testing.T) {
 	}
 	client := NewClient(config)
 
-	_, err := client.Resolve(t.Context(), "電気をつけて", "light on: turn on the light")
+	_, err := client.Resolve(t.Context(), "電気をつけて", "light on: turn on the light", "")
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}

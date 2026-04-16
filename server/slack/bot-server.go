@@ -110,6 +110,9 @@ func Run(configStore *configstore.Store) error {
 	socketModeHandler := socketmode.NewSocketmodeHandler(client)
 	socketModeHandler.HandleEvents(slackevents.AppMention, newMessageSubcommandHandler(configStore, botUserIDPrefix))
 	socketModeHandler.Handle(socketmode.EventTypeSlashCommand, newSlashCommandSubcommandHandler(configStore))
+	socketModeHandler.HandleInteractionBlockAction(feedbackCorrectActionID, newFeedbackBlockActionHandler())
+	socketModeHandler.HandleInteractionBlockAction(feedbackIncorrectActionID, newFeedbackBlockActionHandler())
+	socketModeHandler.HandleInteraction(slack.InteractionTypeViewSubmission, newFeedbackViewSubmissionHandler())
 	socketModeHandler.HandleDefault(defaultHandler)
 	err = socketModeHandler.RunEventLoop()
 	if err != nil {
