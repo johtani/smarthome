@@ -135,12 +135,19 @@ func (r dspyResolver) Resolve(ctx context.Context, text string, commandList stri
 }
 
 func naturalLanguageResolvers(config Config) []nlResolver {
+	legacyEnabled := strings.TrimSpace(config.LLM.Endpoint) != ""
 	legacy := legacyResolver{config: config.LLM}
 	if config.Resolver.Mode == ResolverModeDSPy {
-		return []nlResolver{
+		resolvers := []nlResolver{
 			newDSPyResolver(config.Resolver.DSPyEndpoint, time.Duration(config.Resolver.DSPyTimeoutSeconds)*time.Second),
-			legacy,
 		}
+		if legacyEnabled {
+			resolvers = append(resolvers, legacy)
+		}
+		return resolvers
 	}
-	return []nlResolver{legacy}
+	if legacyEnabled {
+		return []nlResolver{legacy}
+	}
+	return nil
 }

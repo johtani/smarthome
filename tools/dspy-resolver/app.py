@@ -79,8 +79,10 @@ def build_catalog_text(entries: List[CommandEntry]) -> str:
 
 
 MODEL = os.getenv("MODEL", "openai/gpt-4o-mini")
+LM_CONFIGURED = False
 try:
     dspy.configure(lm=dspy.LM(MODEL))
+    LM_CONFIGURED = True
 except Exception:
     # Keep process alive; request handler returns 503 and smarthome can fallback to legacy.
     pass
@@ -91,6 +93,8 @@ app = FastAPI(title="smarthome-dspy-resolver", version="0.1.0")
 
 @app.get("/healthz")
 def healthz() -> dict:
+    if not LM_CONFIGURED:
+        raise HTTPException(status_code=503, detail={"status": "not_ready", "model": MODEL})
     return {"status": "ok", "model": MODEL}
 
 
@@ -100,7 +104,7 @@ def resolve(req: ResolveRequest) -> ResolveResponse:
     if not entries:
         raise HTTPException(status_code=400, detail="command_list does not contain command entries")
 
-    if not hasattr(dspy.settings, "lm") or dspy.settings.lm is None:
+    if not LM_CONFIGURED or not hasattr(dspy.settings, "lm") or dspy.settings.lm is None:
         raise HTTPException(status_code=503, detail="dspy lm is not configured")
 
     try:
@@ -125,4 +129,3 @@ def resolve(req: ResolveRequest) -> ResolveResponse:
             thought = "no compatible command in catalog"
 
     return ResolveResponse(command=command, args=args, thought=thought)
-

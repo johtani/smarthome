@@ -49,6 +49,8 @@ docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
 curl http://localhost:8089/healthz
 ```
 
+`OPENAI_API_KEY` 未設定などで LM 初期化に失敗した場合は `503` を返します。
+
 ## Docker (single command)
 
 ```powershell
