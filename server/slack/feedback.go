@@ -28,13 +28,22 @@ type feedbackActionValue struct {
 	Label     string `json:"label"`
 	Command   string `json:"command"`
 	Args      string `json:"args"`
+	PathHint  string `json:"path_hint,omitempty"`
 }
 
 func buildResponseMessageOptions(feedbackEnabled bool, message, requestID, command, args string) []slack.MsgOption {
-	if !feedbackEnabled || strings.TrimSpace(command) == "" {
+	if !feedbackEnabled {
 		return []slack.MsgOption{slack.MsgOptionText(message, false)}
 	}
-	blocks, err := buildFeedbackBlocks(message, requestID, command, args)
+	var (
+		blocks []slack.Block
+		err    error
+	)
+	if strings.TrimSpace(command) == "" {
+		blocks, err = buildUnresolvedFeedbackBlocks(message, requestID)
+	} else {
+		blocks, err = buildFeedbackBlocks(message, requestID, command, args)
+	}
 	if err != nil {
 		slog.Warn("failed to build feedback blocks, fallback to plain text", "error", err)
 		return []slack.MsgOption{slack.MsgOptionText(message, false)}
@@ -87,6 +96,30 @@ func buildFeedbackBlocks(message, requestID, command, args string) ([]slack.Bloc
 	return []slack.Block{messageBlock, metaBlock, actions}, nil
 }
 
+func buildUnresolvedFeedbackBlocks(message, requestID string) ([]slack.Block, error) {
+	msgText := slack.NewTextBlockObject(slack.MarkdownType, message, false, false)
+	messageBlock := slack.NewSectionBlock(msgText, nil, nil)
+
+	metaText := slack.NewTextBlockObject(slack.MarkdownType, "解釈: `unresolved`", false, false)
+	metaBlock := slack.NewContextBlock("resolver_feedback_context", metaText)
+
+	teachValue, err := encodeFeedbackActionValue(feedbackActionValue{
+		RequestID: requestID,
+		Label:     "incorrect",
+		PathHint:  "unresolved",
+	})
+	if err != nil {
+		return nil, err
+	}
+	teachButton := slack.NewButtonBlockElement(
+		feedbackIncorrectActionID,
+		teachValue,
+		slack.NewTextBlockObject(slack.PlainTextType, "📝コマンドを教える", false, false),
+	)
+	actions := slack.NewActionBlock("resolver_feedback_actions", teachButton)
+	return []slack.Block{messageBlock, metaBlock, actions}, nil
+}
+
 func encodeFeedbackActionValue(v feedbackActionValue) (string, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
@@ -132,6 +165,7 @@ func newFeedbackBlockActionHandler() socketmode.SocketmodeHandlerFunc {
 			attribute.String("resolver.request_id", payload.RequestID),
 			attribute.String("resolver.resolved_command", payload.Command),
 			attribute.String("resolver.resolved_args", payload.Args),
+			attribute.String("resolver.path_hint", payload.PathHint),
 		)
 
 		if action.ActionID == feedbackCorrectActionID {
@@ -213,6 +247,7 @@ func newFeedbackViewSubmissionHandler() socketmode.SocketmodeHandlerFunc {
 			attribute.String("resolver.request_id", payload.RequestID),
 			attribute.String("resolver.resolved_command", payload.Command),
 			attribute.String("resolver.resolved_args", payload.Args),
+			attribute.String("resolver.path_hint", payload.PathHint),
 		)
 
 		recordFeedback(ctx, feedbackActionValue{
@@ -220,6 +255,7 @@ func newFeedbackViewSubmissionHandler() socketmode.SocketmodeHandlerFunc {
 			Label:     "incorrect",
 			Command:   payload.Command,
 			Args:      payload.Args,
+			PathHint:  payload.PathHint,
 		}, correction)
 	}
 }
@@ -248,11 +284,13 @@ func recordFeedback(ctx context.Context, payload feedbackActionValue, correction
 		attribute.String("feedback.correction", correction),
 		attribute.String("resolver.resolved_command", payload.Command),
 		attribute.String("resolver.resolved_args", payload.Args),
+		attribute.String("resolver.path_hint", payload.PathHint),
 	)
 	resolver.RecordFeedback(ctx, resolver.FeedbackRecord{
 		FeedbackLabel:      payload.Label,
 		FeedbackCorrection: correction,
 		ResolvedCommand:    payload.Command,
 		ResolvedArgs:       payload.Args,
+		ResolverPathHint:   payload.PathHint,
 	})
 }

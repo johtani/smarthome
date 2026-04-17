@@ -74,6 +74,7 @@ func TestRecordExecutionAndFeedbackAddsEvents(t *testing.T) {
 		FeedbackLabel:      "incorrect",
 		FeedbackCorrection: "light off",
 		ResolvedCommand:    "light on",
+		ResolverPathHint:   "unresolved",
 	})
 	span.End()
 
@@ -86,6 +87,10 @@ func TestRecordExecutionAndFeedbackAddsEvents(t *testing.T) {
 	}
 	if recorded.Events[1].Name != "resolver.feedback" {
 		t.Fatalf("expected second event resolver.feedback, got %q", recorded.Events[1].Name)
+	}
+	attrs := toMap(recorded.Events[1].Attributes)
+	if attrs["resolver.path_hint"] != "unresolved" {
+		t.Fatalf("expected resolver.path_hint unresolved, got %q", attrs["resolver.path_hint"])
 	}
 }
 
