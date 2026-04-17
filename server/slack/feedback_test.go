@@ -12,6 +12,7 @@ func TestFeedbackActionValueRoundTrip(t *testing.T) {
 		Label:     "correct",
 		Command:   "light on",
 		Args:      "",
+		PathHint:  "llm",
 	}
 	encoded, err := encodeFeedbackActionValue(in)
 	if err != nil {
@@ -61,6 +62,40 @@ func TestBuildFeedbackBlocks(t *testing.T) {
 	}
 }
 
+func TestBuildUnresolvedFeedbackBlocks(t *testing.T) {
+	blocks, err := buildUnresolvedFeedbackBlocks("sorry", "req-2")
+	if err != nil {
+		t.Fatalf("buildUnresolvedFeedbackBlocks failed: %v", err)
+	}
+	if len(blocks) != 3 {
+		t.Fatalf("expected 3 blocks, got %d", len(blocks))
+	}
+
+	actionBlock, ok := blocks[2].(*slack.ActionBlock)
+	if !ok {
+		t.Fatalf("expected action block at index 2, got %T", blocks[2])
+	}
+	if len(actionBlock.Elements.ElementSet) != 1 {
+		t.Fatalf("expected 1 action element, got %d", len(actionBlock.Elements.ElementSet))
+	}
+
+	btnTeach, ok := actionBlock.Elements.ElementSet[0].(*slack.ButtonBlockElement)
+	if !ok {
+		t.Fatalf("expected button element, got %T", actionBlock.Elements.ElementSet[0])
+	}
+	if btnTeach.ActionID != feedbackIncorrectActionID {
+		t.Fatalf("expected action id %q, got %q", feedbackIncorrectActionID, btnTeach.ActionID)
+	}
+
+	payload, err := decodeFeedbackActionValue(btnTeach.Value)
+	if err != nil {
+		t.Fatalf("decode button payload failed: %v", err)
+	}
+	if payload.RequestID != "req-2" || payload.Label != "incorrect" || payload.PathHint != "unresolved" {
+		t.Fatalf("unexpected payload: %+v", payload)
+	}
+}
+
 func TestExtractCorrection(t *testing.T) {
 	state := &slack.ViewState{
 		Values: map[string]map[string]slack.BlockAction{
@@ -82,5 +117,12 @@ func TestBuildResponseMessageOptions_FeedbackDisabled(t *testing.T) {
 	options := buildResponseMessageOptions(false, "ok", "req-1", "light on", "")
 	if len(options) != 1 {
 		t.Fatalf("expected one msg option, got %d", len(options))
+	}
+}
+
+func TestBuildResponseMessageOptions_UnresolvedUsesBlocks(t *testing.T) {
+	options := buildResponseMessageOptions(true, "sorry", "req-1", "", "")
+	if len(options) != 2 {
+		t.Fatalf("expected two msg options, got %d", len(options))
 	}
 }

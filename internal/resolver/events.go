@@ -42,6 +42,7 @@ type FeedbackRecord struct {
 	FeedbackCorrection string
 	ResolvedCommand    string
 	ResolvedArgs       string
+	ResolverPathHint   string
 }
 
 // RecordDecision records a resolver decision event with a fixed schema.
@@ -104,6 +105,7 @@ func RecordFeedback(ctx context.Context, record FeedbackRecord) {
 		attribute.String("feedback.correction", record.FeedbackCorrection),
 		attribute.String("resolver.resolved_command", record.ResolvedCommand),
 		attribute.String("resolver.resolved_args", record.ResolvedArgs),
+		attribute.String("resolver.path_hint", record.ResolverPathHint),
 	)
 	span := trace.SpanFromContext(ctx)
 	span.AddEvent(eventNameFeedback, trace.WithAttributes(attrs...))
@@ -116,6 +118,7 @@ func RecordFeedback(ctx context.Context, record FeedbackRecord) {
 		"feedback.correction", record.FeedbackCorrection,
 		"resolver.resolved_command", record.ResolvedCommand,
 		"resolver.resolved_args", record.ResolvedArgs,
+		"resolver.path_hint", record.ResolverPathHint,
 	)
 }
 

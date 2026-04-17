@@ -26,8 +26,23 @@ def normalize(s: Optional[str]) -> str:
     return (s or "").strip()
 
 
+def split_correction_target(correction: str, known_commands: set[str]) -> tuple[str, str]:
+    text = normalize(correction)
+    if not text:
+        return "", ""
+
+    matches = [cmd for cmd in known_commands if text == cmd or text.startswith(cmd + " ")]
+    if matches:
+        cmd = max(matches, key=len)
+        return cmd, normalize(text[len(cmd):])
+
+    parts = text.split(maxsplit=1)
+    return parts[0], parts[1] if len(parts) > 1 else ""
+
+
 def build_dataset_rows(csv_path: Path) -> List[dict]:
     grouped: Dict[str, RequestAggregate] = {}
+    known_commands: set[str] = set()
     with csv_path.open("r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         for row in reader:
@@ -45,6 +60,8 @@ def build_dataset_rows(csv_path: Path) -> List[dict]:
             event_name = normalize(row.get("event_name"))
             command = normalize(row.get("resolver_resolved_command"))
             args = normalize(row.get("resolver_resolved_args"))
+            if command:
+                known_commands.add(command)
             if event_name in ("resolver.decision", "resolver.execution"):
                 if command:
                     agg.resolved_command = command
@@ -70,9 +87,7 @@ def build_dataset_rows(csv_path: Path) -> List[dict]:
 
         # If explicit negative feedback has correction, treat it as preferred target.
         if agg.feedback_label == "incorrect" and agg.feedback_correction:
-            parts = agg.feedback_correction.split(maxsplit=1)
-            expected_command = parts[0]
-            expected_args = parts[1] if len(parts) > 1 else ""
+            expected_command, expected_args = split_correction_target(agg.feedback_correction, known_commands)
 
         dataset.append(
             {
