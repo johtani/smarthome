@@ -29,6 +29,12 @@ smarthome -config-dir /path/to/config
 * owntone.url : 例："http://localhost:3689"
 * llm.endpoint : （任意）OpenAI互換APIのエンドポイント（例: "https://api.openai.com/v1/chat/completions"）
 * llm.model : （任意）使用するモデル名（例: "gpt-4o"）
+* resolver
+  * mode : Resolverモード（`legacy` または `dspy`）
+  * feedback_enabled : フィードバックイベント出力の有効/無効（`true`/`false`）
+  * prompt_version : プロンプト管理用の任意バージョン文字列
+  * dspy_endpoint : `mode=dspy` で使用する外部DSPy resolverのHTTPエンドポイント
+  * dspy_timeout_seconds : 外部DSPy resolver呼び出しのタイムアウト秒
 * yamaha.url : 例："http://IPアドレス"
 * influxdb
   * url : 例: "http://IPアドレス:ポート"
