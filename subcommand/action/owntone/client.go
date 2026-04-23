@@ -27,8 +27,9 @@ type Client struct {
 
 // Config is the configuration for the Owntone client.
 type Config struct {
-	URL     string `json:"url"`
-	Timeout int    `json:"timeout"`
+	URL           string            `json:"url"`
+	Timeout       int               `json:"timeout"`
+	SearchAliases map[string]string `json:"search_aliases"`
 }
 
 // Validate validates the Owntone configuration.

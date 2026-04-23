@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/johtani/smarthome/subcommand/action"
+	"golang.org/x/text/unicode/norm"
 )
 
 // SearchAndPlayAction represents an action to search for music and play it on Owntone.
@@ -31,7 +33,13 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	defer span.End()
 	msg := []string{"Search Results..."}
 	searchQuery := Parse(query)
-	result, err := a.c.Search(ctx, strings.Join(searchQuery.Terms, " "), searchQuery.TypeArray(), searchQuery.Limit)
+	originalKeyword := strings.Join(searchQuery.Terms, " ")
+	searchKeyword := normalizeSearchKeyword(originalKeyword, a.c.config.SearchAliases)
+	if strings.TrimSpace(searchKeyword) == "" {
+		searchKeyword = originalKeyword
+	}
+
+	result, err := a.c.Search(ctx, searchKeyword, searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
 		return "Something wrong...", fmt.Errorf("error in SearchAndDisplayAction\n %v", err)
 	}
@@ -71,7 +79,7 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	}
 
 	if len(result.Genres.Items) > 0 {
-		err = a.c.AddItem2QueueAndPlay(ctx, "", fmt.Sprintf("genre is \"%s\"", strings.Join(searchQuery.Terms, " ")))
+		err = a.c.AddItem2QueueAndPlay(ctx, "", fmt.Sprintf("genre is \"%s\"", searchKeyword))
 		if err != nil {
 			return "", fmt.Errorf("error calling AddItem2QueueAndPlay with expression\n %v", err)
 		}
@@ -198,4 +206,67 @@ func Parse(target string) *SearchQuery {
 		}
 	}
 	return &SearchQuery{Terms: queries, Limit: limit, Offset: offset, Types: types}
+}
+
+func normalizeSearchKeyword(keyword string, aliases map[string]string) string {
+	normalized := normalizeText(keyword)
+	if normalized == "" {
+		return ""
+	}
+	return applySearchAliases(normalized, aliases)
+}
+
+func applySearchAliases(keyword string, aliases map[string]string) string {
+	if len(aliases) == 0 {
+		return keyword
+	}
+
+	normalizedAliases := make(map[string]string, len(aliases))
+	for from, to := range aliases {
+		normalizedFrom := normalizeText(from)
+		normalizedTo := normalizeText(to)
+		if normalizedFrom == "" || normalizedTo == "" {
+			continue
+		}
+		normalizedAliases[normalizedFrom] = normalizedTo
+	}
+
+	if replaced, ok := normalizedAliases[keyword]; ok {
+		return replaced
+	}
+
+	terms := strings.Fields(keyword)
+	for i, term := range terms {
+		if replaced, ok := normalizedAliases[term]; ok {
+			terms[i] = replaced
+		}
+	}
+	return strings.Join(terms, " ")
+}
+
+func normalizeText(s string) string {
+	normalized := norm.NFKC.String(s)
+	var b strings.Builder
+	b.Grow(len(normalized))
+
+	for _, r := range normalized {
+		r = katakanaToHiragana(r)
+		switch {
+		case unicode.IsLetter(r), unicode.IsDigit(r):
+			b.WriteRune(unicode.ToLower(r))
+		case unicode.IsSpace(r):
+			b.WriteByte(' ')
+		default:
+			// Treat punctuation/symbols as separators.
+			b.WriteByte(' ')
+		}
+	}
+	return strings.Join(strings.Fields(b.String()), " ")
+}
+
+func katakanaToHiragana(r rune) rune {
+	if r >= 'ァ' && r <= 'ヶ' {
+		return r - 0x60
+	}
+	return r
 }

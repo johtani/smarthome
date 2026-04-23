@@ -6,7 +6,11 @@
   },
   "owntone": {
     "url": "",
-    "timeout": 10
+    "timeout": 10,
+    "search_aliases": {
+      "ひげだん": "official髭男dism",
+      "mga": "mrs green apple"
+    }
   },
   "yamaha": {
     "url": "",
