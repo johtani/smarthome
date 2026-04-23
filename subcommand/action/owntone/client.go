@@ -282,6 +282,17 @@ type SearchResult struct {
 func (c Client) Search(ctx context.Context, keyword string, resultType []SearchType, limit int) (*SearchResult, error) {
 	params := map[string]string{}
 	params["query"] = keyword
+	return c.search(ctx, params, resultType, limit)
+}
+
+// SearchByExpression performs a search on the Owntone server using expression.
+func (c Client) SearchByExpression(ctx context.Context, expression string, resultType []SearchType, limit int) (*SearchResult, error) {
+	params := map[string]string{}
+	params["expression"] = expression
+	return c.search(ctx, params, resultType, limit)
+}
+
+func (c Client) search(ctx context.Context, params map[string]string, resultType []SearchType, limit int) (*SearchResult, error) {
 	l := limit
 	if limit <= 0 {
 		l = 5

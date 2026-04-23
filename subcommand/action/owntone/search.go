@@ -3,6 +3,7 @@ package owntone
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -38,8 +39,9 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	if strings.TrimSpace(searchKeyword) == "" {
 		searchKeyword = originalKeyword
 	}
+	keywords := buildSearchKeywords(originalKeyword, searchKeyword)
 
-	result, err := a.c.Search(ctx, searchKeyword, searchQuery.TypeArray(), searchQuery.Limit)
+	result, err := a.searchWithFallback(ctx, keywords, searchKeyword, searchQuery.TypeArray(), searchQuery.Limit)
 	if err != nil {
 		return "Something wrong...", fmt.Errorf("error in SearchAndDisplayAction\n %v", err)
 	}
@@ -91,6 +93,19 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 		msg = append(msg, "And no play items...")
 	}
 	return strings.Join(msg, "\n"), nil
+}
+
+func (a SearchAndPlayAction) searchWithFallback(ctx context.Context, keywords []string, fallbackKeyword string, types []SearchType, limit int) (*SearchResult, error) {
+	expression := buildSearchExpression(keywords, types)
+	if expression == "" {
+		return a.c.Search(ctx, fallbackKeyword, types, limit)
+	}
+
+	result, err := a.c.SearchByExpression(ctx, expression, types, limit)
+	if err != nil || totalSearchResultCount(result) == 0 {
+		return a.c.Search(ctx, fallbackKeyword, types, limit)
+	}
+	return result, nil
 }
 
 // NewSearchAndPlayAction creates a new SearchAndPlayAction.
@@ -206,6 +221,83 @@ func Parse(target string) *SearchQuery {
 		}
 	}
 	return &SearchQuery{Terms: queries, Limit: limit, Offset: offset, Types: types}
+}
+
+func buildSearchKeywords(originalKeyword string, normalizedKeyword string) []string {
+	var keywords []string
+	for _, keyword := range []string{originalKeyword, normalizedKeyword} {
+		trimmed := strings.TrimSpace(keyword)
+		if trimmed == "" || slices.Contains(keywords, trimmed) {
+			continue
+		}
+		keywords = append(keywords, trimmed)
+	}
+	return keywords
+}
+
+func buildSearchExpression(keywords []string, types []SearchType) string {
+	fields := expressionFields(types)
+	if len(fields) == 0 || len(keywords) == 0 {
+		return ""
+	}
+
+	keywordClauses := make([]string, 0, len(keywords))
+	for _, keyword := range keywords {
+		fieldClauses := make([]string, 0, len(fields))
+		escaped := escapeExpressionValue(keyword)
+		for _, field := range fields {
+			fieldClauses = append(fieldClauses, fmt.Sprintf("%s includes \"%s\"", field, escaped))
+		}
+		keywordClauses = append(keywordClauses, fmt.Sprintf("(%s)", strings.Join(fieldClauses, " or ")))
+	}
+	return strings.Join(keywordClauses, " or ")
+}
+
+func expressionFields(types []SearchType) []string {
+	if len(types) == 0 {
+		types = []SearchType{artist, album, track, genre}
+	}
+
+	seen := map[string]struct{}{}
+	fields := []string{}
+	appendFields := func(candidates ...string) {
+		for _, candidate := range candidates {
+			if _, ok := seen[candidate]; ok {
+				continue
+			}
+			seen[candidate] = struct{}{}
+			fields = append(fields, candidate)
+		}
+	}
+
+	for _, searchType := range types {
+		switch searchType {
+		case artist:
+			appendFields("artist")
+		case album:
+			appendFields("album")
+		case track:
+			appendFields("title", "artist", "album")
+		case genre:
+			appendFields("genre")
+		}
+	}
+	return fields
+}
+
+func escapeExpressionValue(value string) string {
+	replacer := strings.NewReplacer(
+		"\\", "\\\\",
+		"\"", "\\\"",
+	)
+	return replacer.Replace(value)
+}
+
+func totalSearchResultCount(result *SearchResult) int {
+	if result == nil {
+		return 0
+	}
+	return result.Artists.Total + result.Albums.Total + result.Tracks.Total + result.Genres.Total + result.Playlists.Total
 }
 
 func normalizeSearchKeyword(keyword string, aliases map[string]string) string {
