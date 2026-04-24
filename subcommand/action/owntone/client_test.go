@@ -518,6 +518,7 @@ func TestClient_Search(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
+		params  map[string][]string
 		want    *SearchResult
 		wantErr bool
 	}{
@@ -525,6 +526,7 @@ func TestClient_Search(t *testing.T) {
 			name:   "OK",
 			fields: fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: searchSampleJSONResponse()},
 			args:   args{keyword: "keyword", resultType: []SearchType{track}},
+			params: map[string][]string{"query": {"keyword"}, "type": {"track"}, "limit": {"5"}},
 			want: &SearchResult{
 				Tracks: Items{Items: []SearchItem{
 					{
@@ -577,11 +579,11 @@ func TestClient_Search(t *testing.T) {
 			},
 			wantErr: false,
 		},
-		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: searchSampleJSONResponse()}, args{keyword: "keyword", resultType: []SearchType{track}}, nil, true},
+		{"NG", fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: searchSampleJSONResponse()}, args{keyword: "keyword", resultType: []SearchType{track}}, map[string][]string{"query": {"keyword"}, "type": {"track"}, "limit": {"5"}}, nil, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, nil, tt.fields.response)
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, tt.params, tt.fields.response)
 			defer server.Close()
 			config := Config{URL: server.URL}
 			c := NewClient(config)
@@ -593,6 +595,57 @@ func TestClient_Search(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Search() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_SearchByExpression(t *testing.T) {
+	type fields struct {
+		statusCode int
+		method     string
+		path       string
+		response   string
+	}
+	type args struct {
+		expression string
+		resultType []SearchType
+		limit      int
+	}
+	path := "/api/search"
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		params  map[string][]string
+		wantErr bool
+	}{
+		{
+			name:    "OK",
+			fields:  fields{statusCode: http.StatusOK, method: http.MethodGet, path: path, response: searchSampleJSONResponse()},
+			args:    args{expression: "title includes \"keyword\"", resultType: []SearchType{track}, limit: 2},
+			params:  map[string][]string{"expression": {"title includes \"keyword\""}, "type": {"track"}, "limit": {"2"}},
+			wantErr: false,
+		},
+		{
+			name:    "NG",
+			fields:  fields{statusCode: http.StatusInternalServerError, method: http.MethodGet, path: path, response: searchSampleJSONResponse()},
+			args:    args{expression: "title includes \"keyword\"", resultType: []SearchType{track}, limit: 2},
+			params:  map[string][]string{"expression": {"title includes \"keyword\""}, "type": {"track"}, "limit": {"2"}},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := createMockServerWithResponse(tt.fields.statusCode, tt.fields.method, tt.fields.path, tt.params, tt.fields.response)
+			defer server.Close()
+			config := Config{URL: server.URL}
+			c := NewClient(config)
+
+			_, err := c.SearchByExpression(context.Background(), tt.args.expression, tt.args.resultType, tt.args.limit)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SearchByExpression() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}

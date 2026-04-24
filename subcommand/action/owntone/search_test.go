@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -162,32 +161,71 @@ func TestNormalizeSearchKeyword(t *testing.T) {
 
 func TestSearchAndPlayAction_Run_UsesNormalizedQueryAndFallback(t *testing.T) {
 	tests := []struct {
-		name           string
-		query          string
-		aliases        map[string]string
-		wantSearchText string
+		name                string
+		query               string
+		aliases             map[string]string
+		expressionStatus    int
+		expressionResponse  string
+		queryStatus         int
+		wantExpressionParts []string
+		wantQueryText       string
 	}{
 		{
-			name:           "normalized alias query",
-			query:          "ＭＧＡ!!!",
-			aliases:        map[string]string{"mga": "Mrs GREEN APPLE"},
-			wantSearchText: "mrs green apple",
+			name:               "expression search uses original and normalized keywords",
+			query:              "ＭＧＡ!!!",
+			aliases:            map[string]string{"mga": "Mrs GREEN APPLE"},
+			expressionStatus:   http.StatusOK,
+			expressionResponse: searchSampleJSONResponse(),
+			queryStatus:        http.StatusOK,
+			wantExpressionParts: []string{
+				"title includes \"ＭＧＡ!!!\"",
+				"title includes \"mrs green apple\"",
+			},
+			wantQueryText: "",
 		},
 		{
-			name:           "fallback to original terms when normalized empty",
-			query:          "!!! type:artist",
-			aliases:        nil,
-			wantSearchText: "!!!",
+			name:               "fallback to query when expression search returns error",
+			query:              "ＭＧＡ!!! type:track",
+			aliases:            map[string]string{"mga": "Mrs GREEN APPLE"},
+			expressionStatus:   http.StatusBadRequest,
+			expressionResponse: `{"message":"invalid expression"}`,
+			queryStatus:        http.StatusOK,
+			wantExpressionParts: []string{
+				"title includes \"ＭＧＡ!!!\"",
+				"title includes \"mrs green apple\"",
+			},
+			wantQueryText: "mrs green apple",
+		},
+		{
+			name:               "fallback to query when expression search has no hit",
+			query:              "!!! type:artist",
+			aliases:            nil,
+			expressionStatus:   http.StatusOK,
+			expressionResponse: emptySearchJSONResponse(),
+			queryStatus:        http.StatusOK,
+			wantExpressionParts: []string{
+				"artist includes \"!!!\"",
+			},
+			wantQueryText: "!!!",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var receivedQuery string
+			var receivedExpressions []string
+			var receivedQueries []string
 			mux := http.NewServeMux()
 			mux.HandleFunc("/api/search", func(w http.ResponseWriter, r *http.Request) {
-				receivedQuery = r.URL.Query().Get("query")
-				w.WriteHeader(http.StatusOK)
+				receivedExpression := r.URL.Query().Get("expression")
+				receivedQuery := r.URL.Query().Get("query")
+				receivedExpressions = append(receivedExpressions, receivedExpression)
+				receivedQueries = append(receivedQueries, receivedQuery)
+				if receivedExpression != "" {
+					w.WriteHeader(tt.expressionStatus)
+					_, _ = w.Write([]byte(tt.expressionResponse))
+					return
+				}
+				w.WriteHeader(tt.queryStatus)
 				_, _ = w.Write([]byte(searchSampleJSONResponse()))
 			})
 			mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
@@ -208,13 +246,75 @@ func TestSearchAndPlayAction_Run_UsesNormalizedQueryAndFallback(t *testing.T) {
 				t.Fatalf("Run() error = %v", err)
 			}
 
-			got, err := url.QueryUnescape(receivedQuery)
-			if err != nil {
-				t.Fatalf("QueryUnescape() error = %v", err)
+			expression := ""
+			for _, v := range receivedExpressions {
+				if v != "" {
+					expression = v
+					break
+				}
 			}
-			if got != tt.wantSearchText {
-				t.Fatalf("search query = %q, want %q", got, tt.wantSearchText)
+			for _, part := range tt.wantExpressionParts {
+				if !strings.Contains(expression, part) {
+					t.Fatalf("expression = %q, want to contain %q", expression, part)
+				}
+			}
+
+			query := ""
+			for _, v := range receivedQueries {
+				if v != "" {
+					query = v
+				}
+			}
+			if query != tt.wantQueryText {
+				t.Fatalf("search query = %q, want %q", query, tt.wantQueryText)
 			}
 		})
 	}
+}
+
+func TestBuildSearchExpression(t *testing.T) {
+	tests := []struct {
+		name     string
+		keywords []string
+		types    []SearchType
+		want     string
+	}{
+		{
+			name:     "track type expression",
+			keywords: []string{"Utada", "宇多田ひかる"},
+			types:    []SearchType{track},
+			want:     "(title includes \"Utada\" or artist includes \"Utada\" or album includes \"Utada\") or (title includes \"宇多田ひかる\" or artist includes \"宇多田ひかる\" or album includes \"宇多田ひかる\")",
+		},
+		{
+			name:     "escape quote and slash",
+			keywords: []string{`A"B\C`},
+			types:    []SearchType{artist},
+			want:     `(artist includes "A\"B\\C")`,
+		},
+		{
+			name:     "empty keywords",
+			keywords: nil,
+			types:    []SearchType{artist},
+			want:     "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := buildSearchExpression(tt.keywords, tt.types)
+			if got != tt.want {
+				t.Fatalf("buildSearchExpression() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func emptySearchJSONResponse() string {
+	return `{
+  "tracks": {"items": [], "total": 0, "offset": 0, "limit": 5},
+  "artists": {"items": [], "total": 0, "offset": 0, "limit": 5},
+  "albums": {"items": [], "total": 0, "offset": 0, "limit": 5},
+  "genres": {"items": [], "total": 0, "offset": 0, "limit": 5},
+  "playlists": {"items": [], "total": 0, "offset": 0, "limit": 5}
+}`
 }
