@@ -6,7 +6,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List, Optional
 
 import dspy
 from fastapi import FastAPI, HTTPException
@@ -148,9 +148,59 @@ def parse_bool(value: str) -> bool:
 
 
 MODEL = os.getenv("MODEL", "openai/gpt-4o-mini")
+LM_API_BASE = (os.getenv("LM_API_BASE", "") or "").strip()
+LM_API_KEY = (os.getenv("LM_API_KEY", "") or "").strip()
+OPENAI_API_KEY = (os.getenv("OPENAI_API_KEY", "") or "").strip()
+LM_MODEL_TYPE = (os.getenv("LM_MODEL_TYPE", "chat") or "").strip()
+LM_TEMPERATURE = (os.getenv("LM_TEMPERATURE", "") or "").strip()
+LM_MAX_TOKENS = (os.getenv("LM_MAX_TOKENS", "") or "").strip()
+
+
+def parse_optional_float(value: str) -> Optional[float]:
+    if not value:
+        return None
+    try:
+        return float(value)
+    except Exception:
+        return None
+
+
+def parse_optional_int(value: str) -> Optional[int]:
+    if not value:
+        return None
+    try:
+        return int(value)
+    except Exception:
+        return None
+
+
+def build_lm_kwargs() -> Dict[str, Any]:
+    kwargs: Dict[str, Any] = {}
+    if LM_API_BASE:
+        kwargs["api_base"] = LM_API_BASE
+    if LM_API_KEY:
+        kwargs["api_key"] = LM_API_KEY
+    elif OPENAI_API_KEY:
+        kwargs["api_key"] = OPENAI_API_KEY
+
+    if LM_MODEL_TYPE:
+        kwargs["model_type"] = LM_MODEL_TYPE
+
+    temperature = parse_optional_float(LM_TEMPERATURE)
+    if temperature is not None:
+        kwargs["temperature"] = temperature
+
+    max_tokens = parse_optional_int(LM_MAX_TOKENS)
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+
+    return kwargs
+
+
+LM_KWARGS = build_lm_kwargs()
 LM_CONFIGURED = False
 try:
-    dspy.configure(lm=dspy.LM(MODEL))
+    dspy.configure(lm=dspy.LM(MODEL, **LM_KWARGS))
     LM_CONFIGURED = True
 except Exception:
     # Keep process alive; request handler returns 503 and smarthome can fallback to legacy.
@@ -164,8 +214,21 @@ app = FastAPI(title="smarthome-dspy-resolver", version="0.2.0")
 @app.get("/healthz")
 def healthz() -> dict:
     if not LM_CONFIGURED:
-        raise HTTPException(status_code=503, detail={"status": "not_ready", "model": MODEL})
-    return {"status": "ok", "model": MODEL}
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "status": "not_ready",
+                "model": MODEL,
+                "api_base": LM_API_BASE,
+                "model_type": LM_MODEL_TYPE,
+            },
+        )
+    return {
+        "status": "ok",
+        "model": MODEL,
+        "api_base": LM_API_BASE,
+        "model_type": LM_MODEL_TYPE,
+    }
 
 
 @app.post("/resolve", response_model=ResolveResponse)
