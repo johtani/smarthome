@@ -40,8 +40,7 @@ func NewSearchAndPlayMusicSubcommand(definition Definition, config Config) Subco
 
 	searchAction := owntone.NewSearchAndPlayAction(
 		owntoneClient,
-		owntone.WithMusicIntentResolver(intentResolver),
-		owntone.WithMusicIntentConfidenceThreshold(config.Owntone.MusicIntentConfidenceThreshold),
+		buildSearchAndPlayOptions(config.Owntone, intentResolver)...,
 	)
 
 	return Subcommand{
@@ -56,4 +55,14 @@ func NewSearchAndPlayMusicSubcommand(definition Definition, config Config) Subco
 		},
 		ignoreError: true,
 	}
+}
+
+func buildSearchAndPlayOptions(cfg owntone.Config, resolver owntone.MusicIntentResolver) []owntone.SearchAndPlayActionOption {
+	opts := []owntone.SearchAndPlayActionOption{
+		owntone.WithMusicIntentResolver(resolver),
+	}
+	if cfg.MusicIntentConfidenceThresholdSet {
+		opts = append(opts, owntone.WithMusicIntentConfidenceThreshold(cfg.MusicIntentConfidenceThreshold))
+	}
+	return opts
 }

@@ -27,12 +27,13 @@ type Client struct {
 
 // Config is the configuration for the Owntone client.
 type Config struct {
-	URL                            string            `json:"url"`
-	Timeout                        int               `json:"timeout"`
-	SearchAliases                  map[string]string `json:"search_aliases"`
-	MusicIntentEndpoint            string            `json:"music_intent_endpoint"`
-	MusicIntentTimeoutSeconds      int               `json:"music_intent_timeout_seconds"`
-	MusicIntentConfidenceThreshold float64           `json:"music_intent_confidence_threshold"`
+	URL                               string            `json:"url"`
+	Timeout                           int               `json:"timeout"`
+	SearchAliases                     map[string]string `json:"search_aliases"`
+	MusicIntentEndpoint               string            `json:"music_intent_endpoint"`
+	MusicIntentTimeoutSeconds         int               `json:"music_intent_timeout_seconds"`
+	MusicIntentConfidenceThreshold    float64           `json:"music_intent_confidence_threshold"`
+	MusicIntentConfidenceThresholdSet bool              `json:"-"`
 }
 
 // Validate validates the Owntone configuration.
