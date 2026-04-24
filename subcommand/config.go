@@ -122,6 +122,23 @@ func (c *Config) overrideWithEnv() {
 			c.Owntone.Timeout = i
 		}
 	}
+	// SMARTHOME_OWNTONE_MUSIC_INTENT_ENDPOINT
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_MUSIC_INTENT_ENDPOINT"); ok {
+		c.Owntone.MusicIntentEndpoint = val
+	}
+	// SMARTHOME_OWNTONE_MUSIC_INTENT_TIMEOUT_SECONDS
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_MUSIC_INTENT_TIMEOUT_SECONDS"); ok {
+		if i, err := strconv.Atoi(val); err == nil {
+			c.Owntone.MusicIntentTimeoutSeconds = i
+		}
+	}
+	// SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD"); ok {
+		if f, err := strconv.ParseFloat(val, 64); err == nil {
+			c.Owntone.MusicIntentConfidenceThreshold = f
+			c.Owntone.MusicIntentConfidenceThresholdSet = true
+		}
+	}
 	// SMARTHOME_SWITCHBOT_TOKEN
 	if val, ok := os.LookupEnv("SMARTHOME_SWITCHBOT_TOKEN"); ok {
 		c.Switchbot.Token = val
@@ -198,6 +215,38 @@ func (c *Config) overrideWithEnv() {
 	}
 }
 
+func detectOwntoneThresholdSet(configFile string) (bool, error) {
+	// #nosec G304
+	data, err := os.ReadFile(configFile)
+	if err != nil {
+		return false, err
+	}
+
+	var root map[string]json.RawMessage
+	if err := json.Unmarshal(data, &root); err != nil {
+		return false, nil
+	}
+
+	var owntoneRaw json.RawMessage
+	for _, key := range []string{"owntone", "Owntone"} {
+		if v, ok := root[key]; ok {
+			owntoneRaw = v
+			break
+		}
+	}
+	if len(owntoneRaw) == 0 {
+		return false, nil
+	}
+
+	var owntoneMap map[string]json.RawMessage
+	if err := json.Unmarshal(owntoneRaw, &owntoneMap); err != nil {
+		return false, nil
+	}
+
+	_, ok := owntoneMap["music_intent_confidence_threshold"]
+	return ok, nil
+}
+
 // LoadConfig loads the configuration from the default directory.
 func LoadConfig() (Config, error) {
 	return LoadConfigFromDir(ConfigDirName)
@@ -256,6 +305,11 @@ func loadConfigJSON(configFile string) (Config, error) {
 			return Config{}, fmt.Errorf("JSON syntax error at byte offset %d: %w", syntaxErr.Offset, syntaxErr)
 		}
 		return Config{}, fmt.Errorf("failed to parse config file: %w", err)
+	}
+
+	thresholdSet, detectErr := detectOwntoneThresholdSet(configFile)
+	if detectErr == nil {
+		config.Owntone.MusicIntentConfidenceThresholdSet = thresholdSet
 	}
 
 	config.overrideWithEnv()

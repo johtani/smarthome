@@ -2,6 +2,7 @@ package owntone
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -306,6 +307,217 @@ func TestBuildSearchExpression(t *testing.T) {
 				t.Fatalf("buildSearchExpression() = %q, want %q", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestBuildSearchExpressionAND(t *testing.T) {
+	got := buildSearchExpressionAND([]string{"Utada", "First Love"}, []SearchType{track})
+	want := "(title includes \"Utada\" or artist includes \"Utada\" or album includes \"Utada\") and (title includes \"First Love\" or artist includes \"First Love\" or album includes \"First Love\")"
+	if got != want {
+		t.Fatalf("buildSearchExpressionAND() = %q, want %q", got, want)
+	}
+}
+
+type fakeMusicIntentResolver struct {
+	intent MusicIntent
+	err    error
+}
+
+func (f fakeMusicIntentResolver) Path() string {
+	return "fake_music_intent"
+}
+
+func (f fakeMusicIntentResolver) Resolve(_ context.Context, _ string) (MusicIntent, error) {
+	if f.err != nil {
+		return MusicIntent{}, f.err
+	}
+	return f.intent, nil
+}
+
+func TestSearchAndPlayAction_Run_LowConfidenceShowsCandidatesWithoutPlaying(t *testing.T) {
+	var receivedExpression string
+	var clearQueueCalled bool
+	var addQueueCalled bool
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, r *http.Request) {
+		receivedExpression = r.URL.Query().Get("expression")
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, searchSampleJSONResponse())
+	})
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		clearQueueCalled = true
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
+		addQueueCalled = true
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := NewClient(Config{URL: server.URL})
+	action := NewSearchAndPlayAction(
+		client,
+		WithMusicIntentResolver(fakeMusicIntentResolver{
+			intent: MusicIntent{
+				ArtistCandidates: []string{"宇多田ヒカル"},
+				TrackCandidates:  []string{"First Love"},
+				Confidence:       0.40,
+			},
+		}),
+		WithMusicIntentConfidenceThreshold(0.75),
+	)
+
+	got, err := action.Run(context.Background(), "宇多田ヒカルのFirst Loveかけて")
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if !strings.Contains(got, "Candidate results only (no autoplay).") {
+		t.Fatalf("Run() result = %q, want candidate-only message", got)
+	}
+	if !strings.Contains(receivedExpression, " and ") {
+		t.Fatalf("strict expression = %q, want AND expression", receivedExpression)
+	}
+	if clearQueueCalled || addQueueCalled {
+		t.Fatalf("expected no playback actions, clear=%v add=%v", clearQueueCalled, addQueueCalled)
+	}
+}
+
+func TestSearchAndPlayAction_Run_StrictGenreUsesIntentGenreForPlayback(t *testing.T) {
+	var addExpression string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("expression") != "" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = io.WriteString(w, `{
+  "tracks": {"items": [], "total": 0, "offset": 0, "limit": 5},
+  "artists": {"items": [], "total": 0, "offset": 0, "limit": 5},
+  "albums": {"items": [], "total": 0, "offset": 0, "limit": 5},
+  "genres": {"items": [{"name":"Rock","track_count":10}], "total": 1, "offset": 0, "limit": 5},
+  "playlists": {"items": [], "total": 0, "offset": 0, "limit": 5}
+}`)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, emptySearchJSONResponse())
+	})
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, r *http.Request) {
+		addExpression = r.URL.Query().Get("expression")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := NewClient(Config{
+		URL:           server.URL,
+		SearchAliases: map[string]string{"ろっく": "rock"},
+	})
+	action := NewSearchAndPlayAction(
+		client,
+		WithMusicIntentResolver(fakeMusicIntentResolver{
+			intent: MusicIntent{
+				GenreCandidates: []string{"ロック"},
+				Confidence:      0.95,
+			},
+		}),
+	)
+
+	_, err := action.Run(context.Background(), "ロック系をかけて")
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if addExpression != `genre is "rock"` {
+		t.Fatalf("expression = %q, want %q", addExpression, `genre is "rock"`)
+	}
+}
+
+func TestSearchAndPlayAction_Run_AmbiguousIntentShowsCandidatesWithoutPlaying(t *testing.T) {
+	var addQueueCalled bool
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, searchSampleJSONResponse())
+	})
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
+		addQueueCalled = true
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := NewClient(Config{URL: server.URL})
+	action := NewSearchAndPlayAction(
+		client,
+		WithMusicIntentResolver(fakeMusicIntentResolver{
+			intent: MusicIntent{
+				TrackCandidates: []string{"First Love"},
+				Confidence:      0.99,
+				Ambiguous:       true,
+			},
+		}),
+	)
+
+	got, err := action.Run(context.Background(), "First Loveかけて")
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if !strings.Contains(got, "Candidate results only (no autoplay).") {
+		t.Fatalf("Run() result = %q, want candidate-only message", got)
+	}
+	if addQueueCalled {
+		t.Fatal("expected no playback actions for ambiguous intent")
+	}
+}
+
+func TestWithMusicIntentConfidenceThreshold_AllowsZero(t *testing.T) {
+	action := NewSearchAndPlayAction(
+		NewClient(Config{URL: "http://example.local"}),
+		WithMusicIntentConfidenceThreshold(0),
+	)
+	if action.musicIntentConfidenceThreshold != 0 {
+		t.Fatalf("threshold = %v, want 0", action.musicIntentConfidenceThreshold)
+	}
+}
+
+func TestSearchAndPlayAction_Run_MusicIntentFailureFallsBackToLegacy(t *testing.T) {
+	var searchCalls int
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, r *http.Request) {
+		searchCalls++
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, searchSampleJSONResponse())
+	})
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := NewClient(Config{URL: server.URL})
+	action := NewSearchAndPlayAction(
+		client,
+		WithMusicIntentResolver(fakeMusicIntentResolver{err: fmt.Errorf("boom")}),
+	)
+
+	got, err := action.Run(context.Background(), "keyword")
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if !strings.Contains(got, "And play these items") {
+		t.Fatalf("unexpected result: %q", got)
+	}
+	if searchCalls == 0 {
+		t.Fatal("expected legacy search to be called")
 	}
 }
 

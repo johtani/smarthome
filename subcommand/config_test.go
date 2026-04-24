@@ -88,6 +88,7 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	_ = os.Setenv("SMARTHOME_RESOLVER_PROMPT_VERSION", "2026-04-14")
 	_ = os.Setenv("SMARTHOME_RESOLVER_DSPY_ENDPOINT", "http://env-dspy-endpoint")
 	_ = os.Setenv("SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS", "9")
+	_ = os.Setenv("SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD", "0")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
@@ -104,6 +105,7 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 		_ = os.Unsetenv("SMARTHOME_RESOLVER_PROMPT_VERSION")
 		_ = os.Unsetenv("SMARTHOME_RESOLVER_DSPY_ENDPOINT")
 		_ = os.Unsetenv("SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS")
+		_ = os.Unsetenv("SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_TOKEN")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_URL")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_BUCKET")
@@ -146,6 +148,12 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	}
 	if config.Resolver.DSPyTimeoutSeconds != 9 {
 		t.Errorf("expected dspy timeout 9, got %d", config.Resolver.DSPyTimeoutSeconds)
+	}
+	if config.Owntone.MusicIntentConfidenceThreshold != 0 {
+		t.Errorf("expected owntone threshold 0, got %v", config.Owntone.MusicIntentConfidenceThreshold)
+	}
+	if !config.Owntone.MusicIntentConfidenceThresholdSet {
+		t.Error("expected owntone threshold set flag to be true")
 	}
 	if config.Influxdb.Token != "env-influx-token" {
 		t.Errorf("expected env-influx-token, got %s", config.Influxdb.Token)
@@ -248,6 +256,45 @@ func TestLoadConfigWithPath(t *testing.T) {
 	}
 	if config.Resolver.DSPyTimeoutSeconds != 5 {
 		t.Errorf("expected default dspy timeout 5, got %d", config.Resolver.DSPyTimeoutSeconds)
+	}
+	if config.Owntone.MusicIntentConfidenceThresholdSet {
+		t.Error("expected owntone threshold set flag to be false when key is missing")
+	}
+}
+
+func TestLoadConfigWithPath_OwntoneThresholdExplicitlySet(t *testing.T) {
+	content := `{
+		"Owntone": {"url": "http://localhost:8000", "music_intent_confidence_threshold": 0},
+		"Switchbot": {"token": "token", "secret": "secret"},
+		"Yamaha": {"url": "http://localhost:8080"},
+		"LLM": {"endpoint": "http://localhost:8081", "model": "gpt-4o"},
+		"Influxdb": {"url": "http://localhost:8086", "token": "token", "bucket": "bucket", "org": "org"}
+	}`
+	tmpfile, err := os.CreateTemp("", "config_test_threshold.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		_ = os.Remove(tmpfile.Name())
+	}()
+
+	if _, err := tmpfile.Write([]byte(content)); err != nil {
+		t.Fatal(err)
+	}
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	config, err := LoadConfigWithPath(tmpfile.Name())
+	if err != nil {
+		t.Fatalf("LoadConfigWithPath failed: %v", err)
+	}
+
+	if !config.Owntone.MusicIntentConfidenceThresholdSet {
+		t.Error("expected owntone threshold set flag to be true when key exists")
+	}
+	if config.Owntone.MusicIntentConfidenceThreshold != 0 {
+		t.Errorf("expected threshold 0, got %v", config.Owntone.MusicIntentConfidenceThreshold)
 	}
 }
 

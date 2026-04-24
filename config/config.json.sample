@@ -10,7 +10,10 @@
     "search_aliases": {
       "ひげだん": "official髭男dism",
       "mga": "mrs green apple"
-    }
+    },
+    "music_intent_endpoint": "",
+    "music_intent_timeout_seconds": 5,
+    "music_intent_confidence_threshold": 0.75
   },
   "yamaha": {
     "url": "",

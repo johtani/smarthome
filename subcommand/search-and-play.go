@@ -32,16 +32,37 @@ func NewSearchAndPlayMusicCmdDefinition() Definition {
 func NewSearchAndPlayMusicSubcommand(definition Definition, config Config) Subcommand {
 	owntoneClient := owntone.NewClient(config.Owntone)
 	yamahaClient := yamaha.NewClient(config.Yamaha)
+
+	intentResolver := owntone.NewHTTPMusicIntentResolver(
+		config.Owntone.MusicIntentEndpoint,
+		time.Duration(config.Owntone.MusicIntentTimeoutSeconds)*time.Second,
+	)
+
+	searchAction := owntone.NewSearchAndPlayAction(
+		owntoneClient,
+		buildSearchAndPlayOptions(config.Owntone, intentResolver)...,
+	)
+
 	return Subcommand{
 		Definition: definition,
 		actions: []action.Action{
 			yamaha.NewPowerOnAction(yamahaClient),
 			yamaha.NewSetInputAction(yamahaClient, "airplay"),
-			owntone.NewSearchAndPlayAction(owntoneClient),
+			searchAction,
 			action.NewNoOpAction(3 * time.Second),
 			yamaha.NewSetVolumeAction(yamahaClient, 39),
 			owntone.NewDisplayOutputsAction(owntoneClient, true),
 		},
 		ignoreError: true,
 	}
+}
+
+func buildSearchAndPlayOptions(cfg owntone.Config, resolver owntone.MusicIntentResolver) []owntone.SearchAndPlayActionOption {
+	opts := []owntone.SearchAndPlayActionOption{
+		owntone.WithMusicIntentResolver(resolver),
+	}
+	if cfg.MusicIntentConfidenceThresholdSet {
+		opts = append(opts, owntone.WithMusicIntentConfidenceThreshold(cfg.MusicIntentConfidenceThreshold))
+	}
+	return opts
 }
