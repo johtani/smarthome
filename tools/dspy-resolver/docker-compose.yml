@@ -7,6 +7,11 @@ services:
     environment:
       MODEL: ${MODEL:-openai/gpt-4o-mini}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      LM_API_BASE: ${LM_API_BASE:-}
+      LM_API_KEY: ${LM_API_KEY:-}
+      LM_MODEL_TYPE: ${LM_MODEL_TYPE:-chat}
+      LM_TEMPERATURE: ${LM_TEMPERATURE:-}
+      LM_MAX_TOKENS: ${LM_MAX_TOKENS:-}
     ports:
       - "${DSPY_RESOLVER_PORT:-8089}:8080"
     restart: unless-stopped

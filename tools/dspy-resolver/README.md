@@ -58,33 +58,53 @@
 
 ## Docker Compose (recommended)
 
-1. 環境変数を設定:
+利用可能な主な環境変数:
 
 ```powershell
+# 共通
+$env:MODEL="openai/gpt-4o-mini"
+
+# OpenAI利用時
 $env:OPENAI_API_KEY="<your_api_key>"
+
+# ローカルOpenAI互換(例: llm-swap)利用時
+$env:LM_API_BASE="http://host.docker.internal:11434/v1"
+$env:LM_API_KEY="local-dummy-key"
+$env:LM_MODEL_TYPE="chat"
+# 任意
+$env:LM_TEMPERATURE="0.2"
+$env:LM_MAX_TOKENS="512"
 ```
 
-2. 起動:
+起動:
 
 ```powershell
 docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
 ```
 
-3. ヘルスチェック:
+ヘルスチェック:
 
 ```powershell
 curl http://localhost:8089/healthz
 ```
 
-`OPENAI_API_KEY` 未設定などで LM 初期化に失敗した場合は `503` を返します。
+`/healthz` は `model` に加えて `api_base` / `model_type` / `temperature` / `max_tokens` / `api_key_source` を返します。  
+`LM_TEMPERATURE` または `LM_MAX_TOKENS` が不正値の場合を含め、LM 初期化に失敗した場合は `503` を返します。
+
+Dockerコンテナからホスト上のローカルLLMへ接続する場合、`localhost` ではなく `host.docker.internal` を使ってください。
 
 ## Docker (single command)
 
 ```powershell
 docker build -f tools/dspy-resolver/Dockerfile -t smarthome-dspy-resolver .
 docker run --rm -p 8089:8080 `
+  -e MODEL=$env:MODEL `
   -e OPENAI_API_KEY=$env:OPENAI_API_KEY `
-  -e MODEL=openai/gpt-4o-mini `
+  -e LM_API_BASE=$env:LM_API_BASE `
+  -e LM_API_KEY=$env:LM_API_KEY `
+  -e LM_MODEL_TYPE=$env:LM_MODEL_TYPE `
+  -e LM_TEMPERATURE=$env:LM_TEMPERATURE `
+  -e LM_MAX_TOKENS=$env:LM_MAX_TOKENS `
   smarthome-dspy-resolver
 ```
 
