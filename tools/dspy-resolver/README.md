@@ -88,8 +88,8 @@ docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
 curl http://localhost:8089/healthz
 ```
 
-`/healthz` は `model` に加えて `api_base` と `model_type` も返します。  
-LM 初期化に失敗した場合は `503` を返します。
+`/healthz` は `model` に加えて `api_base` / `model_type` / `temperature` / `max_tokens` / `api_key_source` を返します。  
+`LM_TEMPERATURE` または `LM_MAX_TOKENS` が不正値の場合を含め、LM 初期化に失敗した場合は `503` を返します。
 
 Dockerコンテナからホスト上のローカルLLMへ接続する場合、`localhost` ではなく `host.docker.internal` を使ってください。
 
