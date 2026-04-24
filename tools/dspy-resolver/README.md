@@ -1,11 +1,15 @@
 # DSPy Resolver Server
 
-`smarthome` の `resolver.mode=dspy` で利用する外部 HTTP resolver の最小実装です。
+`smarthome` の外部 HTTP resolver 最小実装です。
+
+- コマンド解決（`resolver.mode=dspy`）: `POST /resolve`
+- Music Intent 解決（`search and play` 強化）: `POST /resolve-music-intent`
 
 ## API
 
 - `GET /healthz`
 - `POST /resolve`
+- `POST /resolve-music-intent`
 
 ### Request (`POST /resolve`)
 
@@ -17,7 +21,7 @@
 }
 ```
 
-### Response
+### Response (`POST /resolve`)
 
 ```json
 {
@@ -28,6 +32,29 @@
 ```
 
 `command` は `command_list` 内の名前に一致するものだけ返します。一致しない場合は空文字列を返します。
+
+### Request (`POST /resolve-music-intent`)
+
+```json
+{
+  "text": "宇多田ヒカルのFirst Loveかけて"
+}
+```
+
+### Response (`POST /resolve-music-intent`)
+
+```json
+{
+  "artist_candidates": ["宇多田ヒカル"],
+  "track_candidates": ["First Love"],
+  "genre_candidates": [],
+  "must_terms": [],
+  "confidence": 0.92,
+  "ambiguous": false,
+  "reason": "artist and track detected",
+  "model": "openai/gpt-4o-mini"
+}
+```
 
 ## Docker Compose (recommended)
 
@@ -63,7 +90,7 @@ docker run --rm -p 8089:8080 `
 
 ## smarthome 側設定
 
-`config/config.json` または環境変数で設定します。
+### コマンド解決（既存）
 
 ```json
 {
@@ -75,10 +102,22 @@ docker run --rm -p 8089:8080 `
 }
 ```
 
+### Music Intent 解決（今回追加）
+
+```json
+{
+  "owntone": {
+    "music_intent_endpoint": "http://localhost:8089/resolve-music-intent",
+    "music_intent_timeout_seconds": 5,
+    "music_intent_confidence_threshold": 0.75
+  }
+}
+```
+
 または環境変数:
 
-- `SMARTHOME_RESOLVER_MODE=dspy`
-- `SMARTHOME_RESOLVER_DSPY_ENDPOINT=http://localhost:8089/resolve`
-- `SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS=5`
+- `SMARTHOME_OWNTONE_MUSIC_INTENT_ENDPOINT=http://localhost:8089/resolve-music-intent`
+- `SMARTHOME_OWNTONE_MUSIC_INTENT_TIMEOUT_SECONDS=5`
+- `SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD=0.75`
 
-DSPy resolver が未設定または失敗した場合、`smarthome` は legacy resolver (LLM) にフォールバックします。
+Resolver が未設定または失敗した場合、`smarthome` は既存検索経路へフォールバックします。
