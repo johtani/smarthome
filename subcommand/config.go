@@ -122,6 +122,22 @@ func (c *Config) overrideWithEnv() {
 			c.Owntone.Timeout = i
 		}
 	}
+	// SMARTHOME_OWNTONE_MUSIC_INTENT_ENDPOINT
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_MUSIC_INTENT_ENDPOINT"); ok {
+		c.Owntone.MusicIntentEndpoint = val
+	}
+	// SMARTHOME_OWNTONE_MUSIC_INTENT_TIMEOUT_SECONDS
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_MUSIC_INTENT_TIMEOUT_SECONDS"); ok {
+		if i, err := strconv.Atoi(val); err == nil {
+			c.Owntone.MusicIntentTimeoutSeconds = i
+		}
+	}
+	// SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD"); ok {
+		if f, err := strconv.ParseFloat(val, 64); err == nil {
+			c.Owntone.MusicIntentConfidenceThreshold = f
+		}
+	}
 	// SMARTHOME_SWITCHBOT_TOKEN
 	if val, ok := os.LookupEnv("SMARTHOME_SWITCHBOT_TOKEN"); ok {
 		c.Switchbot.Token = val
