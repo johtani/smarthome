@@ -13,5 +13,5 @@ services:
       LM_TEMPERATURE: ${LM_TEMPERATURE:-}
       LM_MAX_TOKENS: ${LM_MAX_TOKENS:-}
     ports:
-      - "${DSPY_RESOLVER_PORT:-18080}:8080"
+      - "${DSPY_RESOLVER_PORT:-18089}:8080"
     restart: unless-stopped

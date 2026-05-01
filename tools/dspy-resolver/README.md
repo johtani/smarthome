@@ -85,7 +85,7 @@ docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
 ヘルスチェック:
 
 ```powershell
-curl http://localhost:18080/healthz
+curl http://localhost:18089/healthz
 ```
 
 `/healthz` は `model` に加えて `api_base` / `model_type` / `temperature` / `max_tokens` / `api_key_source` を返します。  
@@ -97,7 +97,7 @@ Dockerコンテナからホスト上のローカルLLMへ接続する場合、`l
 
 ```powershell
 docker build -f tools/dspy-resolver/Dockerfile -t smarthome-dspy-resolver .
-docker run --rm -p 18080:8080 `
+docker run --rm -p 18089:8080 `
   -e MODEL=$env:MODEL `
   -e OPENAI_API_KEY=$env:OPENAI_API_KEY `
   -e LM_API_BASE=$env:LM_API_BASE `
@@ -116,7 +116,7 @@ docker run --rm -p 18080:8080 `
 {
   "resolver": {
     "mode": "dspy",
-    "dspy_endpoint": "http://localhost:18080/resolve",
+    "dspy_endpoint": "http://localhost:18089/resolve",
     "dspy_timeout_seconds": 5
   }
 }
@@ -127,7 +127,7 @@ docker run --rm -p 18080:8080 `
 ```json
 {
   "owntone": {
-    "music_intent_endpoint": "http://localhost:18080/resolve-music-intent",
+    "music_intent_endpoint": "http://localhost:18089/resolve-music-intent",
     "music_intent_timeout_seconds": 5,
     "music_intent_confidence_threshold": 0.75
   }
@@ -136,7 +136,7 @@ docker run --rm -p 18080:8080 `
 
 または環境変数:
 
-- `SMARTHOME_OWNTONE_MUSIC_INTENT_ENDPOINT=http://localhost:18080/resolve-music-intent`
+- `SMARTHOME_OWNTONE_MUSIC_INTENT_ENDPOINT=http://localhost:18089/resolve-music-intent`
 - `SMARTHOME_OWNTONE_MUSIC_INTENT_TIMEOUT_SECONDS=5`
 - `SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD=0.75`
 
