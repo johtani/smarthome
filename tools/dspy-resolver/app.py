@@ -6,12 +6,13 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass
-from typing import List
+from typing import Any, Dict, List
 
 import dspy
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from lm_config import build_lm_config
 
 class ResolveRequest(BaseModel):
     text: str = Field(..., min_length=1)
@@ -148,11 +149,24 @@ def parse_bool(value: str) -> bool:
 
 
 MODEL = os.getenv("MODEL", "openai/gpt-4o-mini")
+LM_HEALTH: Dict[str, Any] = {
+    "model": MODEL,
+    "api_base": "",
+    "model_type": "chat",
+    "temperature": None,
+    "max_tokens": None,
+    "api_key_source": "none",
+}
+LM_INIT_ERROR = ""
 LM_CONFIGURED = False
 try:
-    dspy.configure(lm=dspy.LM(MODEL))
+    lm_conf = build_lm_config()
+    MODEL = lm_conf["model"]
+    LM_HEALTH = lm_conf["health"]
+    dspy.configure(lm=dspy.LM(MODEL, **lm_conf["kwargs"]))
     LM_CONFIGURED = True
-except Exception:
+except Exception as err:
+    LM_INIT_ERROR = str(err)
     # Keep process alive; request handler returns 503 and smarthome can fallback to legacy.
     pass
 
@@ -164,8 +178,28 @@ app = FastAPI(title="smarthome-dspy-resolver", version="0.2.0")
 @app.get("/healthz")
 def healthz() -> dict:
     if not LM_CONFIGURED:
-        raise HTTPException(status_code=503, detail={"status": "not_ready", "model": MODEL})
-    return {"status": "ok", "model": MODEL}
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "status": "not_ready",
+                "model": MODEL,
+                "api_base": LM_HEALTH["api_base"],
+                "model_type": LM_HEALTH["model_type"],
+                "temperature": LM_HEALTH["temperature"],
+                "max_tokens": LM_HEALTH["max_tokens"],
+                "api_key_source": LM_HEALTH["api_key_source"],
+                "error": LM_INIT_ERROR,
+            },
+        )
+    return {
+        "status": "ok",
+        "model": MODEL,
+        "api_base": LM_HEALTH["api_base"],
+        "model_type": LM_HEALTH["model_type"],
+        "temperature": LM_HEALTH["temperature"],
+        "max_tokens": LM_HEALTH["max_tokens"],
+        "api_key_source": LM_HEALTH["api_key_source"],
+    }
 
 
 @app.post("/resolve", response_model=ResolveResponse)
