@@ -381,7 +381,7 @@ docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
 {
   "resolver": {
     "mode": "dspy",
-    "dspy_endpoint": "http://localhost:8089/resolve",
+    "dspy_endpoint": "http://localhost:18080/resolve",
     "dspy_timeout_seconds": 5
   }
 }
