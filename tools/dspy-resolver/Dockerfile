@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir -r /opt/dspy-resolver/requirements.txt
 
 COPY tools/dspy-resolver/app.py /opt/dspy-resolver/app.py
 COPY tools/dspy-resolver/lm_config.py /opt/dspy-resolver/lm_config.py
+COPY tools/dspy-resolver/otel_config.py /opt/dspy-resolver/otel_config.py
 
 EXPOSE 8080
 
