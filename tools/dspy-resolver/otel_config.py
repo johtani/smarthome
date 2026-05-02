@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import json
 from contextlib import contextmanager
 from typing import Any, Dict, Iterator, Mapping, Optional
 
@@ -32,10 +33,16 @@ try:
 except Exception:  # pragma: no cover - httpx instrumentation is optional.
     HTTPXClientInstrumentor = None
 
+try:
+    import litellm
+except Exception:  # pragma: no cover - litellm is provided through dspy.
+    litellm = None
+
 
 TRACER_NAME = "dspy-resolver"
 DEFAULT_SERVICE_NAME = "smarthome-dspy-resolver"
 _http_clients_instrumented = False
+_litellm_instrumented = False
 
 
 class NoopSpan:
@@ -147,6 +154,52 @@ def _body_preview_attrs(prefix: str, body: Any, max_preview_chars: int = 2048) -
     return attrs
 
 
+def _redact_sensitive(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        redacted: Dict[str, Any] = {}
+        for key, item in value.items():
+            key_text = str(key)
+            if key_text.lower() in {"api_key", "authorization", "token", "access_token", "secret_key"}:
+                redacted[key_text] = "[redacted]"
+            else:
+                redacted[key_text] = _redact_sensitive(item)
+        return redacted
+    if isinstance(value, list):
+        return [_redact_sensitive(item) for item in value]
+    if isinstance(value, tuple):
+        return [_redact_sensitive(item) for item in value]
+    return value
+
+
+def _json_payload_preview_attrs(prefix: str, payload: Any, max_preview_chars: int = 4096) -> Dict[str, Any]:
+    try:
+        body = json.dumps(_redact_sensitive(payload), ensure_ascii=False, sort_keys=True, default=str)
+    except Exception:
+        body = str(payload)
+    return _body_preview_attrs(prefix, body, max_preview_chars)
+
+
+def _litellm_input_callback(kwargs: Mapping[str, Any]) -> None:
+    if trace is None or not _include_http_body():
+        return
+
+    span = trace.get_current_span()
+    additional_args = kwargs.get("additional_args", {})
+    complete_input = None
+    if isinstance(additional_args, Mapping):
+        complete_input = additional_args.get("complete_input_dict")
+    payload = complete_input if complete_input is not None else kwargs
+    span.add_event(
+        "llm.request",
+        attributes=clean_attributes(
+            {
+                "llm.request.source": "litellm.input_callback",
+                **_json_payload_preview_attrs("llm.request_body", payload),
+            }
+        ),
+    )
+
+
 def _requests_request_hook(span: Any, request: Any) -> None:
     if span is None or not _should_trace_http_body(getattr(request, "url", "")):
         return
@@ -169,6 +222,7 @@ def setup_otel(service_name: str = DEFAULT_SERVICE_NAME) -> None:
 
     _drop_empty_otel_endpoint_env()
     instrument_http_clients()
+    instrument_litellm()
     if not _has_otlp_endpoint():
         return
     if not _otel_provider_is_configurable():
@@ -192,6 +246,18 @@ def instrument_http_clients() -> None:
     if HTTPXClientInstrumentor is not None:
         HTTPXClientInstrumentor().instrument(request_hook=_httpx_request_hook)
     _http_clients_instrumented = True
+
+
+def instrument_litellm() -> None:
+    global _litellm_instrumented
+    if _litellm_instrumented or litellm is None:
+        return
+
+    callbacks = list(getattr(litellm, "input_callback", []) or [])
+    if _litellm_input_callback not in callbacks:
+        callbacks.append(_litellm_input_callback)
+        litellm.input_callback = callbacks
+    _litellm_instrumented = True
 
 
 def instrument_fastapi_app(app: Any) -> None:

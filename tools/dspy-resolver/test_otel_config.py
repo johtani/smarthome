@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from otel_config import (
     _body_preview_attrs,
     _drop_empty_otel_endpoint_env,
+    _json_payload_preview_attrs,
     _should_trace_http_body,
     clean_attributes,
     text_trace_attrs,
@@ -87,6 +88,19 @@ class OtelConfigTests(unittest.TestCase):
 
             self.assertEqual("http://collector:4318", os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"])
             self.assertNotIn("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", os.environ)
+
+    def test_json_payload_preview_attrs_redacts_sensitive_values(self) -> None:
+        payload = {
+            "model": "openai/test",
+            "api_key": "secret",
+            "messages": [{"role": "user", "content": "hello"}],
+        }
+        with patch.dict(os.environ, {"DSPY_RESOLVER_TRACE_INCLUDE_HTTP_BODY": "true"}):
+            attrs = _json_payload_preview_attrs("llm.request_body", payload)
+
+        self.assertIn('"api_key": "[redacted]"', attrs["llm.request_body.preview"])
+        self.assertIn('"content": "hello"', attrs["llm.request_body.preview"])
+        self.assertNotIn("secret", attrs["llm.request_body.preview"])
 
 
 if __name__ == "__main__":

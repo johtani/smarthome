@@ -113,6 +113,7 @@ dspy-resolver は OpenTelemetry に対応しています。`OTEL_EXPORTER_OTLP_E
 - `dspy.resolve.music_intent`
 - `dspy.request` event
 - `dspy.response` event
+- `llm.request` event（LiteLLM input callback で取得できた場合）
 - DSPy/LiteLLM 配下の `requests` / `httpx` outgoing HTTP span
 
 記録する主な属性:
@@ -143,6 +144,9 @@ $env:DSPY_RESOLVER_TRACE_INCLUDE_HTTP_BODY="true"
 ```
 
 この場合の preview は先頭 2048 文字に制限されます。
+HTTP client の hook から body が読めない場合は、LiteLLM input callback で取得できた変換済み LLM 入力を
+`llm.request` event の `llm.request_body.preview` に記録します。
+この preview は API key 類を `[redacted]` に置換し、先頭 4096 文字に制限されます。
 
 ## Docker (single command)
 
