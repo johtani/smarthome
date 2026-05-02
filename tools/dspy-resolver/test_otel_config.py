@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from otel_config import (
     _body_preview_attrs,
+    _drop_empty_otel_endpoint_env,
     _should_trace_http_body,
     clean_attributes,
     text_trace_attrs,
@@ -72,6 +73,20 @@ class OtelConfigTests(unittest.TestCase):
         self.assertEqual(3000, attrs["llm.http.request_body.length"])
         self.assertEqual("a" * 2048, attrs["llm.http.request_body.preview"])
         self.assertEqual(True, attrs["llm.http.request_body.truncated"])
+
+    def test_drop_empty_otel_endpoint_env_keeps_non_empty_values(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "OTEL_EXPORTER_OTLP_ENDPOINT": "http://collector:4318",
+                "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT": "",
+            },
+            clear=False,
+        ):
+            _drop_empty_otel_endpoint_env()
+
+            self.assertEqual("http://collector:4318", os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"])
+            self.assertNotIn("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT", os.environ)
 
 
 if __name__ == "__main__":

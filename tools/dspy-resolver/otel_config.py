@@ -66,6 +66,12 @@ def _has_otlp_endpoint() -> bool:
     )
 
 
+def _drop_empty_otel_endpoint_env() -> None:
+    for key in ("OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"):
+        if key in os.environ and not os.environ[key].strip():
+            del os.environ[key]
+
+
 def _otel_provider_is_configurable() -> bool:
     if trace is None:
         return False
@@ -161,6 +167,7 @@ def setup_otel(service_name: str = DEFAULT_SERVICE_NAME) -> None:
     if _is_otel_disabled() or trace is None:
         return
 
+    _drop_empty_otel_endpoint_env()
     instrument_http_clients()
     if not _has_otlp_endpoint():
         return
