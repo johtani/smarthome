@@ -74,6 +74,12 @@ $env:LM_MODEL_TYPE="chat"
 # 任意
 $env:LM_TEMPERATURE="0.2"
 $env:LM_MAX_TOKENS="512"
+
+# OpenTelemetry利用時
+$env:OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
+$env:OTEL_SERVICE_NAME="smarthome-dspy-resolver"
+# llm-swap向けHTTP request body previewを明示的に記録する場合のみ
+$env:DSPY_RESOLVER_TRACE_INCLUDE_HTTP_BODY="true"
 ```
 
 起動:
@@ -92,6 +98,51 @@ curl http://localhost:18089/healthz
 `LM_TEMPERATURE` または `LM_MAX_TOKENS` が不正値の場合を含め、LM 初期化に失敗した場合は `503` を返します。
 
 Dockerコンテナからホスト上のローカルLLMへ接続する場合、`localhost` ではなく `host.docker.internal` を使ってください。
+
+## OpenTelemetry
+
+dspy-resolver は OpenTelemetry に対応しています。`OTEL_EXPORTER_OTLP_ENDPOINT` または
+`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` を設定すると OTLP/HTTP で trace を送信します。
+未設定の場合、FastAPI と HTTP client の instrumentation は有効ですが exporter は作成しないため、
+ローカル起動はこれまで通り動作します。
+
+主な span/event:
+
+- FastAPI instrumentation による `/resolve` / `/resolve-music-intent` の server span
+- `dspy.resolve.command`
+- `dspy.resolve.music_intent`
+- `dspy.request` event
+- `dspy.response` event
+- DSPy/LiteLLM 配下の `requests` / `httpx` outgoing HTTP span
+
+記録する主な属性:
+
+- `dspy.lm.model`
+- `dspy.lm.api_base`
+- `dspy.lm.model_type`
+- `dspy.lm.temperature`
+- `dspy.lm.max_tokens`
+- `resolver.prompt_version`
+- `command_catalog.count`
+- 各入力・出力文字列の長さ
+
+ユーザー入力や catalog 本文はデフォルトでは trace に載せず、長さだけを記録します。
+内容の先頭を確認したい場合のみ、次を設定してください。
+
+```powershell
+$env:DSPY_RESOLVER_TRACE_INCLUDE_INPUT="true"
+```
+
+この場合も preview は先頭 256 文字に制限されます。
+
+llm-swap に送信される HTTP request body もデフォルトでは trace に載せません。
+`LM_API_BASE` 宛ての outgoing request に限って body の先頭を確認したい場合のみ、次を設定してください。
+
+```powershell
+$env:DSPY_RESOLVER_TRACE_INCLUDE_HTTP_BODY="true"
+```
+
+この場合の preview は先頭 2048 文字に制限されます。
 
 ## Docker (single command)
 

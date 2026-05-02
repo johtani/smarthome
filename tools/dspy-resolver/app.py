@@ -13,6 +13,15 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from lm_config import build_lm_config
+from otel_config import (
+    add_event,
+    clean_attributes,
+    instrument_fastapi_app,
+    set_error,
+    setup_otel,
+    start_span,
+    text_trace_attrs,
+)
 
 class ResolveRequest(BaseModel):
     text: str = Field(..., min_length=1)
@@ -172,7 +181,22 @@ except Exception as err:
 
 resolver = ResolverModule()
 music_intent_resolver = MusicIntentResolverModule()
+setup_otel()
 app = FastAPI(title="smarthome-dspy-resolver", version="0.2.0")
+instrument_fastapi_app(app)
+
+
+def lm_trace_attrs() -> Dict[str, Any]:
+    return clean_attributes(
+        {
+            "dspy.lm.model": MODEL,
+            "dspy.lm.api_base": LM_HEALTH.get("api_base", ""),
+            "dspy.lm.model_type": LM_HEALTH.get("model_type", ""),
+            "dspy.lm.temperature": LM_HEALTH.get("temperature"),
+            "dspy.lm.max_tokens": LM_HEALTH.get("max_tokens"),
+            "dspy.lm.api_key_source": LM_HEALTH.get("api_key_source", "none"),
+        }
+    )
 
 
 @app.get("/healthz")
@@ -204,62 +228,146 @@ def healthz() -> dict:
 
 @app.post("/resolve", response_model=ResolveResponse)
 def resolve(req: ResolveRequest) -> ResolveResponse:
-    entries = parse_command_list(req.command_list)
-    if not entries:
-        raise HTTPException(status_code=400, detail="command_list does not contain command entries")
+    prompt_version = req.prompt_version.strip()
+    text = req.text.strip()
+    with start_span(
+        "dspy.resolve.command",
+        {
+            "resolver.path": "dspy",
+            "resolver.prompt_version": prompt_version,
+            **lm_trace_attrs(),
+            **text_trace_attrs("resolver.input", req.text),
+            **text_trace_attrs("resolver.command_list", req.command_list),
+        },
+    ) as span:
+        entries = parse_command_list(req.command_list)
+        span.set_attributes(clean_attributes({"command_catalog.count": len(entries)}))
+        if not entries:
+            set_error(span, "command_list does not contain command entries")
+            raise HTTPException(status_code=400, detail="command_list does not contain command entries")
 
-    if not LM_CONFIGURED or not hasattr(dspy.settings, "lm") or dspy.settings.lm is None:
-        raise HTTPException(status_code=503, detail="dspy lm is not configured")
+        if not LM_CONFIGURED or not hasattr(dspy.settings, "lm") or dspy.settings.lm is None:
+            set_error(span, "dspy lm is not configured")
+            raise HTTPException(status_code=503, detail="dspy lm is not configured")
 
-    try:
-        pred = resolver(
-            utterance=req.text.strip(),
-            command_catalog=build_catalog_text(entries),
-            prompt_version=req.prompt_version.strip(),
+        command_catalog = build_catalog_text(entries)
+        add_event(
+            span,
+            "dspy.request",
+            {
+                "dspy.signature": "ResolveSignature",
+                "resolver.prompt_version": prompt_version,
+                "command_catalog.count": len(entries),
+                **lm_trace_attrs(),
+                **text_trace_attrs("dspy.request.utterance", text),
+                **text_trace_attrs("dspy.request.command_catalog", command_catalog),
+            },
         )
-    except Exception as err:
-        raise HTTPException(status_code=503, detail=f"dspy resolve failed: {err}") from err
 
-    command = (getattr(pred, "selected_command", "") or "").strip()
-    args = (getattr(pred, "selected_args", "") or "").strip()
-    thought = (getattr(pred, "rationale", "") or "").strip()
+        try:
+            pred = resolver(
+                utterance=text,
+                command_catalog=command_catalog,
+                prompt_version=prompt_version,
+            )
+        except Exception as err:
+            set_error(span, err)
+            raise HTTPException(status_code=503, detail=f"dspy resolve failed: {err}") from err
 
-    # Safety: only allow commands that exist in the provided catalog.
-    allowed = {e.name for e in entries}
-    if command not in allowed:
-        command = ""
-        args = ""
-        if not thought:
-            thought = "no compatible command in catalog"
+        command = (getattr(pred, "selected_command", "") or "").strip()
+        args = (getattr(pred, "selected_args", "") or "").strip()
+        thought = (getattr(pred, "rationale", "") or "").strip()
 
-    return ResolveResponse(command=command, args=args, thought=thought)
+        # Safety: only allow commands that exist in the provided catalog.
+        allowed = {e.name for e in entries}
+        if command not in allowed:
+            command = ""
+            args = ""
+            if not thought:
+                thought = "no compatible command in catalog"
+
+        span.set_attributes(
+            clean_attributes(
+                {
+                    "resolver.selected_command": command,
+                    "resolver.args.length": len(args),
+                    "resolver.thought.length": len(thought),
+                    "resolver.resolved": command != "",
+                }
+            )
+        )
+        add_event(
+            span,
+            "dspy.response",
+            {
+                "resolver.selected_command": command,
+                "resolver.args.length": len(args),
+                "resolver.thought.length": len(thought),
+                "resolver.resolved": command != "",
+            },
+        )
+
+        return ResolveResponse(command=command, args=args, thought=thought)
 
 
 @app.post("/resolve-music-intent", response_model=ResolveMusicIntentResponse)
 def resolve_music_intent(req: ResolveMusicIntentRequest) -> ResolveMusicIntentResponse:
-    if not LM_CONFIGURED or not hasattr(dspy.settings, "lm") or dspy.settings.lm is None:
-        raise HTTPException(status_code=503, detail="dspy lm is not configured")
+    text = req.text.strip()
+    with start_span(
+        "dspy.resolve.music_intent",
+        {
+            "resolver.path": "dspy_music_intent",
+            **lm_trace_attrs(),
+            **text_trace_attrs("music_intent.input", req.text),
+        },
+    ) as span:
+        if not LM_CONFIGURED or not hasattr(dspy.settings, "lm") or dspy.settings.lm is None:
+            set_error(span, "dspy lm is not configured")
+            raise HTTPException(status_code=503, detail="dspy lm is not configured")
 
-    try:
-        pred = music_intent_resolver(utterance=req.text.strip())
-    except Exception as err:
-        raise HTTPException(status_code=503, detail=f"dspy resolve music intent failed: {err}") from err
+        add_event(
+            span,
+            "dspy.request",
+            {
+                "dspy.signature": "ResolveMusicIntentSignature",
+                **lm_trace_attrs(),
+                **text_trace_attrs("dspy.request.utterance", text),
+            },
+        )
 
-    artists = split_candidates((getattr(pred, "artist_candidates", "") or "").strip())
-    tracks = split_candidates((getattr(pred, "track_candidates", "") or "").strip())
-    genres = split_candidates((getattr(pred, "genre_candidates", "") or "").strip())
-    must_terms = split_candidates((getattr(pred, "must_terms", "") or "").strip())
-    confidence = parse_confidence((getattr(pred, "confidence", "") or "").strip())
-    ambiguous = parse_bool((getattr(pred, "ambiguous", "") or "").strip())
-    reason = (getattr(pred, "reason", "") or "").strip()
+        try:
+            pred = music_intent_resolver(utterance=text)
+        except Exception as err:
+            set_error(span, err)
+            raise HTTPException(status_code=503, detail=f"dspy resolve music intent failed: {err}") from err
 
-    return ResolveMusicIntentResponse(
-        artist_candidates=artists,
-        track_candidates=tracks,
-        genre_candidates=genres,
-        must_terms=must_terms,
-        confidence=confidence,
-        ambiguous=ambiguous,
-        reason=reason,
-        model=MODEL,
-    )
+        artists = split_candidates((getattr(pred, "artist_candidates", "") or "").strip())
+        tracks = split_candidates((getattr(pred, "track_candidates", "") or "").strip())
+        genres = split_candidates((getattr(pred, "genre_candidates", "") or "").strip())
+        must_terms = split_candidates((getattr(pred, "must_terms", "") or "").strip())
+        confidence = parse_confidence((getattr(pred, "confidence", "") or "").strip())
+        ambiguous = parse_bool((getattr(pred, "ambiguous", "") or "").strip())
+        reason = (getattr(pred, "reason", "") or "").strip()
+
+        response_attrs = {
+            "music_intent.artist_candidates.count": len(artists),
+            "music_intent.track_candidates.count": len(tracks),
+            "music_intent.genre_candidates.count": len(genres),
+            "music_intent.must_terms.count": len(must_terms),
+            "music_intent.confidence": confidence,
+            "music_intent.ambiguous": ambiguous,
+            "music_intent.reason.length": len(reason),
+        }
+        span.set_attributes(clean_attributes(response_attrs))
+        add_event(span, "dspy.response", response_attrs)
+
+        return ResolveMusicIntentResponse(
+            artist_candidates=artists,
+            track_candidates=tracks,
+            genre_candidates=genres,
+            must_terms=must_terms,
+            confidence=confidence,
+            ambiguous=ambiguous,
+            reason=reason,
+            model=MODEL,
+        )
