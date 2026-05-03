@@ -6,11 +6,18 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Dict, List
 
+TOOLS_DIR = Path(__file__).resolve().parents[1]
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
 import dspy
+
+from dspy_common.lm_config import build_lm_config
 
 
 @dataclass
@@ -162,6 +169,11 @@ def main() -> int:
     parser.add_argument("--dataset-jsonl", required=True)
     parser.add_argument("--command-catalog", required=True)
     parser.add_argument("--model", required=True, help="e.g. openai/gpt-4o-mini")
+    parser.add_argument("--api-base", default=None, help="OpenAI-compatible API base URL")
+    parser.add_argument("--api-key", default=None, help="API key for the configured LM")
+    parser.add_argument("--model-type", default=None, help="DSPy LM model_type, e.g. chat")
+    parser.add_argument("--temperature", default=None, type=float)
+    parser.add_argument("--max-tokens", default=None, type=int)
     parser.add_argument("--report-out", required=True)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--train-ratio", type=float, default=0.8)
@@ -185,7 +197,17 @@ def main() -> int:
     if not dev_rows:
         dev_rows = data[-1:]
 
-    dspy.configure(lm=dspy.LM(args.model))
+    lm_conf = build_lm_config(
+        overrides={
+            "model": args.model,
+            "api_base": args.api_base,
+            "api_key": args.api_key,
+            "model_type": args.model_type,
+            "temperature": args.temperature,
+            "max_tokens": args.max_tokens,
+        }
+    )
+    dspy.configure(lm=dspy.LM(lm_conf["model"], **lm_conf["kwargs"]))
 
     baseline = ResolverProgram()
     baseline_eval = evaluate(baseline, dev_rows, catalog_text)

@@ -48,11 +48,32 @@ python tools/dspy/prepare_dataset.py `
 
 ## 3) Optimize + Evaluate
 
+### OpenAI
+
 ```powershell
 python tools/dspy/optimize_and_evaluate.py `
   --dataset-jsonl .\tmp\dspy\dataset.jsonl `
   --command-catalog .\tools\dspy\command_catalog.sample.json `
   --model openai/gpt-4o-mini `
+  --report-out .\tmp\dspy\report.json `
+  --min-command-accuracy 0.80 `
+  --min-arg-accuracy 0.60
+```
+
+### OpenAI-compatible local LM
+
+`tools/dspy-resolver` と同じ `LM_*` 設定を利用できます。CLI 引数を指定した場合は環境変数より優先されます。
+
+```powershell
+python tools/dspy/optimize_and_evaluate.py `
+  --dataset-jsonl .\tmp\dspy\dataset.jsonl `
+  --command-catalog .\tools\dspy\command_catalog.sample.json `
+  --model openai/qwen2.5:14b `
+  --api-base http://localhost:11434/v1 `
+  --api-key local-dummy-key `
+  --model-type chat `
+  --temperature 0.2 `
+  --max-tokens 512 `
   --report-out .\tmp\dspy\report.json `
   --min-command-accuracy 0.80 `
   --min-arg-accuracy 0.60
@@ -93,8 +114,37 @@ docker run --rm `
   smarthome-dspy-batch
 ```
 
+ローカルの OpenAI 互換サーバーを使う場合、Docker コンテナからホストへ到達するために `host.docker.internal` を使います。
+
+```powershell
+docker run --rm `
+  -e MODEL=openai/qwen2.5:14b `
+  -e LM_API_BASE=http://host.docker.internal:11434/v1 `
+  -e LM_API_KEY=local-dummy-key `
+  -e LM_MODEL_TYPE=chat `
+  -e LM_TEMPERATURE=0.2 `
+  -e LM_MAX_TOKENS=512 `
+  -e RESOLVER_EVENTS_CSV=/workspace/tmp/resolver-events/resolver-events.csv `
+  -e WORK_DIR=/workspace/tmp/dspy `
+  -v ${PWD}:/workspace `
+  smarthome-dspy-batch
+```
+
 必要に応じて以下も上書きできます。
 
 - `COMMAND_CATALOG`
 - `MIN_COMMAND_ACCURACY`
 - `MIN_ARG_ACCURACY`
+- `LM_API_BASE`
+- `LM_API_KEY`
+- `LM_MODEL_TYPE`
+- `LM_TEMPERATURE`
+- `LM_MAX_TOKENS`
+
+LM 設定の優先順位:
+
+- API key: `--api-key` / wrapper parameter -> `LM_API_KEY` -> `OPENAI_API_KEY`
+- API base: `--api-base` / wrapper parameter -> `LM_API_BASE`
+- Model type: `--model-type` / wrapper parameter -> `LM_MODEL_TYPE` -> `chat`
+- Temperature: `--temperature` / wrapper parameter -> `LM_TEMPERATURE`
+- Max tokens: `--max-tokens` / wrapper parameter -> `LM_MAX_TOKENS`
