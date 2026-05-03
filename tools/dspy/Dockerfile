@@ -12,6 +12,7 @@ COPY tools/dspy/prepare_dataset.py /opt/dspy/prepare_dataset.py
 COPY tools/dspy/optimize_and_evaluate.py /opt/dspy/optimize_and_evaluate.py
 COPY tools/dspy/command_catalog.sample.json /opt/dspy/command_catalog.sample.json
 COPY tools/dspy/run-batch.sh /opt/dspy/run-batch.sh
+COPY tools/dspy_common /opt/dspy_common
 
 RUN chmod +x /opt/dspy/run-batch.sh
 
