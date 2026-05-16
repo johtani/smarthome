@@ -173,30 +173,22 @@ func openSearchResponseToSearchResult(response openSearchTemplateResponse) *Sear
 		item := SearchItem{
 			Title:  doc.Title,
 			URI:    doc.URI,
-			Name:   displayName(doc),
 			Artist: doc.Artist,
 		}
 		switch doc.Type {
 		case string(track):
-			item.Name = ""
 			result.Tracks.Items = append(result.Tracks.Items, item)
 		case string(artist):
 			item.Title = ""
-			if item.Name == "" {
-				item.Name = doc.Artist
-			}
+			item.Name = firstNonEmpty(doc.Artist, doc.Title)
 			result.Artists.Items = append(result.Artists.Items, item)
 		case string(album):
 			item.Title = ""
-			if item.Name == "" {
-				item.Name = firstNonEmpty(doc.Album, doc.Title)
-			}
+			item.Name = firstNonEmpty(doc.Album, doc.Title)
 			result.Albums.Items = append(result.Albums.Items, item)
 		case string(genre):
 			item.Title = ""
-			if item.Name == "" {
-				item.Name = firstNonEmpty(doc.Genre, doc.Title)
-			}
+			item.Name = firstNonEmpty(doc.Genre, doc.Title)
 			result.Genres.Items = append(result.Genres.Items, item)
 		}
 	}
@@ -204,18 +196,6 @@ func openSearchResponseToSearchResult(response openSearchTemplateResponse) *Sear
 	return result
 }
 
-func displayName(doc openSearchMusicDocument) string {
-	switch doc.Type {
-	case string(artist):
-		return firstNonEmpty(doc.Artist, doc.Title)
-	case string(album):
-		return firstNonEmpty(doc.Album, doc.Title)
-	case string(genre):
-		return firstNonEmpty(doc.Genre, doc.Title)
-	default:
-		return firstNonEmpty(doc.Title, doc.Album, doc.Artist, doc.Genre)
-	}
-}
 
 func firstNonEmpty(values ...string) string {
 	for _, value := range values {
@@ -227,12 +207,8 @@ func firstNonEmpty(values ...string) string {
 }
 
 func setExternalSearchTotals(result *SearchResult) {
-	result.Tracks.Total = len(result.Tracks.Items)
-	result.Artists.Total = len(result.Artists.Items)
-	result.Albums.Total = len(result.Albums.Items)
-	result.Genres.Total = len(result.Genres.Items)
-	result.Playlists.Total = len(result.Playlists.Items)
 	for _, items := range []*Items{&result.Tracks, &result.Artists, &result.Albums, &result.Genres, &result.Playlists} {
+		items.Total = len(items.Items)
 		items.Offset = 0
 		items.Limit = len(items.Items)
 	}
