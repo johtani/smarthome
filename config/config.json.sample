@@ -13,7 +13,14 @@
     },
     "music_intent_endpoint": "",
     "music_intent_timeout_seconds": 5,
-    "music_intent_confidence_threshold": 0.75
+    "music_intent_confidence_threshold": 0.75,
+    "external_search": {
+      "enabled": false,
+      "opensearch_url": "http://localhost:9200",
+      "index": "smarthome-owntone-music",
+      "template_id": "music_search",
+      "timeout_seconds": 3
+    }
   },
   "yamaha": {
     "url": "",

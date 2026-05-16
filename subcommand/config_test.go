@@ -89,6 +89,11 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	_ = os.Setenv("SMARTHOME_RESOLVER_DSPY_ENDPOINT", "http://env-dspy-endpoint")
 	_ = os.Setenv("SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS", "9")
 	_ = os.Setenv("SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD", "0")
+	_ = os.Setenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_ENABLED", "true")
+	_ = os.Setenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_OPENSEARCH_URL", "http://env-opensearch")
+	_ = os.Setenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_INDEX", "env-index")
+	_ = os.Setenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_TEMPLATE_ID", "env-template")
+	_ = os.Setenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_TIMEOUT_SECONDS", "7")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_TOKEN", "env-influx-token")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_URL", "http://env-influx-url")
 	_ = os.Setenv("SMARTHOME_INFLUXDB_BUCKET", "env-bucket")
@@ -106,6 +111,11 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 		_ = os.Unsetenv("SMARTHOME_RESOLVER_DSPY_ENDPOINT")
 		_ = os.Unsetenv("SMARTHOME_RESOLVER_DSPY_TIMEOUT_SECONDS")
 		_ = os.Unsetenv("SMARTHOME_OWNTONE_MUSIC_INTENT_CONFIDENCE_THRESHOLD")
+		_ = os.Unsetenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_ENABLED")
+		_ = os.Unsetenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_OPENSEARCH_URL")
+		_ = os.Unsetenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_INDEX")
+		_ = os.Unsetenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_TEMPLATE_ID")
+		_ = os.Unsetenv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_TIMEOUT_SECONDS")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_TOKEN")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_URL")
 		_ = os.Unsetenv("SMARTHOME_INFLUXDB_BUCKET")
@@ -154,6 +164,21 @@ func TestConfig_OverrideWithEnv(t *testing.T) {
 	}
 	if !config.Owntone.MusicIntentConfidenceThresholdSet {
 		t.Error("expected owntone threshold set flag to be true")
+	}
+	if !config.Owntone.ExternalSearch.Enabled {
+		t.Error("expected external search enabled")
+	}
+	if config.Owntone.ExternalSearch.OpenSearchURL != "http://env-opensearch" {
+		t.Errorf("expected env opensearch url, got %s", config.Owntone.ExternalSearch.OpenSearchURL)
+	}
+	if config.Owntone.ExternalSearch.Index != "env-index" {
+		t.Errorf("expected env index, got %s", config.Owntone.ExternalSearch.Index)
+	}
+	if config.Owntone.ExternalSearch.TemplateID != "env-template" {
+		t.Errorf("expected env template, got %s", config.Owntone.ExternalSearch.TemplateID)
+	}
+	if config.Owntone.ExternalSearch.TimeoutSeconds != 7 {
+		t.Errorf("expected external timeout 7, got %d", config.Owntone.ExternalSearch.TimeoutSeconds)
 	}
 	if config.Influxdb.Token != "env-influx-token" {
 		t.Errorf("expected env-influx-token, got %s", config.Influxdb.Token)

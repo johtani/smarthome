@@ -24,6 +24,7 @@ type SearchAndPlayAction struct {
 	c                              *Client
 	musicIntentResolver            MusicIntentResolver
 	musicIntentConfidenceThreshold float64
+	externalSearcher               ExternalSearcher
 }
 
 // SearchAndPlayActionOption customizes SearchAndPlayAction behavior.
@@ -42,6 +43,13 @@ func WithMusicIntentConfidenceThreshold(threshold float64) SearchAndPlayActionOp
 		if threshold >= 0 {
 			a.musicIntentConfidenceThreshold = threshold
 		}
+	}
+}
+
+// WithExternalSearch sets the external music search adapter.
+func WithExternalSearch(searcher ExternalSearcher) SearchAndPlayActionOption {
+	return func(a *SearchAndPlayAction) {
+		a.externalSearcher = searcher
 	}
 }
 
@@ -116,8 +124,15 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	}
 
 	executionStatus := "success_alias"
-	if fallbackPath == "legacy_query" {
+	switch fallbackPath {
+	case "external_search":
+		executionStatus = "external_search_success"
+	case "legacy_query":
 		executionStatus = "fallback_legacy_success"
+	case "external_search_fallback_alias_expression":
+		executionStatus = "external_search_fallback_alias_success"
+	case "external_search_fallback_legacy_query":
+		executionStatus = "external_search_fallback_legacy_success"
 	}
 	resolver.RecordExecution(ctx, resolver.ExecutionRecord{
 		ExecutionStatus:  executionStatus,
@@ -258,16 +273,40 @@ func (a SearchAndPlayAction) playAndBuildMessage(ctx context.Context, result *Se
 }
 
 func (a SearchAndPlayAction) searchWithFallback(ctx context.Context, keywords []string, fallbackKeyword string, types []SearchType, limit int) (*SearchResult, string, error) {
+	var externalErr error
+	if a.externalSearcher != nil {
+		result, err := a.externalSearcher.Search(ctx, fallbackKeyword, types, limit)
+		if err == nil && totalSearchResultCount(result) > 0 {
+			return result, "external_search", nil
+		}
+		if err != nil {
+			externalErr = err
+			slog.WarnContext(ctx, "external search failed; falling back to owntone search", "reason", externalSearchFallbackReason(err), "error", err)
+		} else {
+			externalErr = ErrExternalSearchNoHits
+			slog.WarnContext(ctx, "external search returned no hits; falling back to owntone search", "reason", externalSearchFallbackReason(externalErr))
+		}
+	}
+
 	expression := buildSearchExpression(keywords, types)
 	if expression == "" {
 		result, err := a.c.Search(ctx, fallbackKeyword, types, limit)
+		if externalErr != nil {
+			return result, "external_search_fallback_legacy_query", err
+		}
 		return result, "legacy_query", err
 	}
 
 	result, err := a.c.SearchByExpression(ctx, expression, types, limit)
 	if err != nil || totalSearchResultCount(result) == 0 {
 		fallback, fallbackErr := a.c.Search(ctx, fallbackKeyword, types, limit)
+		if externalErr != nil {
+			return fallback, "external_search_fallback_legacy_query", fallbackErr
+		}
 		return fallback, "legacy_query", fallbackErr
+	}
+	if externalErr != nil {
+		return result, "external_search_fallback_alias_expression", nil
 	}
 	return result, "alias_expression", nil
 }

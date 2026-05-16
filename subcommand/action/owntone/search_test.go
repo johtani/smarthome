@@ -334,6 +334,156 @@ func (f fakeMusicIntentResolver) Resolve(_ context.Context, _ string) (MusicInte
 	return f.intent, nil
 }
 
+type fakeExternalSearcher struct {
+	result *SearchResult
+	err    error
+	calls  int
+}
+
+func (f *fakeExternalSearcher) Search(_ context.Context, _ string, _ []SearchType, _ int) (*SearchResult, error) {
+	f.calls++
+	if f.err != nil {
+		return nil, f.err
+	}
+	return f.result, nil
+}
+
+func TestSearchAndPlayAction_Run_ExternalSearchSuccessUsesURIPlayback(t *testing.T) {
+	var searchCalled bool
+	var addURIs string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, _ *http.Request) {
+		searchCalled = true
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, searchSampleJSONResponse())
+	})
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, r *http.Request) {
+		addURIs = r.URL.Query().Get("uris")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	external := &fakeExternalSearcher{
+		result: &SearchResult{
+			Tracks: Items{
+				Items: []SearchItem{{Title: "First Love", Artist: "宇多田ヒカル", URI: "library:track:123"}},
+				Total: 1,
+			},
+		},
+	}
+	client := NewClient(Config{URL: server.URL})
+	action := NewSearchAndPlayAction(client, WithExternalSearch(external))
+
+	got, err := action.Run(context.Background(), "宇多田 type:track")
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if !strings.Contains(got, "And play these items") {
+		t.Fatalf("Run() result = %q, want play message", got)
+	}
+	if addURIs != "library:track:123" {
+		t.Fatalf("uris = %q, want library:track:123", addURIs)
+	}
+	if searchCalled {
+		t.Fatal("expected Owntone search not to be called when external search succeeds")
+	}
+	if external.calls != 1 {
+		t.Fatalf("external calls = %d, want 1", external.calls)
+	}
+}
+
+func TestSearchAndPlayAction_Run_ExternalSearchFailureFallsBackToOwntone(t *testing.T) {
+	var expressionSearchCalled bool
+	var addQueueCalled bool
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("expression") != "" {
+			expressionSearchCalled = true
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, searchSampleJSONResponse())
+	})
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
+		addQueueCalled = true
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	external := &fakeExternalSearcher{err: fmt.Errorf("external down")}
+	client := NewClient(Config{URL: server.URL})
+	action := NewSearchAndPlayAction(client, WithExternalSearch(external))
+
+	got, err := action.Run(context.Background(), "宇多田 type:track")
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if !strings.Contains(got, "And play these items") {
+		t.Fatalf("Run() result = %q, want play message", got)
+	}
+	if !expressionSearchCalled {
+		t.Fatal("expected Owntone expression search fallback")
+	}
+	if !addQueueCalled {
+		t.Fatal("expected queue add after fallback search")
+	}
+}
+
+func TestSearchAndPlayAction_Run_MusicIntentStrictSkipsExternalSearch(t *testing.T) {
+	external := &fakeExternalSearcher{
+		result: &SearchResult{
+			Tracks: Items{Items: []SearchItem{{Title: "External", URI: "library:track:external"}}, Total: 1},
+		},
+	}
+	var addURIs string
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("expression") == "" {
+			t.Fatal("expected strict expression search")
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, searchSampleJSONResponse())
+	})
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, r *http.Request) {
+		addURIs = r.URL.Query().Get("uris")
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := NewClient(Config{URL: server.URL})
+	action := NewSearchAndPlayAction(
+		client,
+		WithExternalSearch(external),
+		WithMusicIntentResolver(fakeMusicIntentResolver{
+			intent: MusicIntent{TrackCandidates: []string{"First Love"}, Confidence: 0.95},
+		}),
+	)
+
+	_, err := action.Run(context.Background(), "First Loveかけて")
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if external.calls != 0 {
+		t.Fatalf("external calls = %d, want 0", external.calls)
+	}
+	if addURIs == "library:track:external" {
+		t.Fatal("strict intent should not play external search result")
+	}
+}
+
 func TestSearchAndPlayAction_Run_LowConfidenceShowsCandidatesWithoutPlaying(t *testing.T) {
 	var receivedExpression string
 	var clearQueueCalled bool
