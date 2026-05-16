@@ -27,19 +27,43 @@ type Client struct {
 
 // Config is the configuration for the Owntone client.
 type Config struct {
-	URL                               string            `json:"url"`
-	Timeout                           int               `json:"timeout"`
-	SearchAliases                     map[string]string `json:"search_aliases"`
-	MusicIntentEndpoint               string            `json:"music_intent_endpoint"`
-	MusicIntentTimeoutSeconds         int               `json:"music_intent_timeout_seconds"`
-	MusicIntentConfidenceThreshold    float64           `json:"music_intent_confidence_threshold"`
-	MusicIntentConfidenceThresholdSet bool              `json:"-"`
+	URL                               string               `json:"url"`
+	Timeout                           int                  `json:"timeout"`
+	SearchAliases                     map[string]string    `json:"search_aliases"`
+	MusicIntentEndpoint               string               `json:"music_intent_endpoint"`
+	MusicIntentTimeoutSeconds         int                  `json:"music_intent_timeout_seconds"`
+	MusicIntentConfidenceThreshold    float64              `json:"music_intent_confidence_threshold"`
+	MusicIntentConfidenceThresholdSet bool                 `json:"-"`
+	ExternalSearch                    ExternalSearchConfig `json:"external_search"`
+}
+
+// ExternalSearchConfig controls OpenSearch-backed music search.
+type ExternalSearchConfig struct {
+	Enabled        bool   `json:"enabled"`
+	OpenSearchURL  string `json:"opensearch_url"`
+	Index          string `json:"index"`
+	TemplateID     string `json:"template_id"`
+	TimeoutSeconds int    `json:"timeout_seconds"`
 }
 
 // Validate validates the Owntone configuration.
 func (c Config) Validate() error {
 	if c.URL == "" {
 		return fmt.Errorf("owntone.url is required")
+	}
+	if c.ExternalSearch.Enabled {
+		if strings.TrimSpace(c.ExternalSearch.OpenSearchURL) == "" {
+			return fmt.Errorf("owntone.external_search.opensearch_url is required when enabled")
+		}
+		if strings.TrimSpace(c.ExternalSearch.Index) == "" {
+			return fmt.Errorf("owntone.external_search.index is required when enabled")
+		}
+		if strings.TrimSpace(c.ExternalSearch.TemplateID) == "" {
+			return fmt.Errorf("owntone.external_search.template_id is required when enabled")
+		}
+		if c.ExternalSearch.TimeoutSeconds < 0 {
+			return fmt.Errorf("owntone.external_search.timeout_seconds must be >= 0")
+		}
 	}
 	return nil
 }

@@ -64,5 +64,8 @@ func buildSearchAndPlayOptions(cfg owntone.Config, resolver owntone.MusicIntentR
 	if cfg.MusicIntentConfidenceThresholdSet {
 		opts = append(opts, owntone.WithMusicIntentConfidenceThreshold(cfg.MusicIntentConfidenceThreshold))
 	}
+	if cfg.ExternalSearch.Enabled {
+		opts = append(opts, owntone.WithExternalSearch(owntone.NewOpenSearchExternalSearcher(cfg.ExternalSearch)))
+	}
 	return opts
 }

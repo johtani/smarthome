@@ -18,12 +18,21 @@ import (
 
 const defaultMusicIntentConfidenceThreshold = 0.75
 
+const (
+	fallbackPathAliasExpression                  = "alias_expression"
+	fallbackPathLegacyQuery                      = "legacy_query"
+	fallbackPathExternalSearch                   = "external_search"
+	fallbackPathExternalSearchFallbackAlias      = "external_search_fallback_alias_expression"
+	fallbackPathExternalSearchFallbackLegacy     = "external_search_fallback_legacy_query"
+)
+
 // SearchAndPlayAction represents an action to search for music and play it on Owntone.
 type SearchAndPlayAction struct {
 	name                           string
 	c                              *Client
 	musicIntentResolver            MusicIntentResolver
 	musicIntentConfidenceThreshold float64
+	externalSearcher               ExternalSearcher
 }
 
 // SearchAndPlayActionOption customizes SearchAndPlayAction behavior.
@@ -42,6 +51,13 @@ func WithMusicIntentConfidenceThreshold(threshold float64) SearchAndPlayActionOp
 		if threshold >= 0 {
 			a.musicIntentConfidenceThreshold = threshold
 		}
+	}
+}
+
+// WithExternalSearch sets the external music search adapter.
+func WithExternalSearch(searcher ExternalSearcher) SearchAndPlayActionOption {
+	return func(a *SearchAndPlayAction) {
+		a.externalSearcher = searcher
 	}
 }
 
@@ -116,8 +132,15 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	}
 
 	executionStatus := "success_alias"
-	if fallbackPath == "legacy_query" {
+	switch fallbackPath {
+	case fallbackPathExternalSearch:
+		executionStatus = "external_search_success"
+	case fallbackPathLegacyQuery:
 		executionStatus = "fallback_legacy_success"
+	case fallbackPathExternalSearchFallbackAlias:
+		executionStatus = "external_search_fallback_alias_success"
+	case fallbackPathExternalSearchFallbackLegacy:
+		executionStatus = "external_search_fallback_legacy_success"
 	}
 	resolver.RecordExecution(ctx, resolver.ExecutionRecord{
 		ExecutionStatus:  executionStatus,
@@ -258,18 +281,42 @@ func (a SearchAndPlayAction) playAndBuildMessage(ctx context.Context, result *Se
 }
 
 func (a SearchAndPlayAction) searchWithFallback(ctx context.Context, keywords []string, fallbackKeyword string, types []SearchType, limit int) (*SearchResult, string, error) {
+	var externalErr error
+	if a.externalSearcher != nil {
+		result, err := a.externalSearcher.Search(ctx, fallbackKeyword, types, limit)
+		if err == nil && totalSearchResultCount(result) > 0 {
+			return result, fallbackPathExternalSearch, nil
+		}
+		if err != nil {
+			externalErr = err
+			slog.WarnContext(ctx, "external search failed; falling back to owntone search", "reason", externalSearchFallbackReason(err), "error", err)
+		} else {
+			externalErr = ErrExternalSearchNoHits
+			slog.WarnContext(ctx, "external search returned no hits; falling back to owntone search", "reason", externalSearchFallbackReason(externalErr))
+		}
+	}
+
 	expression := buildSearchExpression(keywords, types)
 	if expression == "" {
 		result, err := a.c.Search(ctx, fallbackKeyword, types, limit)
-		return result, "legacy_query", err
+		if externalErr != nil {
+			return result, fallbackPathExternalSearchFallbackLegacy, err
+		}
+		return result, fallbackPathLegacyQuery, err
 	}
 
 	result, err := a.c.SearchByExpression(ctx, expression, types, limit)
 	if err != nil || totalSearchResultCount(result) == 0 {
 		fallback, fallbackErr := a.c.Search(ctx, fallbackKeyword, types, limit)
-		return fallback, "legacy_query", fallbackErr
+		if externalErr != nil {
+			return fallback, fallbackPathExternalSearchFallbackLegacy, fallbackErr
+		}
+		return fallback, fallbackPathLegacyQuery, fallbackErr
 	}
-	return result, "alias_expression", nil
+	if externalErr != nil {
+		return result, fallbackPathExternalSearchFallbackAlias, nil
+	}
+	return result, fallbackPathAliasExpression, nil
 }
 
 // NewSearchAndPlayAction creates a new SearchAndPlayAction.

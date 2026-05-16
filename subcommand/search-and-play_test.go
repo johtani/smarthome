@@ -25,4 +25,19 @@ func TestBuildSearchAndPlayOptions(t *testing.T) {
 			t.Fatalf("expected 2 options, got %d", len(opts))
 		}
 	})
+
+	t.Run("with external search", func(t *testing.T) {
+		cfg := owntone.Config{
+			ExternalSearch: owntone.ExternalSearchConfig{
+				Enabled:       true,
+				OpenSearchURL: "http://localhost:9200",
+				Index:         "smarthome-owntone-music",
+				TemplateID:    "music_search",
+			},
+		}
+		opts := buildSearchAndPlayOptions(cfg, nil)
+		if len(opts) != 2 {
+			t.Fatalf("expected 2 options, got %d", len(opts))
+		}
+	})
 }

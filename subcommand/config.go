@@ -139,6 +139,30 @@ func (c *Config) overrideWithEnv() {
 			c.Owntone.MusicIntentConfidenceThresholdSet = true
 		}
 	}
+	// SMARTHOME_OWNTONE_EXTERNAL_SEARCH_ENABLED
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_ENABLED"); ok {
+		if b, err := strconv.ParseBool(val); err == nil {
+			c.Owntone.ExternalSearch.Enabled = b
+		}
+	}
+	// SMARTHOME_OWNTONE_EXTERNAL_SEARCH_OPENSEARCH_URL
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_OPENSEARCH_URL"); ok {
+		c.Owntone.ExternalSearch.OpenSearchURL = val
+	}
+	// SMARTHOME_OWNTONE_EXTERNAL_SEARCH_INDEX
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_INDEX"); ok {
+		c.Owntone.ExternalSearch.Index = val
+	}
+	// SMARTHOME_OWNTONE_EXTERNAL_SEARCH_TEMPLATE_ID
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_TEMPLATE_ID"); ok {
+		c.Owntone.ExternalSearch.TemplateID = val
+	}
+	// SMARTHOME_OWNTONE_EXTERNAL_SEARCH_TIMEOUT_SECONDS
+	if val, ok := os.LookupEnv("SMARTHOME_OWNTONE_EXTERNAL_SEARCH_TIMEOUT_SECONDS"); ok {
+		if i, err := strconv.Atoi(val); err == nil {
+			c.Owntone.ExternalSearch.TimeoutSeconds = i
+		}
+	}
 	// SMARTHOME_SWITCHBOT_TOKEN
 	if val, ok := os.LookupEnv("SMARTHOME_SWITCHBOT_TOKEN"); ok {
 		c.Switchbot.Token = val
