@@ -202,9 +202,6 @@ type Commands struct {
 func NewCommands(macros ...MacroConfig) Commands {
 	defs := []Definition{
 		NewStartMusicCmdDefinition(),
-		NewPlayRandomPlaylistCmdDefinition(),
-		NewPlayRandomArtistCmdDefinition(),
-		NewPlayRandomGenreCmdDefinition(),
 		NewStopMusicDefinition(),
 		NewChangePlaylistCmdDefinition(),
 		NewDisplayPlaylistCmdDefinition(),
