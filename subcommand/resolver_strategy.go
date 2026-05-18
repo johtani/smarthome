@@ -86,6 +86,11 @@ func (r dspyResolver) Resolve(ctx context.Context, text string, commandList stri
 	if err != nil {
 		return llm.ResolvedCommand{}, fmt.Errorf("failed to marshal dspy payload: %w", err)
 	}
+	span.SetAttributes(
+		attribute.String("dspy.request.text", text),
+		attribute.String("dspy.request.prompt_version", promptVersion),
+		attribute.Int("dspy.request.command_count", strings.Count(commandList, "\n")+1),
+	)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, r.endpoint, bytes.NewReader(reqBody))
 	if err != nil {
@@ -105,6 +110,7 @@ func (r dspyResolver) Resolve(ctx context.Context, text string, commandList stri
 	if err != nil {
 		return llm.ResolvedCommand{}, fmt.Errorf("failed to read dspy response: %w", err)
 	}
+	span.SetAttributes(attribute.String("dspy.response_body", string(respBody)))
 	if resp.StatusCode != http.StatusOK {
 		return llm.ResolvedCommand{}, fmt.Errorf("unexpected dspy status code: %d", resp.StatusCode)
 	}
