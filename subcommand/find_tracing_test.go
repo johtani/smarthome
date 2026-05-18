@@ -192,7 +192,7 @@ func TestCommandsFindTracing_DSPyPath(t *testing.T) {
 		t.Fatalf("expected dspy.request.command_count 2, got %q", dspyAttrs["dspy.request.command_count"])
 	}
 	if dspyAttrs["dspy.response_body"] != `{"command":"light on","args":"","thought":"resolved by DSPy"}` {
-		t.Fatalf("expected dspy.response_body, got %q", dspyAttrs["dspy.response_body"])
+		t.Fatalf("expected dspy.response_body %s, got %q", `{"command":"light on","args":"","thought":"resolved by DSPy"}`, dspyAttrs["dspy.response_body"])
 	}
 }
 
