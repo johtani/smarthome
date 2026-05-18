@@ -123,6 +123,103 @@ func TestNormalizeText(t *testing.T) {
 	}
 }
 
+func TestNormalizeTextNoKana(t *testing.T) {
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "NFKC and lowercase", in: "ＴＥＳＴ　１２３", want: "test 123"},
+		{name: "Symbol collapse", in: "A・B!!! C", want: "a b c"},
+		{name: "Katakana kept as-is", in: "スピッツ", want: "スピッツ"},
+		{name: "Mixed kana not converted", in: "ヒカル ひかる", want: "ヒカル ひかる"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizeTextNoKana(tt.in)
+			if got != tt.want {
+				t.Fatalf("normalizeTextNoKana() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNormalizeSearchKeywordForExternalSearch(t *testing.T) {
+	tests := []struct {
+		name    string
+		keyword string
+		aliases map[string]string
+		want    string
+	}{
+		{
+			name:    "katakana kept without kana conversion",
+			keyword: "スピッツ",
+			aliases: nil,
+			want:    "スピッツ",
+		},
+		{
+			name:    "alias match without kana conversion",
+			keyword: "MGA",
+			aliases: map[string]string{"ｍｇａ": "Mrs. GREEN APPLE"},
+			want:    "mrs green apple",
+		},
+		{
+			name:    "alias key in katakana matched without conversion",
+			keyword: "ヒッキー",
+			aliases: map[string]string{"ヒッキー": "宇多田ヒカル"},
+			want:    "宇多田ヒカル",
+		},
+		{
+			name:    "empty after normalization",
+			keyword: "!!!",
+			aliases: map[string]string{"x": "y"},
+			want:    "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizeSearchKeywordForExternalSearch(tt.keyword, tt.aliases)
+			if got != tt.want {
+				t.Fatalf("normalizeSearchKeywordForExternalSearch() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSearchAndPlayAction_Run_ExternalSearchUsesNoKanaKeyword(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	external := &fakeExternalSearcher{
+		result: &SearchResult{
+			Tracks: Items{
+				Items: []SearchItem{{Title: "Robinson", Artist: "スピッツ", URI: "library:track:1"}},
+				Total: 1,
+			},
+		},
+	}
+	client := NewClient(Config{URL: server.URL})
+	action := NewSearchAndPlayAction(client, WithExternalSearch(external))
+
+	_, err := action.Run(context.Background(), "スピッツ")
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if external.receivedKeyword != "スピッツ" {
+		t.Fatalf("external search keyword = %q, want %q (katakana must not be converted to hiragana)", external.receivedKeyword, "スピッツ")
+	}
+}
+
 func TestNormalizeSearchKeyword(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -335,13 +432,15 @@ func (f fakeMusicIntentResolver) Resolve(_ context.Context, _ string) (MusicInte
 }
 
 type fakeExternalSearcher struct {
-	result *SearchResult
-	err    error
-	calls  int
+	result          *SearchResult
+	err             error
+	calls           int
+	receivedKeyword string
 }
 
-func (f *fakeExternalSearcher) Search(_ context.Context, _ string, _ []SearchType, _ int) (*SearchResult, error) {
+func (f *fakeExternalSearcher) Search(_ context.Context, keyword string, _ []SearchType, _ int) (*SearchResult, error) {
 	f.calls++
+	f.receivedKeyword = keyword
 	if f.err != nil {
 		return nil, f.err
 	}

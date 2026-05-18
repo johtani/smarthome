@@ -19,11 +19,11 @@ import (
 const defaultMusicIntentConfidenceThreshold = 0.75
 
 const (
-	fallbackPathAliasExpression                  = "alias_expression"
-	fallbackPathLegacyQuery                      = "legacy_query"
-	fallbackPathExternalSearch                   = "external_search"
-	fallbackPathExternalSearchFallbackAlias      = "external_search_fallback_alias_expression"
-	fallbackPathExternalSearchFallbackLegacy     = "external_search_fallback_legacy_query"
+	fallbackPathAliasExpression              = "alias_expression"
+	fallbackPathLegacyQuery                  = "legacy_query"
+	fallbackPathExternalSearch               = "external_search"
+	fallbackPathExternalSearchFallbackAlias  = "external_search_fallback_alias_expression"
+	fallbackPathExternalSearchFallbackLegacy = "external_search_fallback_legacy_query"
 )
 
 // SearchAndPlayAction represents an action to search for music and play it on Owntone.
@@ -82,6 +82,12 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	if strings.TrimSpace(searchKeyword) == "" {
 		searchKeyword = originalKeyword
 	}
+	externalKeyword := originalKeyword
+	if a.externalSearcher != nil {
+		if k := normalizeSearchKeywordForExternalSearch(originalKeyword, a.c.config.SearchAliases); strings.TrimSpace(k) != "" {
+			externalKeyword = k
+		}
+	}
 	keywords := buildSearchKeywords(originalKeyword, searchKeyword)
 	types := searchQuery.TypeArray()
 
@@ -120,7 +126,7 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 		}
 	}
 
-	result, fallbackPath, err := a.searchWithFallback(ctx, keywords, searchKeyword, types, searchQuery.Limit)
+	result, fallbackPath, err := a.searchWithFallback(ctx, keywords, searchKeyword, externalKeyword, types, searchQuery.Limit)
 	if err != nil {
 		resolver.RecordExecution(ctx, resolver.ExecutionRecord{
 			ExecutionStatus:  "search_error",
@@ -280,10 +286,10 @@ func (a SearchAndPlayAction) playAndBuildMessage(ctx context.Context, result *Se
 	return strings.Join(msg, "\n"), nil
 }
 
-func (a SearchAndPlayAction) searchWithFallback(ctx context.Context, keywords []string, fallbackKeyword string, types []SearchType, limit int) (*SearchResult, string, error) {
+func (a SearchAndPlayAction) searchWithFallback(ctx context.Context, keywords []string, fallbackKeyword string, externalKeyword string, types []SearchType, limit int) (*SearchResult, string, error) {
 	var externalErr error
 	if a.externalSearcher != nil {
-		result, err := a.externalSearcher.Search(ctx, fallbackKeyword, types, limit)
+		result, err := a.externalSearcher.Search(ctx, externalKeyword, types, limit)
 		if err == nil && totalSearchResultCount(result) > 0 {
 			return result, fallbackPathExternalSearch, nil
 		}
@@ -542,15 +548,31 @@ func normalizeSearchKeyword(keyword string, aliases map[string]string) string {
 	return applySearchAliases(normalized, aliases)
 }
 
+func normalizeSearchKeywordForExternalSearch(keyword string, aliases map[string]string) string {
+	normalized := normalizeTextNoKana(keyword)
+	if normalized == "" {
+		return ""
+	}
+	return applySearchAliasesNoKana(normalized, aliases)
+}
+
 func applySearchAliases(keyword string, aliases map[string]string) string {
+	return applyAliasesWithNormalizer(keyword, aliases, normalizeText)
+}
+
+func applySearchAliasesNoKana(keyword string, aliases map[string]string) string {
+	return applyAliasesWithNormalizer(keyword, aliases, normalizeTextNoKana)
+}
+
+func applyAliasesWithNormalizer(keyword string, aliases map[string]string, normalizer func(string) string) string {
 	if len(aliases) == 0 {
 		return keyword
 	}
 
 	normalizedAliases := make(map[string]string, len(aliases))
 	for from, to := range aliases {
-		normalizedFrom := normalizeText(from)
-		normalizedTo := normalizeText(to)
+		normalizedFrom := normalizer(from)
+		normalizedTo := normalizer(to)
 		if normalizedFrom == "" || normalizedTo == "" {
 			continue
 		}
@@ -571,19 +593,28 @@ func applySearchAliases(keyword string, aliases map[string]string) string {
 }
 
 func normalizeText(s string) string {
+	return buildNormalizedText(s, true)
+}
+
+func normalizeTextNoKana(s string) string {
+	return buildNormalizedText(s, false)
+}
+
+func buildNormalizedText(s string, convertKana bool) string {
 	normalized := norm.NFKC.String(s)
 	var b strings.Builder
 	b.Grow(len(normalized))
 
 	for _, r := range normalized {
-		r = katakanaToHiragana(r)
+		if convertKana {
+			r = katakanaToHiragana(r)
+		}
 		switch {
 		case unicode.IsLetter(r), unicode.IsDigit(r):
 			b.WriteRune(unicode.ToLower(r))
 		case unicode.IsSpace(r):
 			b.WriteByte(' ')
 		default:
-			// Treat punctuation/symbols as separators.
 			b.WriteByte(' ')
 		}
 	}
