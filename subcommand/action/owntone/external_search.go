@@ -125,6 +125,7 @@ func (s *OpenSearchExternalSearcher) search(ctx context.Context, keyword string,
 	if err != nil {
 		return nil, fmt.Errorf("failed to encode external search request: %w", err)
 	}
+	trace.SpanFromContext(ctx).SetAttributes(attribute.String("search.request_body", string(body)))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, s.searchTemplateURL(), bytes.NewReader(body))
 	if err != nil {
@@ -195,7 +196,6 @@ func openSearchResponseToSearchResult(response openSearchTemplateResponse) *Sear
 	setExternalSearchTotals(result)
 	return result
 }
-
 
 func firstNonEmpty(values ...string) string {
 	for _, value := range values {

@@ -85,6 +85,16 @@ func TestOpenSearchExternalSearcher_Search(t *testing.T) {
 			if attrValue(span.Attributes, "search.hit_count") != int64(2) {
 				t.Fatalf("search.hit_count = %v, want 2", attrValue(span.Attributes, "search.hit_count"))
 			}
+			reqBody, ok := attrValue(span.Attributes, "search.request_body").(string)
+			if !ok || reqBody == "" {
+				t.Fatalf("search.request_body = %v, want non-empty string", attrValue(span.Attributes, "search.request_body"))
+			}
+			if !strings.Contains(reqBody, "宇多田") {
+				t.Fatalf("search.request_body does not contain keyword: %s", reqBody)
+			}
+			if !strings.Contains(reqBody, "music_search") {
+				t.Fatalf("search.request_body does not contain template id: %s", reqBody)
+			}
 		}
 	}
 	if !found {
