@@ -182,6 +182,18 @@ func TestCommandsFindTracing_DSPyPath(t *testing.T) {
 	if dspyAttrs["resolver.prompt_version"] != "v2" {
 		t.Fatalf("expected resolver.prompt_version v2, got %q", dspyAttrs["resolver.prompt_version"])
 	}
+	if dspyAttrs["dspy.request.text"] != "あかりをつけて" {
+		t.Fatalf("expected dspy.request.text あかりをつけて, got %q", dspyAttrs["dspy.request.text"])
+	}
+	if dspyAttrs["dspy.request.prompt_version"] != "v2" {
+		t.Fatalf("expected dspy.request.prompt_version v2, got %q", dspyAttrs["dspy.request.prompt_version"])
+	}
+	if dspyAttrs["dspy.request.command_count"] != "2" {
+		t.Fatalf("expected dspy.request.command_count 2, got %q", dspyAttrs["dspy.request.command_count"])
+	}
+	if dspyAttrs["dspy.response_body"] != `{"command":"light on","args":"","thought":"resolved by DSPy"}` {
+		t.Fatalf("expected dspy.response_body %s, got %q", `{"command":"light on","args":"","thought":"resolved by DSPy"}`, dspyAttrs["dspy.response_body"])
+	}
 }
 
 func findSpanByName(t *testing.T, exporter *tracetest.InMemoryExporter, name string) tracetest.SpanStub {
