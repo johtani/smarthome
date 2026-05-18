@@ -19,11 +19,11 @@ import (
 const defaultMusicIntentConfidenceThreshold = 0.75
 
 const (
-	fallbackPathAliasExpression                  = "alias_expression"
-	fallbackPathLegacyQuery                      = "legacy_query"
-	fallbackPathExternalSearch                   = "external_search"
-	fallbackPathExternalSearchFallbackAlias      = "external_search_fallback_alias_expression"
-	fallbackPathExternalSearchFallbackLegacy     = "external_search_fallback_legacy_query"
+	fallbackPathAliasExpression              = "alias_expression"
+	fallbackPathLegacyQuery                  = "legacy_query"
+	fallbackPathExternalSearch               = "external_search"
+	fallbackPathExternalSearchFallbackAlias  = "external_search_fallback_alias_expression"
+	fallbackPathExternalSearchFallbackLegacy = "external_search_fallback_legacy_query"
 )
 
 // SearchAndPlayAction represents an action to search for music and play it on Owntone.
@@ -82,6 +82,10 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 	if strings.TrimSpace(searchKeyword) == "" {
 		searchKeyword = originalKeyword
 	}
+	externalKeyword := normalizeSearchKeywordForExternalSearch(originalKeyword, a.c.config.SearchAliases)
+	if strings.TrimSpace(externalKeyword) == "" {
+		externalKeyword = originalKeyword
+	}
 	keywords := buildSearchKeywords(originalKeyword, searchKeyword)
 	types := searchQuery.TypeArray()
 
@@ -120,7 +124,7 @@ func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, err
 		}
 	}
 
-	result, fallbackPath, err := a.searchWithFallback(ctx, keywords, searchKeyword, types, searchQuery.Limit)
+	result, fallbackPath, err := a.searchWithFallback(ctx, keywords, searchKeyword, externalKeyword, types, searchQuery.Limit)
 	if err != nil {
 		resolver.RecordExecution(ctx, resolver.ExecutionRecord{
 			ExecutionStatus:  "search_error",
@@ -280,10 +284,10 @@ func (a SearchAndPlayAction) playAndBuildMessage(ctx context.Context, result *Se
 	return strings.Join(msg, "\n"), nil
 }
 
-func (a SearchAndPlayAction) searchWithFallback(ctx context.Context, keywords []string, fallbackKeyword string, types []SearchType, limit int) (*SearchResult, string, error) {
+func (a SearchAndPlayAction) searchWithFallback(ctx context.Context, keywords []string, fallbackKeyword string, externalKeyword string, types []SearchType, limit int) (*SearchResult, string, error) {
 	var externalErr error
 	if a.externalSearcher != nil {
-		result, err := a.externalSearcher.Search(ctx, fallbackKeyword, types, limit)
+		result, err := a.externalSearcher.Search(ctx, externalKeyword, types, limit)
 		if err == nil && totalSearchResultCount(result) > 0 {
 			return result, fallbackPathExternalSearch, nil
 		}
@@ -542,6 +546,14 @@ func normalizeSearchKeyword(keyword string, aliases map[string]string) string {
 	return applySearchAliases(normalized, aliases)
 }
 
+func normalizeSearchKeywordForExternalSearch(keyword string, aliases map[string]string) string {
+	normalized := normalizeTextNoKana(keyword)
+	if normalized == "" {
+		return ""
+	}
+	return applySearchAliasesNoKana(normalized, aliases)
+}
+
 func applySearchAliases(keyword string, aliases map[string]string) string {
 	if len(aliases) == 0 {
 		return keyword
@@ -551,6 +563,34 @@ func applySearchAliases(keyword string, aliases map[string]string) string {
 	for from, to := range aliases {
 		normalizedFrom := normalizeText(from)
 		normalizedTo := normalizeText(to)
+		if normalizedFrom == "" || normalizedTo == "" {
+			continue
+		}
+		normalizedAliases[normalizedFrom] = normalizedTo
+	}
+
+	if replaced, ok := normalizedAliases[keyword]; ok {
+		return replaced
+	}
+
+	terms := strings.Fields(keyword)
+	for i, term := range terms {
+		if replaced, ok := normalizedAliases[term]; ok {
+			terms[i] = replaced
+		}
+	}
+	return strings.Join(terms, " ")
+}
+
+func applySearchAliasesNoKana(keyword string, aliases map[string]string) string {
+	if len(aliases) == 0 {
+		return keyword
+	}
+
+	normalizedAliases := make(map[string]string, len(aliases))
+	for from, to := range aliases {
+		normalizedFrom := normalizeTextNoKana(from)
+		normalizedTo := normalizeTextNoKana(to)
 		if normalizedFrom == "" || normalizedTo == "" {
 			continue
 		}
@@ -584,6 +624,24 @@ func normalizeText(s string) string {
 			b.WriteByte(' ')
 		default:
 			// Treat punctuation/symbols as separators.
+			b.WriteByte(' ')
+		}
+	}
+	return strings.Join(strings.Fields(b.String()), " ")
+}
+
+func normalizeTextNoKana(s string) string {
+	normalized := norm.NFKC.String(s)
+	var b strings.Builder
+	b.Grow(len(normalized))
+
+	for _, r := range normalized {
+		switch {
+		case unicode.IsLetter(r), unicode.IsDigit(r):
+			b.WriteRune(unicode.ToLower(r))
+		case unicode.IsSpace(r):
+			b.WriteByte(' ')
+		default:
 			b.WriteByte(' ')
 		}
 	}
