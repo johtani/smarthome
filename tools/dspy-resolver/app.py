@@ -54,15 +54,19 @@ class ResolveMusicIntentResponse(BaseModel):
 class CommandEntry:
     name: str
     description: str
+    args_text: str = ""
 
 
 def parse_command_list(command_list: str) -> List[CommandEntry]:
     rows: List[CommandEntry] = []
+    last_entry: CommandEntry | None = None
     for line in command_list.splitlines():
         trimmed = line.strip()
         if not trimmed:
             continue
         if trimmed.startswith("args:"):
+            if last_entry is not None:
+                last_entry.args_text = trimmed[len("args:"):].strip()
             continue
         if not line.startswith("  "):
             continue
@@ -73,16 +77,18 @@ def parse_command_list(command_list: str) -> List[CommandEntry]:
         m = re.match(r"^\s*([^\[:]+?)(?:\s*\[[^\]]+\])?\s*:\s*(.+?)\s*$", line)
         if not m:
             continue
-        rows.append(CommandEntry(name=m.group(1).strip(), description=m.group(2).strip()))
+        entry = CommandEntry(name=m.group(1).strip(), description=m.group(2).strip())
+        rows.append(entry)
+        last_entry = entry
     return rows
 
 
 class ResolveSignature(dspy.Signature):
     utterance = dspy.InputField(desc="User input text")
-    command_catalog = dspy.InputField(desc="Command catalog list with names and descriptions")
+    command_catalog = dspy.InputField(desc="Command catalog with names, descriptions, and optional args format hints")
     prompt_version = dspy.InputField(desc="Prompt version for traceability")
     selected_command = dspy.OutputField(desc="Best matching command name. Use empty string if none.")
-    selected_args = dspy.OutputField(desc="Args text for selected command. Empty string when no args.")
+    selected_args = dspy.OutputField(desc="Args for the selected command following the args format hint. For non-prefix required args output the extracted value only (e.g. 'Meja'). For prefix args use prefix:value (e.g. 'type:artist'). Empty string when no args needed.")
     rationale = dspy.OutputField(desc="Short reason for selection")
 
 
@@ -120,7 +126,13 @@ class MusicIntentResolverModule(dspy.Module):
 
 
 def build_catalog_text(entries: List[CommandEntry]) -> str:
-    return "\n".join(f"- {e.name}: {e.description}" for e in entries)
+    lines = []
+    for e in entries:
+        if e.args_text:
+            lines.append(f"- {e.name}: {e.description} [args: {e.args_text}]")
+        else:
+            lines.append(f"- {e.name}: {e.description}")
+    return "\n".join(lines)
 
 
 def split_candidates(value: str) -> List[str]:
