@@ -50,6 +50,9 @@ class ResolveMusicIntentResponse(BaseModel):
     model: str = ""
 
 
+_ARGS_PREFIX = "args:"
+
+
 @dataclass
 class CommandEntry:
     name: str
@@ -64,9 +67,9 @@ def parse_command_list(command_list: str) -> List[CommandEntry]:
         trimmed = line.strip()
         if not trimmed:
             continue
-        if trimmed.startswith("args:"):
+        if trimmed.startswith(_ARGS_PREFIX):
             if last_entry is not None:
-                last_entry.args_text = trimmed[len("args:"):].strip()
+                last_entry.args_text = trimmed[len(_ARGS_PREFIX):].strip()
             continue
         if not line.startswith("  "):
             continue
@@ -126,13 +129,10 @@ class MusicIntentResolverModule(dspy.Module):
 
 
 def build_catalog_text(entries: List[CommandEntry]) -> str:
-    lines = []
-    for e in entries:
-        if e.args_text:
-            lines.append(f"- {e.name}: {e.description} [args: {e.args_text}]")
-        else:
-            lines.append(f"- {e.name}: {e.description}")
-    return "\n".join(lines)
+    return "\n".join(
+        f"- {e.name}: {e.description}" + (f" [args: {e.args_text}]" if e.args_text else "")
+        for e in entries
+    )
 
 
 def split_candidates(value: str) -> List[str]:
