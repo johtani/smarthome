@@ -80,7 +80,7 @@ class TestBuildCatalogText:
         result = build_catalog_text(entries)
         assert result == (
             "- search and play: Search Music by keyword And play"
-            " [args: keyword(required), type(optional,prefix=type:,enum=artist|album|track|genre)]"
+            " [args: keyword(required,no-prefix), type(optional,prefix=type:,enum=artist|album|track|genre)]"
         )
 
     def test_entry_without_args_text_excludes_args(self):
@@ -98,7 +98,7 @@ class TestBuildCatalogText:
             CommandEntry(name="light on", description="turn on the light"),
         ]
         lines = build_catalog_text(entries).splitlines()
-        assert lines[0] == "- search and play: Search Music by keyword And play [args: keyword(required)]"
+        assert lines[0] == "- search and play: Search Music by keyword And play [args: keyword(required,no-prefix)]"
         assert lines[1] == "- light on: turn on the light"
 
     def test_empty_entries_returns_empty_string(self):

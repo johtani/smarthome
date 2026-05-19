@@ -135,7 +135,7 @@ def build_catalog_text(entries: List[CommandEntry]) -> str:
         if e.args_text:
             annotated = re.sub(
                 r"\(([^)]*)\)",
-                lambda m: "(" + m.group(1) + ",no-prefix)" if "prefix=" not in m.group(1) else "(" + m.group(1) + ")",
+                lambda m: "(" + m.group(1) + (",no-prefix)" if "prefix=" not in m.group(1) else ")"),
                 e.args_text,
             )
             args_hint = f" [args: {annotated}]"

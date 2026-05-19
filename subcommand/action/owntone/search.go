@@ -407,8 +407,7 @@ const typePrefix = "type:"
 const keywordPrefix = "keyword:"
 
 // Parse parses a search query string into a SearchQuery struct.
-// It handles both space-separated and comma-separated args formats, and strips
-// the "keyword:" prefix that DSPy may erroneously prepend to keyword values.
+// Handles comma-separated input and strips "keyword:" prefix that DSPy may prepend erroneously.
 func Parse(target string) *SearchQuery {
 	normalized := strings.ReplaceAll(target, ",", " ")
 	split := strings.Fields(normalized)
