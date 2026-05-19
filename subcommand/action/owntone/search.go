@@ -404,16 +404,23 @@ func (sq SearchQuery) TypeArray() []SearchType {
 const limitPrefix = "limit:"
 const offsetPrefix = "offset:"
 const typePrefix = "type:"
+const keywordPrefix = "keyword:"
 
 // Parse parses a search query string into a SearchQuery struct.
+// Handles comma-separated input and strips "keyword:" prefix that DSPy may prepend erroneously.
 func Parse(target string) *SearchQuery {
-	split := strings.Fields(target)
+	normalized := strings.ReplaceAll(target, ",", " ")
+	split := strings.Fields(normalized)
 	var queries []string
 	var types []SearchType
 	limit := -1
 	offset := -1
 	for _, term := range split {
 		switch {
+		case strings.HasPrefix(term, keywordPrefix):
+			if value := term[len(keywordPrefix):]; value != "" {
+				queries = append(queries, value)
+			}
 		case strings.HasPrefix(term, limitPrefix):
 			value := term[len(limitPrefix):]
 			i, err := strconv.Atoi(value)

@@ -28,6 +28,9 @@ func TestParse(t *testing.T) {
 		{name: "Term and offset, limit, types", args: args{target: "term offset:1 limit:2 type:album type:artist"}, want: &SearchQuery{Terms: []string{"term"}, Offset: 1, Limit: 2, Types: []SearchType{album, artist}}},
 		{name: "Term genre type", args: args{target: "term type:genre"}, want: &SearchQuery{Terms: []string{"term"}, Offset: -1, Limit: -1, Types: []SearchType{genre}}},
 		{name: "Term genre type misspelled", args: args{target: "term type:gener"}, want: &SearchQuery{Terms: []string{"term"}, Offset: -1, Limit: -1, Types: []SearchType{genre}}},
+		{name: "keyword prefix stripped", args: args{target: "keyword:メイヤ"}, want: &SearchQuery{Terms: []string{"メイヤ"}, Offset: -1, Limit: -1}},
+		{name: "keyword prefix with type space-separated", args: args{target: "keyword:メイヤ type:artist"}, want: &SearchQuery{Terms: []string{"メイヤ"}, Offset: -1, Limit: -1, Types: []SearchType{artist}}},
+		{name: "keyword prefix with type comma-separated", args: args{target: "keyword:メイヤ,type:artist"}, want: &SearchQuery{Terms: []string{"メイヤ"}, Offset: -1, Limit: -1, Types: []SearchType{artist}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
