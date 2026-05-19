@@ -91,7 +91,7 @@ class ResolveSignature(dspy.Signature):
     command_catalog = dspy.InputField(desc="Command catalog with names, descriptions, and optional args format hints")
     prompt_version = dspy.InputField(desc="Prompt version for traceability")
     selected_command = dspy.OutputField(desc="Best matching command name. Use empty string if none.")
-    selected_args = dspy.OutputField(desc="Args for the selected command following the args format hint. For non-prefix required args output the extracted value only (e.g. 'Meja'). For prefix args use prefix:value (e.g. 'type:artist'). Empty string when no args needed.")
+    selected_args = dspy.OutputField(desc="Args for the selected command following the args format hint. For non-prefix required args output the extracted value only, never add the arg name as prefix (e.g. 'Meja', not 'keyword:Meja'). For prefix args use prefix:value (e.g. 'type:artist'). Multiple args are space-separated (e.g. 'Meja type:artist'). Empty string when no args needed.")
     rationale = dspy.OutputField(desc="Short reason for selection")
 
 
@@ -129,10 +129,18 @@ class MusicIntentResolverModule(dspy.Module):
 
 
 def build_catalog_text(entries: List[CommandEntry]) -> str:
-    return "\n".join(
-        f"- {e.name}: {e.description}" + (f" [args: {e.args_text}]" if e.args_text else "")
-        for e in entries
-    )
+    lines = []
+    for e in entries:
+        args_hint = ""
+        if e.args_text:
+            annotated = re.sub(
+                r"\(([^)]*)\)",
+                lambda m: "(" + m.group(1) + ",no-prefix)" if "prefix=" not in m.group(1) else "(" + m.group(1) + ")",
+                e.args_text,
+            )
+            args_hint = f" [args: {annotated}]"
+        lines.append(f"- {e.name}: {e.description}{args_hint}")
+    return "\n".join(lines)
 
 
 def split_candidates(value: str) -> List[str]:
