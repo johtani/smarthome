@@ -56,9 +56,10 @@ type openSearchTemplateRequest struct {
 }
 
 type openSearchTemplateParams struct {
-	Query string `json:"query"`
-	Type  string `json:"type,omitempty"`
-	Size  int    `json:"size"`
+	Query    string   `json:"query"`
+	Types    []string `json:"types,omitempty"`
+	HasTypes bool     `json:"has_types,omitempty"`
+	Size     int      `json:"size"`
 }
 
 type openSearchTemplateResponse struct {
@@ -86,7 +87,8 @@ func (s *OpenSearchExternalSearcher) Search(ctx context.Context, keyword string,
 	if l <= 0 {
 		l = 5
 	}
-	typeParam := searchTypesParam(resultTypes)
+	typeParams := searchTypesParams(resultTypes)
+	typeAttr := strings.Join(typeParams, ",")
 
 	ctx, span := otel.Tracer("owntone").Start(ctx, "owntone.ExternalSearch.Search")
 	defer span.End()
@@ -95,11 +97,11 @@ func (s *OpenSearchExternalSearcher) Search(ctx context.Context, keyword string,
 		attribute.String("search.index", s.config.Index),
 		attribute.String("search.template_id", s.config.TemplateID),
 		attribute.String("search.query_hash", hashInputText(keyword)),
-		attribute.String("search.type", typeParam),
+		attribute.String("search.type", typeAttr),
 		attribute.Int("search.limit", l),
 	)
 
-	result, err := s.search(ctx, keyword, typeParam, l)
+	result, err := s.search(ctx, keyword, typeParams, l)
 	if err != nil {
 		recordExternalSearchFailure(span, externalSearchFallbackReason(err), err)
 		return nil, err
@@ -113,13 +115,14 @@ func (s *OpenSearchExternalSearcher) Search(ctx context.Context, keyword string,
 	return result, nil
 }
 
-func (s *OpenSearchExternalSearcher) search(ctx context.Context, keyword string, typeParam string, limit int) (*SearchResult, error) {
+func (s *OpenSearchExternalSearcher) search(ctx context.Context, keyword string, typeParams []string, limit int) (*SearchResult, error) {
 	body, err := json.Marshal(openSearchTemplateRequest{
 		ID: s.config.TemplateID,
 		Params: openSearchTemplateParams{
-			Query: keyword,
-			Type:  typeParam,
-			Size:  limit,
+			Query:    keyword,
+			Types:    typeParams,
+			HasTypes: len(typeParams) > 0,
+			Size:     limit,
 		},
 	})
 	if err != nil {
@@ -214,15 +217,15 @@ func setExternalSearchTotals(result *SearchResult) {
 	}
 }
 
-func searchTypesParam(types []SearchType) string {
+func searchTypesParams(types []SearchType) []string {
 	if len(types) == 0 {
-		return ""
+		return nil
 	}
 	values := make([]string, 0, len(types))
 	for _, t := range types {
 		values = append(values, string(t))
 	}
-	return strings.Join(values, ",")
+	return values
 }
 
 func recordExternalSearchFailure(span trace.Span, reason string, err error) {
