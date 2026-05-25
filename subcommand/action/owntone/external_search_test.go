@@ -59,8 +59,11 @@ func TestOpenSearchExternalSearcher_Search(t *testing.T) {
 	if received.Params.Query != "宇多田" {
 		t.Fatalf("query = %q", received.Params.Query)
 	}
-	if received.Params.Type != "track" {
-		t.Fatalf("type = %q", received.Params.Type)
+	if !reflect.DeepEqual(received.Params.Types, []string{"track"}) {
+		t.Fatalf("types = %v", received.Params.Types)
+	}
+	if !received.Params.HasTypes {
+		t.Fatal("has_types = false, want true")
 	}
 	if received.Params.Size != 2 {
 		t.Fatalf("size = %d", received.Params.Size)
@@ -99,6 +102,52 @@ func TestOpenSearchExternalSearcher_Search(t *testing.T) {
 	}
 	if !found {
 		t.Fatal("expected owntone.ExternalSearch.Search span")
+	}
+}
+
+func TestOpenSearchExternalSearcher_SearchSendsTypesArrayForDefaultTypes(t *testing.T) {
+	var receivedRaw map[string]any
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if err := json.NewDecoder(r.Body).Decode(&receivedRaw); err != nil {
+			t.Fatalf("failed to decode request: %v", err)
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = io.WriteString(w, openSearchSampleResponse())
+	}))
+	defer server.Close()
+
+	searcher := NewOpenSearchExternalSearcher(ExternalSearchConfig{
+		OpenSearchURL: server.URL,
+		Index:         "smarthome-owntone-music",
+		TemplateID:    "music_search",
+	})
+
+	_, err := searcher.Search(context.Background(), "メイヤ", []SearchType{artist, album, track, genre}, 5)
+	if err != nil {
+		t.Fatalf("Search() error = %v", err)
+	}
+
+	params, ok := receivedRaw["params"].(map[string]any)
+	if !ok {
+		t.Fatalf("params = %#v", receivedRaw["params"])
+	}
+	if _, ok := params["type"]; ok {
+		t.Fatalf("params.type is present: %#v", params["type"])
+	}
+	types, ok := params["types"].([]any)
+	if !ok {
+		t.Fatalf("params.types = %#v", params["types"])
+	}
+	gotTypes := make([]string, 0, len(types))
+	for _, value := range types {
+		gotTypes = append(gotTypes, value.(string))
+	}
+	wantTypes := []string{"artist", "album", "track", "genre"}
+	if !reflect.DeepEqual(gotTypes, wantTypes) {
+		t.Fatalf("params.types = %v, want %v", gotTypes, wantTypes)
+	}
+	if params["has_types"] != true {
+		t.Fatalf("params.has_types = %#v, want true", params["has_types"])
 	}
 }
 

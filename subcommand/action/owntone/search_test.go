@@ -221,6 +221,9 @@ func TestSearchAndPlayAction_Run_ExternalSearchUsesNoKanaKeyword(t *testing.T) {
 	if external.receivedKeyword != "スピッツ" {
 		t.Fatalf("external search keyword = %q, want %q (katakana must not be converted to hiragana)", external.receivedKeyword, "スピッツ")
 	}
+	if !reflect.DeepEqual(external.receivedTypes, []SearchType{artist, album, track, genre}) {
+		t.Fatalf("external search types = %v, want default types", external.receivedTypes)
+	}
 }
 
 func TestNormalizeSearchKeyword(t *testing.T) {
@@ -439,11 +442,13 @@ type fakeExternalSearcher struct {
 	err             error
 	calls           int
 	receivedKeyword string
+	receivedTypes   []SearchType
 }
 
-func (f *fakeExternalSearcher) Search(_ context.Context, keyword string, _ []SearchType, _ int) (*SearchResult, error) {
+func (f *fakeExternalSearcher) Search(_ context.Context, keyword string, types []SearchType, _ int) (*SearchResult, error) {
 	f.calls++
 	f.receivedKeyword = keyword
+	f.receivedTypes = append([]SearchType(nil), types...)
 	if f.err != nil {
 		return nil, f.err
 	}
