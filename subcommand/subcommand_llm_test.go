@@ -185,6 +185,90 @@ func TestCommands_Find_DSPyMode(t *testing.T) {
 	})
 }
 
+func TestCommands_Find_DSPySearchAndPlayStripsTypeArgs(t *testing.T) {
+	dspyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"command":"search and play","args":"宇多田 First Love type:artist limit:2 offset:1","thought":"music request"}`)
+	}))
+	defer dspyServer.Close()
+
+	config := Config{
+		Resolver: ResolverConfig{
+			Mode:               ResolverModeDSPy,
+			DSPyEndpoint:       dspyServer.URL,
+			DSPyTimeoutSeconds: 3,
+		},
+	}
+
+	cmds := Commands{
+		Definitions: []Definition{
+			{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+		},
+	}
+
+	def, args, _, err := cmds.Find(t.Context(), config, "宇多田のFirst Loveかけて")
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if def.Name != SearchAndPlayMusicCmd {
+		t.Fatalf("expected command %q, got %q", SearchAndPlayMusicCmd, def.Name)
+	}
+	if args != "宇多田 First Love limit:2 offset:1" {
+		t.Fatalf("args = %q, want type arg stripped", args)
+	}
+}
+
+func TestCommands_Find_LLMSearchAndPlayStripsTypeArgs(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"command\": \"search and play\", \"args\": \"宇多田 First Love type:track limit:3\", \"thought\": \"music request\"}"}}]}`)
+	}))
+	defer server.Close()
+
+	config := Config{
+		LLM: llm.Config{
+			Endpoint: server.URL,
+			Model:    "test-model",
+		},
+	}
+
+	cmds := Commands{
+		Definitions: []Definition{
+			{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+		},
+	}
+
+	def, args, _, err := cmds.Find(t.Context(), config, "宇多田のFirst Loveかけて")
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if def.Name != SearchAndPlayMusicCmd {
+		t.Fatalf("expected command %q, got %q", SearchAndPlayMusicCmd, def.Name)
+	}
+	if args != "宇多田 First Love limit:3" {
+		t.Fatalf("args = %q, want type arg stripped", args)
+	}
+}
+
+func TestCommands_Find_ExactSearchAndPlayKeepsTypeArgs(t *testing.T) {
+	cmds := Commands{
+		Definitions: []Definition{
+			{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+		},
+	}
+
+	def, args, _, err := cmds.Find(t.Context(), Config{}, "search and play 宇多田 type:artist limit:2")
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if def.Name != SearchAndPlayMusicCmd {
+		t.Fatalf("expected command %q, got %q", SearchAndPlayMusicCmd, def.Name)
+	}
+	if args != "宇多田 type:artist limit:2" {
+		t.Fatalf("args = %q, want exact match args preserved", args)
+	}
+}
+
 func TestCommands_Find_LLM_FallbackStartMusicArgsToSearchAndPlay(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")

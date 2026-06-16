@@ -313,6 +313,9 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 				!strings.HasPrefix(strings.TrimSpace(resolved.Args), "genre") {
 				resolved.Command = SearchAndPlayMusicCmd
 			}
+			if resolved.Command == SearchAndPlayMusicCmd {
+				resolved.Args = stripNaturalLanguageSearchTypeArgs(resolved.Args)
+			}
 
 			for _, d := range c.Definitions {
 				if d.Name == resolved.Command {
@@ -356,6 +359,27 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 		ResolvedArgs:    args,
 	})
 	return def, args, dymMsg, nil
+}
+
+func stripNaturalLanguageSearchTypeArgs(args string) string {
+	allowedTypes := map[string]struct{}{
+		"artist": {},
+		"album":  {},
+		"track":  {},
+		"genre":  {},
+	}
+	parts := strings.Fields(strings.ReplaceAll(args, ",", " "))
+	kept := make([]string, 0, len(parts))
+	for _, part := range parts {
+		value, ok := strings.CutPrefix(part, "type:")
+		if ok {
+			if _, allowed := allowedTypes[value]; allowed {
+				continue
+			}
+		}
+		kept = append(kept, part)
+	}
+	return strings.Join(kept, " ")
 }
 
 func hashInputText(text string) string {
