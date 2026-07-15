@@ -331,6 +331,14 @@ pwsh tools/resolver-events/extract-from-collector-file.ps1 `
   -OutputCsv .\tmp\resolver-events\resolver-events.csv
 ```
 
+Ubuntu / bash 環境では同等のシェル版も利用できます:
+
+```bash
+bash tools/resolver-events/extract-from-collector-file.sh \
+  --input ./tmp/otel/resolver-traces.jsonl \
+  --output ./tmp/resolver-events/resolver-events.csv
+```
+
 主に次の列を出力します:
 
 - `resolver_schema_version`
