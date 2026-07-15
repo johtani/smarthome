@@ -35,6 +35,15 @@ var genericPlaybackRequests = map[string]struct{}{
 	"playmusic": {},
 }
 
+const specifiedMusicTargetCorrectionReason = "specified_music_target"
+
+type resolutionCorrection struct {
+	initialCommand   string
+	initialArgsKind  string
+	commandCorrected bool
+	reason           string
+}
+
 // normalizeMusicResolution prevents a named music request from being treated
 // as random playback when a natural-language resolver selects start music.
 func normalizeMusicResolution(input string, resolved llm.ResolvedCommand) llm.ResolvedCommand {
@@ -50,6 +59,29 @@ func normalizeMusicResolution(input string, resolved llm.ResolvedCommand) llm.Re
 		resolved.Args = args
 	}
 	return resolved
+}
+
+func describeResolutionCorrection(before, after llm.ResolvedCommand) resolutionCorrection {
+	correction := resolutionCorrection{
+		initialCommand:  before.Command,
+		initialArgsKind: classifyResolverArgs(before.Args),
+	}
+	if before.Command != after.Command {
+		correction.commandCorrected = true
+		correction.reason = specifiedMusicTargetCorrectionReason
+	}
+	return correction
+}
+
+func classifyResolverArgs(args string) string {
+	switch strings.TrimSpace(args) {
+	case "":
+		return "empty"
+	case "artist", "genre":
+		return "mode"
+	default:
+		return "free_text"
+	}
 }
 
 func isGenericOrRandomPlaybackRequest(input string) bool {

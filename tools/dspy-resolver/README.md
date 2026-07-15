@@ -11,6 +11,22 @@
 - `POST /resolve`
 - `POST /resolve-music-intent`
 
+### 音楽再生コマンドの選択
+
+`POST /resolve` では、音楽再生要求を次の基準で選択します。
+
+- アーティスト、曲、アルバム、プレイリスト、ジャンルなどの検索対象がある場合は `search and play`
+- 対象指定がない場合、またはランダム／シャッフル再生が明示されている場合は `start music`
+- `start music` の `artist` / `genre` はランダム再生の分類方法であり、指定された検索対象を表すものではない
+
+例:
+
+- 「B'zの曲をかけて」→ `search and play`
+- 「音楽をかけて」→ `start music`
+- 「ランダムにジャズを流して」→ `start music`
+
+smarthome側にも共通ガードがあり、DSPyが具体的な対象を含む要求を `start music` と解決した場合は、実行前に `search and play` へ補正します。DSPyシグネチャや選択ルールを変更した場合は、`resolver.prompt_version` も更新してください。
+
 ### Request (`POST /resolve`)
 
 ```json

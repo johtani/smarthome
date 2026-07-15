@@ -84,3 +84,53 @@ func TestNormalizeMusicResolution(t *testing.T) {
 		})
 	}
 }
+
+func TestDescribeResolutionCorrection(t *testing.T) {
+	tests := []struct {
+		name          string
+		before        llm.ResolvedCommand
+		after         llm.ResolvedCommand
+		wantArgsKind  string
+		wantCorrected bool
+		wantReason    string
+	}{
+		{
+			name:          "mode args corrected",
+			before:        llm.ResolvedCommand{Command: StartMusicCmd, Args: "artist"},
+			after:         llm.ResolvedCommand{Command: SearchAndPlayMusicCmd, Args: "B'zの曲をかけて"},
+			wantArgsKind:  "mode",
+			wantCorrected: true,
+			wantReason:    specifiedMusicTargetCorrectionReason,
+		},
+		{
+			name:         "empty args unchanged",
+			before:       llm.ResolvedCommand{Command: StartMusicCmd},
+			after:        llm.ResolvedCommand{Command: StartMusicCmd},
+			wantArgsKind: "empty",
+		},
+		{
+			name:         "free text args unchanged",
+			before:       llm.ResolvedCommand{Command: SearchAndPlayMusicCmd, Args: "B'z"},
+			after:        llm.ResolvedCommand{Command: SearchAndPlayMusicCmd, Args: "B'z"},
+			wantArgsKind: "free_text",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := describeResolutionCorrection(tt.before, tt.after)
+			if got.initialCommand != tt.before.Command {
+				t.Fatalf("initial command = %q, want %q", got.initialCommand, tt.before.Command)
+			}
+			if got.initialArgsKind != tt.wantArgsKind {
+				t.Fatalf("initial args kind = %q, want %q", got.initialArgsKind, tt.wantArgsKind)
+			}
+			if got.commandCorrected != tt.wantCorrected {
+				t.Fatalf("command corrected = %t, want %t", got.commandCorrected, tt.wantCorrected)
+			}
+			if got.reason != tt.wantReason {
+				t.Fatalf("reason = %q, want %q", got.reason, tt.wantReason)
+			}
+		})
+	}
+}

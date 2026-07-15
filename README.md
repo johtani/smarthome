@@ -155,6 +155,19 @@ Subcommand名をもとに、以下のようにSlash Command名として登録す
 `resolver.mode=dspy` の場合は `resolver.dspy_endpoint` にHTTPエンドポイントを指定するとDSPy resolverを優先します。  
 DSPy resolver が未設定または失敗した場合は既存の `legacy`（LLM）解決へフォールバックします。
 
+#### 音楽再生コマンドの解決
+
+自然言語による音楽再生要求は、指定対象の有無でコマンドを使い分けます。
+
+- `search and play`: アーティスト、曲、アルバム、プレイリスト、ジャンルなどを指定した再生
+  - 例: 「B'zの曲をかけて」「First Loveを再生して」
+- `start music`: 対象指定のない再生、またはランダム／シャッフル再生
+  - 例: 「音楽をかけて」「適当に何か流して」
+
+DSPyまたはlegacy LLMが、具体的な対象を含む要求を `start music` と解決した場合、実行前の共通ガードが `search and play` へ補正します。明示的な `start music artist` / `start music genre` は補正対象外です。
+
+DSPyシグネチャや選択ルールを変更したときは、トレースと評価データでバージョンを識別できるよう `resolver.prompt_version` も更新してください。
+
 ### Bitwarden Secrets Manager を使った秘匿情報管理
 
 [Bitwarden Secrets Manager](https://bitwarden.com/products/secrets-manager/) と `bws` CLI を使うことで、トークン等の秘匿情報をサーバー上に平文で保存せずに管理できます。
@@ -295,6 +308,10 @@ Resolverまわりは、OTel Event名を固定して出力します（`resolver.s
 - `resolver.input_text_hash`（平文ではなくハッシュ）
 - `resolver.path`
 - `llm.model`
+- `resolver.initial_command`
+- `resolver.initial_args_kind`（`empty` / `mode` / `free_text`）
+- `resolver.command_corrected`
+- `resolver.correction_reason`（音楽再生補正時は `specified_music_target`）
 - `resolver.resolved_command`
 - `resolver.resolved_args`
 - `resolver.execution_status`
@@ -349,6 +366,10 @@ bash tools/resolver-events/extract-from-collector-file.sh \
 - `resolver_path`
 - `resolver_mode`
 - `llm_model`
+- `resolver_initial_command`
+- `resolver_initial_args_kind`
+- `resolver_command_corrected`
+- `resolver_correction_reason`
 - `resolver_resolved_command`
 - `resolver_resolved_args`
 - `resolver_execution_status`

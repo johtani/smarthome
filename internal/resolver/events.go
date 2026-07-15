@@ -23,6 +23,10 @@ type DecisionRecord struct {
 	ResolverPath      string
 	ResolverMode      string
 	LLMModel          string
+	InitialCommand    string
+	InitialArgsKind   string
+	CommandCorrected  bool
+	CorrectionReason  string
 	ResolvedCommand   string
 	ResolvedArgs      string
 	DidYouMeanCommand string
@@ -53,6 +57,10 @@ func RecordDecision(ctx context.Context, record DecisionRecord) {
 		attribute.String("resolver.path", record.ResolverPath),
 		attribute.String("resolver.mode", record.ResolverMode),
 		attribute.String("llm.model", record.LLMModel),
+		attribute.String("resolver.initial_command", record.InitialCommand),
+		attribute.String("resolver.initial_args_kind", record.InitialArgsKind),
+		attribute.Bool("resolver.command_corrected", record.CommandCorrected),
+		attribute.String("resolver.correction_reason", record.CorrectionReason),
 		attribute.String("resolver.resolved_command", record.ResolvedCommand),
 		attribute.String("resolver.resolved_args", record.ResolvedArgs),
 		attribute.String("resolver.did_you_mean_command", record.DidYouMeanCommand),
@@ -68,6 +76,10 @@ func RecordDecision(ctx context.Context, record DecisionRecord) {
 		"resolver.path", record.ResolverPath,
 		"resolver.mode", record.ResolverMode,
 		"llm.model", record.LLMModel,
+		"resolver.initial_command", record.InitialCommand,
+		"resolver.initial_args_kind", record.InitialArgsKind,
+		"resolver.command_corrected", record.CommandCorrected,
+		"resolver.correction_reason", record.CorrectionReason,
 		"resolver.resolved_command", record.ResolvedCommand,
 		"resolver.resolved_args", record.ResolvedArgs,
 		"resolver.did_you_mean_command", record.DidYouMeanCommand,
