@@ -86,11 +86,19 @@ def parse_command_list(command_list: str) -> List[CommandEntry]:
     return rows
 
 
+MUSIC_COMMAND_ROUTING_POLICY = (
+    "Best matching command name. For a playback request that specifies an artist, song, album, "
+    "playlist, genre, or other search target, select 'search and play'. Select 'start music' only "
+    "for unspecified or explicitly random playback. The start music values artist and genre are "
+    "random-playback grouping modes, not specified search targets. Use empty string if none."
+)
+
+
 class ResolveSignature(dspy.Signature):
     utterance = dspy.InputField(desc="User input text")
     command_catalog = dspy.InputField(desc="Command catalog with names, descriptions, and optional args format hints")
     prompt_version = dspy.InputField(desc="Prompt version for traceability")
-    selected_command = dspy.OutputField(desc="Best matching command name. Use empty string if none.")
+    selected_command = dspy.OutputField(desc=MUSIC_COMMAND_ROUTING_POLICY)
     selected_args = dspy.OutputField(desc="Args for the selected command following the args format hint. For non-prefix required args output the extracted value only, never add the arg name as prefix (e.g. 'Meja', not 'keyword:Meja'). For prefix args use prefix:value (e.g. 'type:artist'). Multiple args are space-separated (e.g. 'Meja type:artist'). Empty string when no args needed.")
     rationale = dspy.OutputField(desc="Short reason for selection")
 

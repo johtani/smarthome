@@ -305,14 +305,7 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 				continue
 			}
 
-			// Backward-compatible safety fallback:
-			// if resolver resolves to start music with free-text args, use search and play.
-			if resolved.Command == StartMusicCmd &&
-				strings.TrimSpace(resolved.Args) != "" &&
-				!strings.HasPrefix(strings.TrimSpace(resolved.Args), "artist") &&
-				!strings.HasPrefix(strings.TrimSpace(resolved.Args), "genre") {
-				resolved.Command = SearchAndPlayMusicCmd
-			}
+			resolved = normalizeMusicResolution(text, resolved)
 			if resolved.Command == SearchAndPlayMusicCmd {
 				resolved.Args = stripNaturalLanguageSearchTypeArgs(resolved.Args)
 			}
