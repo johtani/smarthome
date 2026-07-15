@@ -18,7 +18,7 @@ const SearchPlayCmd = "search play"
 func NewSearchAndPlayMusicCmdDefinition() Definition {
 	return Definition{
 		Name:        SearchAndPlayMusicCmd,
-		Description: "Search Music by keyword And play",
+		Description: "Play music specified by artist, song, album, playlist, genre, or other search text",
 		Factory:     NewSearchAndPlayMusicSubcommand,
 		shortnames:  []string{SearchPlayCmd},
 		Args: []Arg{

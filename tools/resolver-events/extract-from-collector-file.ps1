@@ -20,10 +20,12 @@ function Get-AttrValue {
     if (-not $attr) {
         return ""
     }
-    if ($null -ne $attr.value.stringValue) { return [string]$attr.value.stringValue }
-    if ($null -ne $attr.value.intValue) { return [string]$attr.value.intValue }
-    if ($null -ne $attr.value.doubleValue) { return [string]$attr.value.doubleValue }
-    if ($null -ne $attr.value.boolValue) { return [string]$attr.value.boolValue }
+    foreach ($valueKey in @("stringValue", "intValue", "doubleValue", "boolValue")) {
+        $property = $attr.value.PSObject.Properties[$valueKey]
+        if ($null -ne $property -and $null -ne $property.Value) {
+            return [string]$property.Value
+        }
+    }
     return ""
 }
 
@@ -63,6 +65,10 @@ Get-Content -LiteralPath $InputPath | ForEach-Object {
                         resolver_path            = Get-AttrValue -Attributes $attrs -Key "resolver.path"
                         resolver_mode            = Get-AttrValue -Attributes $attrs -Key "resolver.mode"
                         llm_model                = Get-AttrValue -Attributes $attrs -Key "llm.model"
+                        resolver_initial_command = Get-AttrValue -Attributes $attrs -Key "resolver.initial_command"
+                        resolver_initial_args_kind = Get-AttrValue -Attributes $attrs -Key "resolver.initial_args_kind"
+                        resolver_command_corrected = Get-AttrValue -Attributes $attrs -Key "resolver.command_corrected"
+                        resolver_correction_reason = Get-AttrValue -Attributes $attrs -Key "resolver.correction_reason"
                         resolver_resolved_command = Get-AttrValue -Attributes $attrs -Key "resolver.resolved_command"
                         resolver_resolved_args   = Get-AttrValue -Attributes $attrs -Key "resolver.resolved_args"
                         resolver_execution_status = Get-AttrValue -Attributes $attrs -Key "resolver.execution_status"

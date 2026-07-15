@@ -196,6 +196,75 @@ func TestCommandsFindTracing_DSPyPath(t *testing.T) {
 	}
 }
 
+func TestCommandsFindTracing_DSPyMusicCorrection(t *testing.T) {
+	exporter := tracetest.NewInMemoryExporter()
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithSyncer(exporter),
+	)
+	defer func() { _ = tp.Shutdown(t.Context()) }()
+
+	prev := otel.GetTracerProvider()
+	otel.SetTracerProvider(tp)
+	defer otel.SetTracerProvider(prev)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"command":"start music","args":"artist","thought":"artist playback"}`))
+	}))
+	defer server.Close()
+
+	cmds := Commands{Definitions: []Definition{
+		{Name: StartMusicCmd, Description: "random music", Factory: NewDummySubcommand},
+		{Name: SearchAndPlayMusicCmd, Description: "search music", Factory: NewDummySubcommand},
+	}}
+	config := Config{Resolver: ResolverConfig{
+		Mode:               ResolverModeDSPy,
+		DSPyEndpoint:       server.URL,
+		DSPyTimeoutSeconds: 3,
+	}}
+
+	def, _, _, err := cmds.Find(t.Context(), config, "B'zの曲をかけて")
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if def.Name != SearchAndPlayMusicCmd {
+		t.Fatalf("command = %q, want %q", def.Name, SearchAndPlayMusicCmd)
+	}
+
+	span := findSpanByName(t, exporter, "Commands.Find")
+	attrs := toAttrMap(span.Attributes)
+	if attrs["resolver.initial_command"] != StartMusicCmd {
+		t.Fatalf("initial command = %q, want %q", attrs["resolver.initial_command"], StartMusicCmd)
+	}
+	if attrs["resolver.initial_args_kind"] != "mode" {
+		t.Fatalf("initial args kind = %q, want mode", attrs["resolver.initial_args_kind"])
+	}
+	if attrs["resolver.command_corrected"] != "true" {
+		t.Fatalf("command corrected = %q, want true", attrs["resolver.command_corrected"])
+	}
+	if attrs["resolver.correction_reason"] != specifiedMusicTargetCorrectionReason {
+		t.Fatalf("correction reason = %q, want %q", attrs["resolver.correction_reason"], specifiedMusicTargetCorrectionReason)
+	}
+
+	var decisionAttrs map[string]string
+	for _, event := range span.Events {
+		if event.Name == "resolver.decision" {
+			decisionAttrs = toAttrMap(event.Attributes)
+			break
+		}
+	}
+	if decisionAttrs == nil {
+		t.Fatal("resolver.decision event not found")
+	}
+	if decisionAttrs["resolver.initial_command"] != StartMusicCmd {
+		t.Fatalf("event initial command = %q, want %q", decisionAttrs["resolver.initial_command"], StartMusicCmd)
+	}
+	if decisionAttrs["resolver.command_corrected"] != "true" {
+		t.Fatalf("event command corrected = %q, want true", decisionAttrs["resolver.command_corrected"])
+	}
+}
+
 func findSpanByName(t *testing.T, exporter *tracetest.InMemoryExporter, name string) tracetest.SpanStub {
 	t.Helper()
 	spans := exporter.GetSpans()

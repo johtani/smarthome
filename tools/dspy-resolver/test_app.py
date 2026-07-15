@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from app import CommandEntry, build_catalog_text, parse_command_list
+from app import MUSIC_COMMAND_ROUTING_POLICY, CommandEntry, build_catalog_text, parse_command_list
 
 
 COMMAND_LIST_WITH_ARGS = """\
@@ -103,3 +103,9 @@ class TestBuildCatalogText:
 
     def test_empty_entries_returns_empty_string(self):
         assert build_catalog_text([]) == ""
+
+
+def test_music_command_routing_policy_distinguishes_search_from_random_playback():
+    assert "select 'search and play'" in MUSIC_COMMAND_ROUTING_POLICY
+    assert "Select 'start music' only" in MUSIC_COMMAND_ROUTING_POLICY
+    assert "random-playback grouping modes" in MUSIC_COMMAND_ROUTING_POLICY

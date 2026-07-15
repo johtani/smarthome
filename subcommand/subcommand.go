@@ -305,14 +305,9 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 				continue
 			}
 
-			// Backward-compatible safety fallback:
-			// if resolver resolves to start music with free-text args, use search and play.
-			if resolved.Command == StartMusicCmd &&
-				strings.TrimSpace(resolved.Args) != "" &&
-				!strings.HasPrefix(strings.TrimSpace(resolved.Args), "artist") &&
-				!strings.HasPrefix(strings.TrimSpace(resolved.Args), "genre") {
-				resolved.Command = SearchAndPlayMusicCmd
-			}
+			initialResolution := resolved
+			resolved = normalizeMusicResolution(text, resolved)
+			correction := describeResolutionCorrection(initialResolution, resolved)
 			if resolved.Command == SearchAndPlayMusicCmd {
 				resolved.Args = stripNaturalLanguageSearchTypeArgs(resolved.Args)
 			}
@@ -320,16 +315,24 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 			for _, d := range c.Definitions {
 				if d.Name == resolved.Command {
 					span.SetAttributes(
+						attribute.String("resolver.initial_command", correction.initialCommand),
+						attribute.String("resolver.initial_args_kind", correction.initialArgsKind),
+						attribute.Bool("resolver.command_corrected", correction.commandCorrected),
+						attribute.String("resolver.correction_reason", correction.reason),
 						attribute.String("resolver.resolved_command", resolved.Command),
 						attribute.String("resolver.resolved_args", resolved.Args),
 					)
 					resolver.RecordDecision(ctx, resolver.DecisionRecord{
-						InputTextHash:   inputHash,
-						ResolverPath:    nlr.Path(),
-						ResolverMode:    config.Resolver.Mode,
-						LLMModel:        config.LLM.Model,
-						ResolvedCommand: resolved.Command,
-						ResolvedArgs:    resolved.Args,
+						InputTextHash:    inputHash,
+						ResolverPath:     nlr.Path(),
+						ResolverMode:     config.Resolver.Mode,
+						LLMModel:         config.LLM.Model,
+						InitialCommand:   correction.initialCommand,
+						InitialArgsKind:  correction.initialArgsKind,
+						CommandCorrected: correction.commandCorrected,
+						CorrectionReason: correction.reason,
+						ResolvedCommand:  resolved.Command,
+						ResolvedArgs:     resolved.Args,
 					})
 					return d, resolved.Args, fmt.Sprintf("(%s) %s", nlr.Prefix(), resolved.Thought), nil
 				}

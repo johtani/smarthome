@@ -25,12 +25,16 @@ func TestRecordDecisionAddsEvent(t *testing.T) {
 	ctx = WithChannel(ctx, "slack_mention")
 	ctx, span := otel.Tracer("test").Start(ctx, "span")
 	RecordDecision(ctx, DecisionRecord{
-		InputTextHash:   "abc",
-		ResolverPath:    "llm",
-		ResolverMode:    "legacy",
-		LLMModel:        "gpt-4o",
-		ResolvedCommand: "light on",
-		ResolvedArgs:    "",
+		InputTextHash:    "abc",
+		ResolverPath:     "llm",
+		ResolverMode:     "legacy",
+		LLMModel:         "gpt-4o",
+		InitialCommand:   "start music",
+		InitialArgsKind:  "mode",
+		CommandCorrected: true,
+		CorrectionReason: "specified_music_target",
+		ResolvedCommand:  "light on",
+		ResolvedArgs:     "",
 	})
 	span.End()
 
@@ -48,6 +52,18 @@ func TestRecordDecisionAddsEvent(t *testing.T) {
 	}
 	if attrs["resolver.schema_version"] != EventSchemaVersion {
 		t.Fatalf("expected schema version %q, got %q", EventSchemaVersion, attrs["resolver.schema_version"])
+	}
+	if attrs["resolver.initial_command"] != "start music" {
+		t.Fatalf("expected initial command start music, got %q", attrs["resolver.initial_command"])
+	}
+	if attrs["resolver.initial_args_kind"] != "mode" {
+		t.Fatalf("expected initial args kind mode, got %q", attrs["resolver.initial_args_kind"])
+	}
+	if attrs["resolver.command_corrected"] != "true" {
+		t.Fatalf("expected command corrected true, got %q", attrs["resolver.command_corrected"])
+	}
+	if attrs["resolver.correction_reason"] != "specified_music_target" {
+		t.Fatalf("expected correction reason specified_music_target, got %q", attrs["resolver.correction_reason"])
 	}
 }
 

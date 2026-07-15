@@ -15,7 +15,7 @@ const StartMusicCmd = "start music"
 func NewStartMusicCmdDefinition() Definition {
 	return Definition{
 		Name:        StartMusicCmd,
-		Description: "Play music randomly by playlist, artist, or genre",
+		Description: "Play a random music selection only when no artist, song, album, or playlist is specified",
 		Factory:     NewStartMusicSubcommand,
 		Args: []Arg{
 			{"mode", "random target type", false, []string{"artist", "genre"}, ""},
