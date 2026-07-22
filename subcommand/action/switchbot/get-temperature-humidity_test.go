@@ -30,6 +30,7 @@ func TestGetTemperatureAndHumidityAction_Run(t *testing.T) {
 				{ID: "1", Name: "Meter 1", Type: "Meter"},
 				{ID: "2", Name: "CO2 Meter", Type: "MeterPro(CO2)"},
 				{ID: "3", Name: "Light", Type: "Light"}, // Should be filtered out
+				{ID: "4", Name: "Weather Station", Type: "WeatherStation"},
 			}, nil, nil
 		},
 		statusFunc: func(_ context.Context, id string) (switchbot.DeviceStatus, error) {
@@ -38,6 +39,9 @@ func TestGetTemperatureAndHumidityAction_Run(t *testing.T) {
 			}
 			if id == "2" {
 				return switchbot.DeviceStatus{Temperature: 20.0, Humidity: 45, Battery: 80, CO2: 800}, nil
+			}
+			if id == "4" {
+				return switchbot.DeviceStatus{Temperature: 22.5, Humidity: 55, Battery: 70}, nil
 			}
 			return switchbot.DeviceStatus{}, nil
 		},
@@ -54,8 +58,8 @@ func TestGetTemperatureAndHumidityAction_Run(t *testing.T) {
 	}
 
 	lines := strings.Split(got, "\n")
-	if len(lines) != 2 {
-		t.Errorf("Run() returned %d lines, want 2", len(lines))
+	if len(lines) != 3 {
+		t.Fatalf("Run() returned %d lines, want 3", len(lines))
 	}
 
 	// Check sorting and content
@@ -65,6 +69,9 @@ func TestGetTemperatureAndHumidityAction_Run(t *testing.T) {
 	}
 	if !strings.Contains(lines[1], "25.5℃") || !strings.Contains(lines[1], "Meter 1") {
 		t.Errorf("Second line unexpected: %s", lines[1])
+	}
+	if !strings.Contains(lines[2], "22.5℃") || !strings.Contains(lines[2], "55％") || !strings.Contains(lines[2], "Weather Station(🔋70)") {
+		t.Errorf("Third line unexpected: %s", lines[2])
 	}
 	if strings.Contains(got, "Light") {
 		t.Errorf("Run() should not contain 'Light' device")
