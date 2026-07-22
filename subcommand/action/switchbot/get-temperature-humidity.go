@@ -10,7 +10,7 @@ import (
 )
 
 // DefaultDeviceTypes is the default list of device types for which temperature and humidity are fetched.
-var DefaultDeviceTypes = []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)"}
+var DefaultDeviceTypes = []string{"Meter", "WoIOSensor", "MeterPlus", "MeterPro(CO2)", "WeatherStation"}
 
 // GetTemperatureAndHumidityAction represents an action to fetch temperature and humidity from SwitchBot devices.
 type GetTemperatureAndHumidityAction struct {
