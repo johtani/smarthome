@@ -33,13 +33,6 @@ smarthome <コマンド名>`
 }
 
 func main() {
-	opts := &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	}
-	var handler slog.Handler = slog.NewTextHandler(os.Stderr, opts)
-	handler = otel.NewTracingHandler(handler)
-	slog.SetDefault(slog.New(handler))
-
 	if err := run(); err != nil {
 		_, _ = fmt.Fprintf(os.Stderr, "%v", err)
 		os.Exit(1)
@@ -58,10 +51,16 @@ func run() error {
 	flag.Parse()
 
 	ctx := context.Background()
+	logLevel, err := otel.ParseLogLevel(os.Getenv("SMARTHOME_LOG_LEVEL"))
+	if err != nil {
+		return err
+	}
 	shutdown, err := otel.SetupOTEL(ctx, "smarthome")
 	if err != nil {
 		return err
 	}
+	stderrHandler := otel.NewTracingHandler(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel}))
+	slog.SetDefault(slog.New(otel.NewLoggerHandler(stderrHandler, logLevel)))
 	defer func() {
 		_ = shutdown(ctx)
 	}()
