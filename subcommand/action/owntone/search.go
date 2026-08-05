@@ -13,6 +13,7 @@ import (
 
 	"github.com/johtani/smarthome/internal/resolver"
 	"github.com/johtani/smarthome/subcommand/action"
+	"go.opentelemetry.io/otel/codes"
 	"golang.org/x/text/unicode/norm"
 )
 
@@ -72,9 +73,15 @@ func appendMessage(items Items, label string, msg []string, uris []string, loopF
 }
 
 // Run executes the SearchAndPlayAction.
-func (a SearchAndPlayAction) Run(ctx context.Context, query string) (string, error) {
+func (a SearchAndPlayAction) Run(ctx context.Context, query string) (message string, runErr error) {
 	ctx, span := action.StartRunSpan(ctx, "owntone", "SearchAndPlayAction.Run", query)
-	defer span.End()
+	defer func() {
+		if runErr != nil {
+			span.RecordError(runErr)
+			span.SetStatus(codes.Error, runErr.Error())
+		}
+		span.End()
+	}()
 
 	searchQuery := Parse(query)
 	originalKeyword := strings.Join(searchQuery.Terms, " ")

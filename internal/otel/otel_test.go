@@ -33,6 +33,7 @@ func TestTracingHandler(t *testing.T) {
 		defer span.End()
 
 		traceID := span.SpanContext().TraceID().String()
+		spanID := span.SpanContext().SpanID().String()
 
 		logger.InfoContext(ctx, "test message")
 
@@ -43,6 +44,9 @@ func TestTracingHandler(t *testing.T) {
 
 		if logRecord["trace_id"] != traceID {
 			t.Errorf("expected trace_id %s, got %v", traceID, logRecord["trace_id"])
+		}
+		if logRecord["span_id"] != spanID {
+			t.Errorf("expected span_id %s, got %v", spanID, logRecord["span_id"])
 		}
 	})
 
@@ -57,6 +61,9 @@ func TestTracingHandler(t *testing.T) {
 
 		if _, ok := logRecord["trace_id"]; ok {
 			t.Error("expected no trace_id in log record")
+		}
+		if _, ok := logRecord["span_id"]; ok {
+			t.Error("expected no span_id in log record")
 		}
 	})
 }

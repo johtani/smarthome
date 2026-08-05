@@ -1,14 +1,23 @@
 package owntone
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
+
+	internalotel "github.com/johtani/smarthome/internal/otel"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 )
 
 func TestParse(t *testing.T) {
@@ -102,6 +111,96 @@ func TestSearchAndPlayAction_Run(t *testing.T) {
 
 	if !strings.Contains(got, "And play these items") {
 		t.Errorf("Run() result does not contain expected success message, got: %s", got)
+	}
+}
+
+func TestSearchAndPlayAction_Run_RecordsOwnToneError(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/search", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(searchSampleJSONResponse()))
+	})
+	mux.HandleFunc("/api/queue/clear", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("/api/queue/items/add", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = w.Write([]byte("OwnTone playback failed"))
+	})
+
+	server := httptest.NewServer(mux)
+	defer server.Close()
+
+	previousProvider := otel.GetTracerProvider()
+	recorder := tracetest.NewSpanRecorder()
+	tp := sdktrace.NewTracerProvider(sdktrace.WithSpanProcessor(recorder))
+	otel.SetTracerProvider(tp)
+	defer func() {
+		_ = tp.Shutdown(context.Background())
+		otel.SetTracerProvider(previousProvider)
+	}()
+
+	var logs bytes.Buffer
+	previousLogger := slog.Default()
+	slog.SetDefault(slog.New(internalotel.NewTracingHandler(slog.NewJSONHandler(&logs, nil))))
+	defer slog.SetDefault(previousLogger)
+
+	client := NewClient(Config{URL: server.URL})
+	searchAction := NewSearchAndPlayAction(client)
+	_, err := searchAction.Run(context.Background(), "keyword")
+	if err == nil {
+		t.Fatal("Run() error = nil, want OwnTone error")
+	}
+
+	var actionSpan sdktrace.ReadOnlySpan
+	for _, span := range recorder.Ended() {
+		if span.Name() == "SearchAndPlayAction.Run" {
+			actionSpan = span
+			break
+		}
+	}
+	if actionSpan == nil {
+		t.Fatal("SearchAndPlayAction.Run span was not recorded")
+	}
+	if actionSpan.Status().Code != codes.Error {
+		t.Errorf("span status = %v, want Error", actionSpan.Status().Code)
+	}
+	if len(actionSpan.Events()) == 0 {
+		t.Error("span has no exception event")
+	}
+
+	var record map[string]any
+	for _, line := range strings.Split(strings.TrimSpace(logs.String()), "\n") {
+		var candidate map[string]any
+		if err := json.Unmarshal([]byte(line), &candidate); err != nil {
+			t.Fatalf("failed to decode structured log: %v", err)
+		}
+		if candidate["msg"] == "OwnTone API request failed" {
+			record = candidate
+			break
+		}
+	}
+	if record == nil {
+		t.Fatal("OwnTone error log was not recorded")
+	}
+	if record["msg"] != "OwnTone API request failed" {
+		t.Errorf("log message = %v", record["msg"])
+	}
+	if record["status_code"] != float64(http.StatusInternalServerError) {
+		t.Errorf("status_code = %v", record["status_code"])
+	}
+	if record["response_body"] != "OwnTone playback failed" {
+		t.Errorf("response_body = %v", record["response_body"])
+	}
+	if record["trace_id"] != actionSpan.SpanContext().TraceID().String() {
+		t.Errorf("trace_id = %v, want %s", record["trace_id"], actionSpan.SpanContext().TraceID())
+	}
+	if record["span_id"] != actionSpan.SpanContext().SpanID().String() {
+		t.Errorf("span_id = %v, want %s", record["span_id"], actionSpan.SpanContext().SpanID())
+	}
+	if strings.Contains(logs.String(), "library:album:") || strings.Contains(logs.String(), "uris=") {
+		t.Error("log must not contain full OwnTone URIs or query parameters")
 	}
 }
 

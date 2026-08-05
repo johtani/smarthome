@@ -5,7 +5,9 @@ package owntone
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -189,7 +191,34 @@ func (c Client) AddItem2QueueAndPlay(ctx context.Context, uri string, expression
 	if err != nil {
 		return err
 	}
-	return internal.HandleResponse(res, http.StatusOK)
+	err = internal.HandleResponse(res, http.StatusOK)
+	if err != nil {
+		attrs := []any{
+			"operation", "AddItem2QueueAndPlay",
+			"http_method", req.Method,
+			"http_path", req.URL.Path,
+			"uri_count", uriCount(uri),
+			"error", err,
+		}
+		var statusErr *internal.HTTPStatusError
+		if errors.As(err, &statusErr) {
+			attrs = append(attrs,
+				"status_code", statusErr.StatusCode,
+				"content_type", statusErr.ContentType,
+				"response_body", statusErr.ResponseBody,
+				"response_body_truncated", statusErr.BodyTruncated,
+			)
+		}
+		slog.ErrorContext(ctx, "OwnTone API request failed", attrs...)
+	}
+	return err
+}
+
+func uriCount(uris string) int {
+	if strings.TrimSpace(uris) == "" {
+		return 0
+	}
+	return strings.Count(uris, ",") + 1
 }
 
 // PlayerStatus represents the current status of the Owntone player.
