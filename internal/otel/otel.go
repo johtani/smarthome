@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/contrib/bridges/otelslog"
@@ -46,9 +47,13 @@ func NewTracingHandler(h slog.Handler) *TracingHandler {
 // fanoutHandler sends each log record to all configured handlers.
 type fanoutHandler struct {
 	handlers []slog.Handler
+	minLevel slog.Leveler
 }
 
 func (h *fanoutHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	if level < h.minLevel.Level() {
+		return false
+	}
 	for _, handler := range h.handlers {
 		if handler.Enabled(ctx, level) {
 			return true
@@ -58,6 +63,9 @@ func (h *fanoutHandler) Enabled(ctx context.Context, level slog.Level) bool {
 }
 
 func (h *fanoutHandler) Handle(ctx context.Context, record slog.Record) error {
+	if record.Level < h.minLevel.Level() {
+		return nil
+	}
 	var errs []error
 	for _, handler := range h.handlers {
 		if handler.Enabled(ctx, record.Level) {
@@ -72,7 +80,7 @@ func (h *fanoutHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	for i, handler := range h.handlers {
 		handlers[i] = handler.WithAttrs(attrs)
 	}
-	return &fanoutHandler{handlers: handlers}
+	return &fanoutHandler{handlers: handlers, minLevel: h.minLevel}
 }
 
 func (h *fanoutHandler) WithGroup(name string) slog.Handler {
@@ -80,16 +88,28 @@ func (h *fanoutHandler) WithGroup(name string) slog.Handler {
 	for i, handler := range h.handlers {
 		handlers[i] = handler.WithGroup(name)
 	}
-	return &fanoutHandler{handlers: handlers}
+	return &fanoutHandler{handlers: handlers, minLevel: h.minLevel}
 }
 
 // NewLoggerHandler creates a handler that preserves the existing log output and
 // also emits records through the globally configured OpenTelemetry LoggerProvider.
-func NewLoggerHandler(existing slog.Handler) slog.Handler {
+func NewLoggerHandler(existing slog.Handler, minLevel slog.Leveler) slog.Handler {
 	return &fanoutHandler{handlers: []slog.Handler{
 		existing,
 		otelslog.NewHandler("github.com/johtani/smarthome"),
-	}}
+	}, minLevel: minLevel}
+}
+
+// ParseLogLevel parses an application log level. An empty value defaults to info.
+func ParseLogLevel(value string) (slog.Level, error) {
+	if strings.TrimSpace(value) == "" {
+		return slog.LevelInfo, nil
+	}
+	var level slog.Level
+	if err := level.UnmarshalText([]byte(value)); err != nil {
+		return 0, fmt.Errorf("invalid log level %q: %w", value, err)
+	}
+	return level, nil
 }
 
 func newLoggerProvider(exporter sdklog.Exporter, res *resource.Resource) *sdklog.LoggerProvider {

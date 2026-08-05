@@ -103,7 +103,7 @@ func TestLoggerProviderExportsSlogRecords(t *testing.T) {
 	otellogglobal.SetLoggerProvider(loggerProvider)
 
 	var stderr bytes.Buffer
-	logger := slog.New(NewLoggerHandler(slog.NewJSONHandler(&stderr, nil)))
+	logger := slog.New(NewLoggerHandler(slog.NewJSONHandler(&stderr, nil), slog.LevelInfo))
 
 	traceProvider := trace.NewTracerProvider(trace.WithSampler(trace.AlwaysSample()))
 	defer func() { _ = traceProvider.Shutdown(context.Background()) }()
@@ -114,6 +114,7 @@ func TestLoggerProviderExportsSlogRecords(t *testing.T) {
 	logger.InfoContext(ctx, "with span", "key", "value")
 	span.End()
 	logger.InfoContext(context.Background(), "without span")
+	logger.DebugContext(context.Background(), "filtered debug")
 
 	if err := loggerProvider.ForceFlush(context.Background()); err != nil {
 		t.Fatalf("failed to flush LoggerProvider: %v", err)
@@ -142,5 +143,32 @@ func TestLoggerProviderExportsSlogRecords(t *testing.T) {
 	}
 	if !exporter.shutdown {
 		t.Error("expected exporter to be shut down")
+	}
+}
+
+func TestParseLogLevel(t *testing.T) {
+	tests := []struct {
+		name    string
+		value   string
+		want    slog.Level
+		wantErr bool
+	}{
+		{name: "default", want: slog.LevelInfo},
+		{name: "debug", value: "debug", want: slog.LevelDebug},
+		{name: "warn uppercase", value: "WARN", want: slog.LevelWarn},
+		{name: "error", value: "error", want: slog.LevelError},
+		{name: "invalid", value: "verbose", wantErr: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ParseLogLevel(tt.value)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("ParseLogLevel() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && got != tt.want {
+				t.Errorf("ParseLogLevel() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

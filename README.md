@@ -288,6 +288,7 @@ Switchbotの温湿度計のデータを取得し、10分おきにInfluxDBに保�
 
 * `OTEL_EXPORTER_OTLP_ENDPOINT` : OTLPコレクターのエンドポイント（例: `http://localhost:4318`）
 * `OTEL_SERVICE_NAME` : サービス名（デフォルト: `smarthome`）
+* `SMARTHOME_LOG_LEVEL` : 標準エラーとOTLPへ出力する最小ログレベル（`debug` / `info` / `warn` / `error`、デフォルト: `info`）
 
 現在はトレース、メトリクス、ログのすべてで OTLP/HTTP エクスポーターを使用しています。シグナルごとに送信先を分ける場合は、標準の `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`、`OTEL_EXPORTER_OTLP_METRICS_ENDPOINT`、`OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` も利用できます。
 
