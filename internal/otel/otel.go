@@ -19,15 +19,18 @@ import (
 	"time"
 )
 
-// TracingHandler is a slog.Handler that adds trace_id to log records from context.
+// TracingHandler is a slog.Handler that adds trace and span IDs to log records from context.
 type TracingHandler struct {
 	slog.Handler
 }
 
-// Handle adds trace_id to the record if it exists in the context.
+// Handle adds trace_id and span_id to the record if they exist in the context.
 func (h *TracingHandler) Handle(ctx context.Context, r slog.Record) error {
 	if sc := trace.SpanContextFromContext(ctx); sc.IsValid() {
-		r.AddAttrs(slog.String("trace_id", sc.TraceID().String()))
+		r.AddAttrs(
+			slog.String("trace_id", sc.TraceID().String()),
+			slog.String("span_id", sc.SpanID().String()),
+		)
 	}
 	return h.Handler.Handle(ctx, r)
 }

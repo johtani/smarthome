@@ -2,6 +2,7 @@ package internal
 
 import (
 	"context"
+	"errors"
 	"io"
 	"net/http"
 	"strings"
@@ -64,6 +65,36 @@ func TestHandleResponse(t *testing.T) {
 				t.Errorf("HandleResponse() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
+	}
+}
+
+func TestHandleResponseCapturesErrorBody(t *testing.T) {
+	body := strings.Repeat("x", MaxErrorResponseBodySize+100)
+	res := &http.Response{
+		StatusCode: http.StatusInternalServerError,
+		Body:       io.NopCloser(strings.NewReader(body)),
+		Header:     http.Header{"Content-Type": []string{"text/plain"}},
+	}
+
+	err := HandleResponse(res, http.StatusOK)
+	var statusErr *HTTPStatusError
+	if !errors.As(err, &statusErr) {
+		t.Fatalf("HandleResponse() error type = %T, want *HTTPStatusError", err)
+	}
+	if statusErr.StatusCode != http.StatusInternalServerError {
+		t.Errorf("StatusCode = %d, want %d", statusErr.StatusCode, http.StatusInternalServerError)
+	}
+	if statusErr.ContentType != "text/plain" {
+		t.Errorf("ContentType = %q, want text/plain", statusErr.ContentType)
+	}
+	if len(statusErr.ResponseBody) != MaxErrorResponseBodySize {
+		t.Errorf("ResponseBody length = %d, want %d", len(statusErr.ResponseBody), MaxErrorResponseBodySize)
+	}
+	if !statusErr.BodyTruncated {
+		t.Error("BodyTruncated = false, want true")
+	}
+	if strings.Contains(err.Error(), body[:100]) {
+		t.Error("error message must not expose the response body")
 	}
 }
 
