@@ -62,6 +62,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	slog.SetDefault(slog.New(otel.NewLoggerHandler(slog.Default().Handler())))
 	defer func() {
 		_ = shutdown(ctx)
 	}()

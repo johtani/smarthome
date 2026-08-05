@@ -284,14 +284,14 @@ Switchbotの温湿度計のデータを取得し、10分おきにInfluxDBに保�
 
 ## OpenTelemetry
 
-本ツールはOpenTelemetryに対応しています。トレースデータを送信するには、以下の環境変数を設定してください。
+本ツールはOpenTelemetryに対応しています。トレース、メトリクス、ログを送信するには、以下の環境変数を設定してください。
 
 * `OTEL_EXPORTER_OTLP_ENDPOINT` : OTLPコレクターのエンドポイント（例: `http://localhost:4318`）
 * `OTEL_SERVICE_NAME` : サービス名（デフォルト: `smarthome`）
 
-現在は OTLP/HTTP エクスポーターを使用しています。
+現在はトレース、メトリクス、ログのすべてで OTLP/HTTP エクスポーターを使用しています。シグナルごとに送信先を分ける場合は、標準の `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`、`OTEL_EXPORTER_OTLP_METRICS_ENDPOINT`、`OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` も利用できます。
 
-ログにはコンテキストから抽出された `trace_id` が付加されるため、特定のトレースに関連するログを容易に検索できます（`slog.InfoContext` 等を使用）。
+ログは従来どおり標準エラーへ出力されると同時に、OTLPでも送信されます。コンテキストから抽出された `trace_id` と `span_id` が付加されるため、特定のトレースに関連するログを容易に検索できます（`slog.InfoContext` 等を使用）。
 
 ### Resolverイベントスキーマ
 
