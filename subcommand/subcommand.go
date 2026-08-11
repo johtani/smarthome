@@ -293,6 +293,7 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 			return def, args, dymMsg, nil
 		}
 
+	resolverLoop:
 		for _, nlr := range naturalLanguageResolvers(config) {
 			span.SetAttributes(attribute.String("resolver.path", nlr.Path()))
 			resolved, err := nlr.Resolve(ctx, text, c.Help(), config.Resolver.PromptVersion)
@@ -314,6 +315,27 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 
 			for _, d := range c.Definitions {
 				if d.Name == resolved.Command {
+					validationReason, argsValid := validateResolvedArgs(d, resolved.Args)
+					span.AddEvent("resolver.args.validation", trace.WithAttributes(
+						attribute.String("resolver.path", nlr.Path()),
+						attribute.String("resolver.resolved_command", resolved.Command),
+						attribute.Bool("resolver.args.valid", argsValid),
+						attribute.String("resolver.args.validation_reason", validationReason),
+					))
+					span.SetAttributes(
+						attribute.Bool("resolver.args.valid", argsValid),
+						attribute.String("resolver.args.validation_reason", validationReason),
+					)
+					if !argsValid {
+						slog.WarnContext(
+							ctx,
+							"natural language resolver returned invalid arguments",
+							"resolver", nlr.Path(),
+							"command", resolved.Command,
+							"reason", validationReason,
+						)
+						continue resolverLoop
+					}
 					span.SetAttributes(
 						attribute.String("resolver.initial_command", correction.initialCommand),
 						attribute.String("resolver.initial_args_kind", correction.initialArgsKind),
