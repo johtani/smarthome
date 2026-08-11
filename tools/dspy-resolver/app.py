@@ -33,6 +33,10 @@ class ResolveResponse(BaseModel):
     command: str
     args: str
     thought: str
+    model: str = ""
+    prompt_version: str = ""
+    artifact_version: str = ""
+    dataset_version: str = ""
 
 
 class ResolveMusicIntentRequest(BaseModel):
@@ -186,6 +190,8 @@ def parse_bool(value: str) -> bool:
 
 
 MODEL = os.getenv("MODEL", "openai/gpt-4o-mini")
+ARTIFACT_VERSION = os.getenv("DSPY_ARTIFACT_VERSION", "").strip()
+DATASET_VERSION = os.getenv("DSPY_DATASET_VERSION", "").strip()
 LM_HEALTH: Dict[str, Any] = {
     "model": MODEL,
     "api_base": "",
@@ -223,6 +229,8 @@ def lm_trace_attrs() -> Dict[str, Any]:
             "dspy.lm.temperature": LM_HEALTH.get("temperature"),
             "dspy.lm.max_tokens": LM_HEALTH.get("max_tokens"),
             "dspy.lm.api_key_source": LM_HEALTH.get("api_key_source", "none"),
+            "resolver.artifact_version": ARTIFACT_VERSION,
+            "resolver.dataset_version": DATASET_VERSION,
         }
     )
 
@@ -240,6 +248,8 @@ def healthz() -> dict:
                 "temperature": LM_HEALTH["temperature"],
                 "max_tokens": LM_HEALTH["max_tokens"],
                 "api_key_source": LM_HEALTH["api_key_source"],
+                "artifact_version": ARTIFACT_VERSION,
+                "dataset_version": DATASET_VERSION,
                 "error": LM_INIT_ERROR,
             },
         )
@@ -251,6 +261,8 @@ def healthz() -> dict:
         "temperature": LM_HEALTH["temperature"],
         "max_tokens": LM_HEALTH["max_tokens"],
         "api_key_source": LM_HEALTH["api_key_source"],
+        "artifact_version": ARTIFACT_VERSION,
+        "dataset_version": DATASET_VERSION,
     }
 
 
@@ -332,10 +344,22 @@ def resolve(req: ResolveRequest) -> ResolveResponse:
                 "resolver.args.length": len(args),
                 "resolver.thought.length": len(thought),
                 "resolver.resolved": command != "",
+                "llm.model": MODEL,
+                "resolver.prompt_version": prompt_version,
+                "resolver.artifact_version": ARTIFACT_VERSION,
+                "resolver.dataset_version": DATASET_VERSION,
             },
         )
 
-        return ResolveResponse(command=command, args=args, thought=thought)
+        return ResolveResponse(
+            command=command,
+            args=args,
+            thought=thought,
+            model=MODEL,
+            prompt_version=prompt_version,
+            artifact_version=ARTIFACT_VERSION,
+            dataset_version=DATASET_VERSION,
+        )
 
 
 @app.post("/resolve-music-intent", response_model=ResolveMusicIntentResponse)

@@ -301,7 +301,7 @@ Switchbotの温湿度計のデータを取得し、10分おきにInfluxDBに保�
 
 ### Resolverイベントスキーマ
 
-Resolverまわりは、OTel Event名を固定して出力します（`resolver.schema_version=v1`）。
+Resolverまわりは、OTel Event名を固定して出力します（`resolver.schema_version=v2`）。
 
 - `resolver.decision`
 - `resolver.execution`
@@ -314,6 +314,9 @@ Resolverまわりは、OTel Event名を固定して出力します（`resolver.s
 - `resolver.input_text_hash`（平文ではなくハッシュ）
 - `resolver.path`
 - `llm.model`
+- `resolver.prompt_version`
+- `resolver.artifact_version`
+- `resolver.dataset_version`
 - `resolver.initial_command`
 - `resolver.initial_args_kind`（`empty` / `mode` / `free_text`）
 - `resolver.command_corrected`
@@ -372,6 +375,9 @@ bash tools/resolver-events/extract-from-collector-file.sh \
 - `resolver_path`
 - `resolver_mode`
 - `llm_model`
+- `resolver_prompt_version`
+- `resolver_artifact_version`
+- `resolver_dataset_version`
 - `resolver_initial_command`
 - `resolver_initial_args_kind`
 - `resolver_command_corrected`

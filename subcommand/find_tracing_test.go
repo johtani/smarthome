@@ -129,6 +129,13 @@ func TestCommandsFindTracing_LLMPath(t *testing.T) {
 	if llmAttrs["resolver.prompt_version"] != "v1" {
 		t.Fatalf("expected resolver.prompt_version v1, got %q", llmAttrs["resolver.prompt_version"])
 	}
+	decisionAttrs := findEventAttrs(t, span, "resolver.decision")
+	if decisionAttrs["llm.model"] != "test-model" {
+		t.Fatalf("expected decision llm.model test-model, got %q", decisionAttrs["llm.model"])
+	}
+	if decisionAttrs["resolver.prompt_version"] != "v1" {
+		t.Fatalf("expected decision prompt version v1, got %q", decisionAttrs["resolver.prompt_version"])
+	}
 }
 
 func TestCommandsFindTracing_DSPyPath(t *testing.T) {
@@ -145,7 +152,7 @@ func TestCommandsFindTracing_DSPyPath(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"command":"light on","args":"","thought":"resolved by DSPy"}`))
+		_, _ = w.Write([]byte(`{"command":"light on","args":"","thought":"resolved by DSPy","model":"lfm2.5-2.6B","prompt_version":"v2","artifact_version":"artifact-v3","dataset_version":"dataset-v4"}`))
 	}))
 	defer server.Close()
 
@@ -191,8 +198,21 @@ func TestCommandsFindTracing_DSPyPath(t *testing.T) {
 	if dspyAttrs["dspy.request.command_count"] != "2" {
 		t.Fatalf("expected dspy.request.command_count 2, got %q", dspyAttrs["dspy.request.command_count"])
 	}
-	if dspyAttrs["dspy.response_body"] != `{"command":"light on","args":"","thought":"resolved by DSPy"}` {
-		t.Fatalf("expected dspy.response_body %s, got %q", `{"command":"light on","args":"","thought":"resolved by DSPy"}`, dspyAttrs["dspy.response_body"])
+	if dspyAttrs["dspy.response_body"] == "" {
+		t.Fatal("expected dspy.response_body")
+	}
+	decisionAttrs := findEventAttrs(t, span, "resolver.decision")
+	if decisionAttrs["llm.model"] != "lfm2.5-2.6B" {
+		t.Fatalf("expected decision llm.model lfm2.5-2.6B, got %q", decisionAttrs["llm.model"])
+	}
+	if decisionAttrs["resolver.prompt_version"] != "v2" {
+		t.Fatalf("expected decision prompt version v2, got %q", decisionAttrs["resolver.prompt_version"])
+	}
+	if decisionAttrs["resolver.artifact_version"] != "artifact-v3" {
+		t.Fatalf("expected artifact version artifact-v3, got %q", decisionAttrs["resolver.artifact_version"])
+	}
+	if decisionAttrs["resolver.dataset_version"] != "dataset-v4" {
+		t.Fatalf("expected dataset version dataset-v4, got %q", decisionAttrs["resolver.dataset_version"])
 	}
 }
 
@@ -318,6 +338,17 @@ func findSpanByName(t *testing.T, exporter *tracetest.InMemoryExporter, name str
 	}
 	t.Fatalf("expected span %q, got %d spans", name, len(spans))
 	return tracetest.SpanStub{}
+}
+
+func findEventAttrs(t *testing.T, span tracetest.SpanStub, name string) map[string]string {
+	t.Helper()
+	for _, event := range span.Events {
+		if event.Name == name {
+			return toAttrMap(event.Attributes)
+		}
+	}
+	t.Fatalf("event %q not found", name)
+	return nil
 }
 
 func toAttrMap(attrs []attribute.KeyValue) map[string]string {

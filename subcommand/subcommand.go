@@ -17,6 +17,7 @@ import (
 	"github.com/hbollon/go-edlib"
 	"github.com/johtani/smarthome/internal/resolver"
 	"github.com/johtani/smarthome/subcommand/action"
+	"github.com/johtani/smarthome/subcommand/action/llm"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -252,6 +253,7 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 	var args string
 	dymMsg := ""
 	inputHash := hashInputText(text)
+	lastResolverResult := llm.ResolvedCommand{PromptVersion: config.Resolver.PromptVersion}
 	find := false
 	for _, d := range c.Definitions {
 		find, args = d.Match(text)
@@ -285,7 +287,7 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 				InputTextHash:     inputHash,
 				ResolverPath:      "did_you_mean",
 				ResolverMode:      config.Resolver.Mode,
-				LLMModel:          config.LLM.Model,
+				PromptVersion:     config.Resolver.PromptVersion,
 				ResolvedCommand:   def.Name,
 				ResolvedArgs:      args,
 				DidYouMeanCommand: cmds[0],
@@ -302,6 +304,7 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 				span.RecordError(err)
 				continue
 			}
+			lastResolverResult = resolved
 			if resolved.Command == "" {
 				continue
 			}
@@ -348,7 +351,10 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 						InputTextHash:    inputHash,
 						ResolverPath:     nlr.Path(),
 						ResolverMode:     config.Resolver.Mode,
-						LLMModel:         config.LLM.Model,
+						LLMModel:         resolved.Model,
+						PromptVersion:    resolved.PromptVersion,
+						ArtifactVersion:  resolved.ArtifactVersion,
+						DatasetVersion:   resolved.DatasetVersion,
 						InitialCommand:   correction.initialCommand,
 						InitialArgsKind:  correction.initialArgsKind,
 						CommandCorrected: correction.commandCorrected,
@@ -367,10 +373,13 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 		span.RecordError(err)
 		span.SetAttributes(attribute.String("resolver.path", "unresolved"))
 		resolver.RecordDecision(ctx, resolver.DecisionRecord{
-			InputTextHash: inputHash,
-			ResolverPath:  "unresolved",
-			ResolverMode:  config.Resolver.Mode,
-			LLMModel:      config.LLM.Model,
+			InputTextHash:   inputHash,
+			ResolverPath:    "unresolved",
+			ResolverMode:    config.Resolver.Mode,
+			LLMModel:        lastResolverResult.Model,
+			PromptVersion:   lastResolverResult.PromptVersion,
+			ArtifactVersion: lastResolverResult.ArtifactVersion,
+			DatasetVersion:  lastResolverResult.DatasetVersion,
 		})
 		return Definition{}, "", "", err
 	}
@@ -379,7 +388,7 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 		InputTextHash:   inputHash,
 		ResolverPath:    "exact_match",
 		ResolverMode:    config.Resolver.Mode,
-		LLMModel:        config.LLM.Model,
+		PromptVersion:   config.Resolver.PromptVersion,
 		ResolvedCommand: def.Name,
 		ResolvedArgs:    args,
 	})

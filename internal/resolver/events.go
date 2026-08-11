@@ -9,7 +9,7 @@ import (
 )
 
 // EventSchemaVersion is the fixed schema version for resolver telemetry events.
-const EventSchemaVersion = "v1"
+const EventSchemaVersion = "v2"
 
 const (
 	eventNameDecision  = "resolver.decision"
@@ -23,6 +23,9 @@ type DecisionRecord struct {
 	ResolverPath      string
 	ResolverMode      string
 	LLMModel          string
+	PromptVersion     string
+	ArtifactVersion   string
+	DatasetVersion    string
 	InitialCommand    string
 	InitialArgsKind   string
 	CommandCorrected  bool
@@ -57,6 +60,9 @@ func RecordDecision(ctx context.Context, record DecisionRecord) {
 		attribute.String("resolver.path", record.ResolverPath),
 		attribute.String("resolver.mode", record.ResolverMode),
 		attribute.String("llm.model", record.LLMModel),
+		attribute.String("resolver.prompt_version", record.PromptVersion),
+		attribute.String("resolver.artifact_version", record.ArtifactVersion),
+		attribute.String("resolver.dataset_version", record.DatasetVersion),
 		attribute.String("resolver.initial_command", record.InitialCommand),
 		attribute.String("resolver.initial_args_kind", record.InitialArgsKind),
 		attribute.Bool("resolver.command_corrected", record.CommandCorrected),
@@ -76,6 +82,9 @@ func RecordDecision(ctx context.Context, record DecisionRecord) {
 		"resolver.path", record.ResolverPath,
 		"resolver.mode", record.ResolverMode,
 		"llm.model", record.LLMModel,
+		"resolver.prompt_version", record.PromptVersion,
+		"resolver.artifact_version", record.ArtifactVersion,
+		"resolver.dataset_version", record.DatasetVersion,
 		"resolver.initial_command", record.InitialCommand,
 		"resolver.initial_args_kind", record.InitialArgsKind,
 		"resolver.command_corrected", record.CommandCorrected,

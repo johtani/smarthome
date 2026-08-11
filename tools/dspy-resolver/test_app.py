@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import pytest
 
-from app import MUSIC_COMMAND_ROUTING_POLICY, CommandEntry, build_catalog_text, parse_command_list
+from app import (
+    MUSIC_COMMAND_ROUTING_POLICY,
+    CommandEntry,
+    ResolveResponse,
+    build_catalog_text,
+    parse_command_list,
+)
 
 
 COMMAND_LIST_WITH_ARGS = """\
@@ -109,3 +115,20 @@ def test_music_command_routing_policy_distinguishes_search_from_random_playback(
     assert "select 'search and play'" in MUSIC_COMMAND_ROUTING_POLICY
     assert "Select 'start music' only" in MUSIC_COMMAND_ROUTING_POLICY
     assert "random-playback grouping modes" in MUSIC_COMMAND_ROUTING_POLICY
+
+
+def test_resolve_response_includes_model_and_version_metadata():
+    response = ResolveResponse(
+        command="start ps5",
+        args="",
+        thought="PS5 is explicit",
+        model="lfm2.5-2.6B",
+        prompt_version="prompt-v2",
+        artifact_version="artifact-v3",
+        dataset_version="dataset-v4",
+    )
+
+    assert response.model == "lfm2.5-2.6B"
+    assert response.prompt_version == "prompt-v2"
+    assert response.artifact_version == "artifact-v3"
+    assert response.dataset_version == "dataset-v4"

@@ -71,6 +71,9 @@ fieldnames = [
     "resolver_path",
     "resolver_mode",
     "llm_model",
+    "resolver_prompt_version",
+    "resolver_artifact_version",
+    "resolver_dataset_version",
     "resolver_initial_command",
     "resolver_initial_args_kind",
     "resolver_command_corrected",
@@ -92,6 +95,14 @@ def attr_value(attrs, key):
         for value_key in ("stringValue", "intValue", "doubleValue", "boolValue"):
             if value_key in value and value[value_key] is not None:
                 return str(value[value_key])
+    return ""
+
+
+def first_attr_value(attrs, *keys):
+    for key in keys:
+        value = attr_value(attrs, key)
+        if value:
+            return value
     return ""
 
 
@@ -132,7 +143,10 @@ with open(input_path, "r", encoding="utf-8") as f:
                                 "resolver_input_text_hash": attr_value(attrs, "resolver.input_text_hash"),
                                 "resolver_path": attr_value(attrs, "resolver.path"),
                                 "resolver_mode": attr_value(attrs, "resolver.mode"),
-                                "llm_model": attr_value(attrs, "llm.model"),
+                                "llm_model": first_attr_value(attrs, "llm.model", "dspy.lm.model"),
+                                "resolver_prompt_version": attr_value(attrs, "resolver.prompt_version"),
+                                "resolver_artifact_version": attr_value(attrs, "resolver.artifact_version"),
+                                "resolver_dataset_version": attr_value(attrs, "resolver.dataset_version"),
                                 "resolver_initial_command": attr_value(attrs, "resolver.initial_command"),
                                 "resolver_initial_args_kind": attr_value(attrs, "resolver.initial_args_kind"),
                                 "resolver_command_corrected": attr_value(attrs, "resolver.command_corrected"),
