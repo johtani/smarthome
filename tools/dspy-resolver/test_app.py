@@ -5,12 +5,13 @@ from __future__ import annotations
 import pytest
 
 from app import (
-    MUSIC_COMMAND_ROUTING_POLICY,
     CommandEntry,
     ResolveResponse,
     build_catalog_text,
     parse_command_list,
+    resolver,
 )
+from dspy_common.resolver_program import COMMAND_SELECTION_POLICY, ResolverProgram
 
 
 COMMAND_LIST_WITH_ARGS = """\
@@ -112,9 +113,13 @@ class TestBuildCatalogText:
 
 
 def test_music_command_routing_policy_distinguishes_search_from_random_playback():
-    assert "select 'search and play'" in MUSIC_COMMAND_ROUTING_POLICY
-    assert "Select 'start music' only" in MUSIC_COMMAND_ROUTING_POLICY
-    assert "random-playback grouping modes" in MUSIC_COMMAND_ROUTING_POLICY
+    assert "selects 'search and play'" in COMMAND_SELECTION_POLICY
+    assert "Select 'start music' only" in COMMAND_SELECTION_POLICY
+    assert "explicit PS5 request selects 'start ps5'" in COMMAND_SELECTION_POLICY
+
+
+def test_http_resolver_uses_shared_program():
+    assert isinstance(resolver, ResolverProgram)
 
 
 def test_resolve_response_includes_model_and_version_metadata():

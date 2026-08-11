@@ -1,22 +1,27 @@
 [
   {
     "name": "start music",
-    "description": "Legacy random playback",
-    "args": "artist:<name> | genre:<name> | (empty)"
+    "description": "Play a random music selection only when no artist, song, album, or playlist is specified",
+    "args": "mode(optional,enum=artist|genre,no-prefix)"
   },
   {
     "name": "search and play",
-    "description": "Search and play by free text",
-    "args": "<query>"
+    "description": "Play music specified by artist, song, album, playlist, genre, or other search text",
+    "args": "keyword(required,no-prefix), type(optional,prefix=type:,enum=artist|album|track|genre)"
+  },
+  {
+    "name": "start ps5",
+    "description": "Actions before starting PS5",
+    "args": ""
   },
   {
     "name": "stop music",
     "description": "Stop playback",
-    "args": "(empty)"
+    "args": ""
   },
   {
     "name": "help",
     "description": "Show command help",
-    "args": "(empty)"
+    "args": ""
   }
 ]

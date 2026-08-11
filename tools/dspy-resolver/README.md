@@ -53,6 +53,11 @@ smarthome側にも共通ガードがあり、DSPyが具体的な対象を含む�
 
 `command` は `command_list` 内の名前に一致するものだけ返します。一致しない場合は空文字列を返します。
 
+`POST /resolve` は、オフライン最適化と共通の
+`tools/dspy_common/resolver_program.py` にある単一段 `ResolverProgram` / `ResolveSignature` を使用します。
+これにより、本番と評価で入力フィールド（`utterance` / `command_catalog` / `prompt_version`）および
+出力フィールド（`selected_command` / `selected_args` / `rationale`）が一致します。
+
 ### Request (`POST /resolve-music-intent`)
 
 ```json

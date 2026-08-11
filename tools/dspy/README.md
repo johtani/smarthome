@@ -17,6 +17,17 @@ Issue #159 Phase D 向けの、オフライン最適化 + 評価ゲートの最�
   - コマンド一覧サンプル（実運用では最新定義に置き換える）
 - `requirements.txt`
   - Python依存
+- `regression_cases.jsonl`
+  - 明示的な対象選択など、モデル変更時にも維持する固定回帰ケース
+
+## Shared resolver program
+
+本番HTTP resolverとオフライン最適化は、どちらも
+`tools/dspy_common/resolver_program.py` の単一段 `ResolverProgram` / `ResolveSignature` を使用します。
+
+単一段構成を採用する理由は、本番の1回のLM呼び出しとAPI入出力を維持しながら、オフラインで最適化したものと
+同じプログラムを本番で実行できるためです。意図解析・command選択・引数生成を別々に呼び出す4段構成は使用しません。
+モデル別の最適化成果物を本番ロードする仕組みは後続Issueの対象です。
 
 ## 1) Setup
 
@@ -62,6 +73,7 @@ python tools/dspy/optimize_and_evaluate.py `
   --dataset-jsonl .\tmp\dspy\dataset.jsonl `
   --command-catalog .\tools\dspy\command_catalog.sample.json `
   --model openai/gpt-4o-mini `
+  --prompt-version offline-eval-v1 `
   --report-out .\tmp\dspy\report.json `
   --min-command-accuracy 0.80 `
   --min-arg-accuracy 0.60
@@ -76,6 +88,7 @@ python tools/dspy/optimize_and_evaluate.py `
   --dataset-jsonl .\tmp\dspy\dataset.jsonl `
   --command-catalog .\tools\dspy\command_catalog.sample.json `
   --model openai/qwen2.5:14b `
+  --prompt-version offline-eval-v1 `
   --api-base http://localhost:11434/v1 `
   --api-key local-dummy-key `
   --model-type chat `
@@ -148,6 +161,7 @@ docker run --rm `
 - `LM_MODEL_TYPE`
 - `LM_TEMPERATURE`
 - `LM_MAX_TOKENS`
+- `PROMPT_VERSION`
 
 LM 設定の優先順位:
 

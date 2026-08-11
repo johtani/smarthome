@@ -12,6 +12,7 @@ LM_API_KEY="${LM_API_KEY:-}"
 LM_MODEL_TYPE="${LM_MODEL_TYPE:-}"
 LM_TEMPERATURE="${LM_TEMPERATURE:-}"
 LM_MAX_TOKENS="${LM_MAX_TOKENS:-}"
+PROMPT_VERSION="${PROMPT_VERSION:-offline-eval-v1}"
 
 if [ ! -f "$RESOLVER_EVENTS_CSV" ]; then
   echo "resolver events csv not found: $RESOLVER_EVENTS_CSV" >&2
@@ -32,6 +33,7 @@ set -- \
   --dataset-jsonl "$DATASET_JSONL" \
   --command-catalog "$COMMAND_CATALOG" \
   --model "$MODEL" \
+  --prompt-version "$PROMPT_VERSION" \
   --report-out "$REPORT_JSON" \
   --min-command-accuracy "$MIN_COMMAND_ACCURACY" \
   --min-arg-accuracy "$MIN_ARG_ACCURACY"
