@@ -1,0 +1,1 @@
+{"request_id":"regression-ps5-explicit","input_text":"PS5やるぞ","expected_command":"start ps5","expected_args":"","feedback_label":"correct","llm_model":"","prompt_version":"regression-v1","artifact_version":"","dataset_version":""}

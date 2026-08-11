@@ -6,6 +6,8 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$Model = "openai/gpt-4o-mini",
     [Parameter(Mandatory = $false)]
+    [string]$PromptVersion = "offline-eval-v1",
+    [Parameter(Mandatory = $false)]
     [string]$ApiBase = "",
     [Parameter(Mandatory = $false)]
     [string]$ApiKey = "",
@@ -35,6 +37,7 @@ $optimizeArgs = @(
   "--dataset-jsonl", $datasetPath,
   "--command-catalog", "tools/dspy/command_catalog.sample.json",
   "--model", $Model,
+  "--prompt-version", $PromptVersion,
   "--report-out", $reportPath,
   "--min-command-accuracy", "0.80",
   "--min-arg-accuracy", "0.60"

@@ -5,12 +5,20 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any, Dict, List
 
 import dspy
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+
+TOOLS_DIR = Path(__file__).resolve().parents[1]
+if str(TOOLS_DIR) not in sys.path:
+    sys.path.insert(0, str(TOOLS_DIR))
+
+from dspy_common.resolver_program import ResolverProgram, format_command_catalog
 
 from lm_config import build_lm_config
 from otel_config import (
@@ -90,23 +98,6 @@ def parse_command_list(command_list: str) -> List[CommandEntry]:
     return rows
 
 
-MUSIC_COMMAND_ROUTING_POLICY = (
-    "Best matching command name. For a playback request that specifies an artist, song, album, "
-    "playlist, genre, or other search target, select 'search and play'. Select 'start music' only "
-    "for unspecified or explicitly random playback. The start music values artist and genre are "
-    "random-playback grouping modes, not specified search targets. Use empty string if none."
-)
-
-
-class ResolveSignature(dspy.Signature):
-    utterance = dspy.InputField(desc="User input text")
-    command_catalog = dspy.InputField(desc="Command catalog with names, descriptions, and optional args format hints")
-    prompt_version = dspy.InputField(desc="Prompt version for traceability")
-    selected_command = dspy.OutputField(desc=MUSIC_COMMAND_ROUTING_POLICY)
-    selected_args = dspy.OutputField(desc="Args for the selected command following the args format hint. For non-prefix required args output the extracted value only, never add the arg name as prefix (e.g. 'Meja', not 'keyword:Meja'). For prefix args use prefix:value (e.g. 'type:artist'). Multiple args are space-separated (e.g. 'Meja type:artist'). Empty string when no args needed.")
-    rationale = dspy.OutputField(desc="Short reason for selection")
-
-
 class ResolveMusicIntentSignature(dspy.Signature):
     utterance = dspy.InputField(desc="User input text for music search/play request")
     artist_candidates = dspy.OutputField(desc="Comma separated artist candidates")
@@ -116,19 +107,6 @@ class ResolveMusicIntentSignature(dspy.Signature):
     confidence = dspy.OutputField(desc="Confidence score between 0.0 and 1.0")
     ambiguous = dspy.OutputField(desc="true if multiple top candidates remain and autoplay should be avoided")
     reason = dspy.OutputField(desc="Short explanation")
-
-
-class ResolverModule(dspy.Module):
-    def __init__(self) -> None:
-        super().__init__()
-        self.predict = dspy.Predict(ResolveSignature)
-
-    def forward(self, utterance: str, command_catalog: str, prompt_version: str) -> dspy.Prediction:
-        return self.predict(
-            utterance=utterance,
-            command_catalog=command_catalog,
-            prompt_version=prompt_version,
-        )
 
 
 class MusicIntentResolverModule(dspy.Module):
@@ -141,18 +119,17 @@ class MusicIntentResolverModule(dspy.Module):
 
 
 def build_catalog_text(entries: List[CommandEntry]) -> str:
-    lines = []
+    catalog_entries = []
     for e in entries:
-        args_hint = ""
+        args_hint = e.args_text
         if e.args_text:
-            annotated = re.sub(
+            args_hint = re.sub(
                 r"\(([^)]*)\)",
                 lambda m: "(" + m.group(1) + (",no-prefix)" if "prefix=" not in m.group(1) else ")"),
                 e.args_text,
             )
-            args_hint = f" [args: {annotated}]"
-        lines.append(f"- {e.name}: {e.description}{args_hint}")
-    return "\n".join(lines)
+        catalog_entries.append({"name": e.name, "description": e.description, "args": args_hint})
+    return format_command_catalog(catalog_entries)
 
 
 def split_candidates(value: str) -> List[str]:
@@ -213,7 +190,7 @@ except Exception as err:
     # Keep process alive; request handler returns 503 and smarthome can fallback to legacy.
     pass
 
-resolver = ResolverModule()
+resolver = ResolverProgram()
 music_intent_resolver = MusicIntentResolverModule()
 setup_otel()
 app = FastAPI(title="smarthome-dspy-resolver", version="0.2.0")
