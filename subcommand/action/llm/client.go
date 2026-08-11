@@ -64,9 +64,13 @@ func NewClient(config Config) *Client {
 
 // ResolvedCommand represents the result of LLM resolution.
 type ResolvedCommand struct {
-	Command string `json:"command"`
-	Args    string `json:"args"`
-	Thought string `json:"thought"`
+	Command         string `json:"command"`
+	Args            string `json:"args"`
+	Thought         string `json:"thought"`
+	Model           string `json:"model,omitempty"`
+	PromptVersion   string `json:"prompt_version,omitempty"`
+	ArtifactVersion string `json:"artifact_version,omitempty"`
+	DatasetVersion  string `json:"dataset_version,omitempty"`
 }
 
 const maxTraceBodyLength = 4096
@@ -220,6 +224,10 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string, p
 	if err := json.Unmarshal([]byte(content), &resolved); err != nil {
 		return ResolvedCommand{}, fmt.Errorf("failed to unmarshal resolved command: %w", err)
 	}
+	resolved.Model = c.config.Model
+	resolved.PromptVersion = promptVersion
+	resolved.ArtifactVersion = ""
+	resolved.DatasetVersion = ""
 
 	span.SetAttributes(
 		attribute.String("llm.resolved_command", resolved.Command),

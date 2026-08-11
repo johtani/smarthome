@@ -43,7 +43,11 @@ smarthome側にも共通ガードがあり、DSPyが具体的な対象を含む�
 {
   "command": "light on",
   "args": "",
-  "thought": "..."
+  "thought": "...",
+  "model": "openai/gpt-4o-mini",
+  "prompt_version": "2026-04-16",
+  "artifact_version": "",
+  "dataset_version": ""
 }
 ```
 
@@ -91,6 +95,10 @@ $env:LM_MODEL_TYPE="chat"
 $env:LM_TEMPERATURE="0.2"
 $env:LM_MAX_TOKENS="512"
 
+# 任意: 最適化成果物とデータセットの識別子
+$env:DSPY_ARTIFACT_VERSION="resolver-lfm-v1"
+$env:DSPY_DATASET_VERSION="resolver-events-2026-08-11"
+
 # OpenTelemetry利用時
 $env:OTEL_EXPORTER_OTLP_ENDPOINT="http://localhost:4318"
 $env:OTEL_SERVICE_NAME="smarthome-dspy-resolver"
@@ -110,10 +118,21 @@ docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
 curl http://localhost:18089/healthz
 ```
 
-`/healthz` は `model` に加えて `api_base` / `model_type` / `temperature` / `max_tokens` / `api_key_source` を返します。  
+`/healthz` は `model` に加えて `api_base` / `model_type` / `temperature` / `max_tokens` / `api_key_source` / `artifact_version` / `dataset_version` を返します。
 `LM_TEMPERATURE` または `LM_MAX_TOKENS` が不正値の場合を含め、LM 初期化に失敗した場合は `503` を返します。
 
 Dockerコンテナからホスト上のローカルLLMへ接続する場合、`localhost` ではなく `host.docker.internal` を使ってください。
+
+## Test
+
+開発・テスト用依存をインストールし、DSPy resolverと共通ツールのテストを実行します。
+
+```powershell
+python -m pip install -r tools/dspy-resolver/requirements-dev.txt
+python -m pytest tools/dspy-resolver tools/dspy tools/dspy_common
+```
+
+同じコマンドはGitHub Actionsの `dspy-resolver-test` jobでも実行されます。
 
 ## OpenTelemetry
 
@@ -140,6 +159,8 @@ dspy-resolver は OpenTelemetry に対応しています。`OTEL_EXPORTER_OTLP_E
 - `dspy.lm.temperature`
 - `dspy.lm.max_tokens`
 - `resolver.prompt_version`
+- `resolver.artifact_version`
+- `resolver.dataset_version`
 - `command_catalog.count`
 - 各入力・出力文字列の長さ
 
@@ -176,6 +197,8 @@ docker run --rm -p 18089:8080 `
   -e LM_MODEL_TYPE=$env:LM_MODEL_TYPE `
   -e LM_TEMPERATURE=$env:LM_TEMPERATURE `
   -e LM_MAX_TOKENS=$env:LM_MAX_TOKENS `
+  -e DSPY_ARTIFACT_VERSION=$env:DSPY_ARTIFACT_VERSION `
+  -e DSPY_DATASET_VERSION=$env:DSPY_DATASET_VERSION `
   smarthome-dspy-resolver
 ```
 

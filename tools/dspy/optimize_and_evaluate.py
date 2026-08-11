@@ -18,6 +18,7 @@ if str(TOOLS_DIR) not in sys.path:
 import dspy
 
 from dspy_common.lm_config import build_lm_config
+from dspy_common.reporting import build_metadata_breakdown
 
 
 @dataclass
@@ -28,6 +29,10 @@ class EvalRow:
     expected_args: str
     pred_command: str
     pred_args: str
+    llm_model: str
+    prompt_version: str
+    artifact_version: str
+    dataset_version: str
 
 
 class IntentParse(dspy.Signature):
@@ -127,7 +132,13 @@ def metric(example: dspy.Example, pred: dspy.Prediction, trace: Any = None) -> f
 
 def evaluate(program: ResolverProgram, rows: List[Dict[str, Any]], command_catalog: str) -> Dict[str, Any]:
     if not rows:
-        return {"count": 0, "command_accuracy": 0.0, "arg_accuracy": 0.0, "rows": []}
+        return {
+            "count": 0,
+            "command_accuracy": 0.0,
+            "arg_accuracy": 0.0,
+            "breakdown": {"by_llm_model": {}, "by_prompt_version": {}},
+            "rows": [],
+        }
 
     eval_rows: List[EvalRow] = []
     cmd_ok = 0
@@ -152,15 +163,21 @@ def evaluate(program: ResolverProgram, rows: List[Dict[str, Any]], command_catal
                 expected_args=exp_args,
                 pred_command=got_cmd,
                 pred_args=got_args,
+                llm_model=(r.get("llm_model") or "").strip(),
+                prompt_version=(r.get("prompt_version") or "").strip(),
+                artifact_version=(r.get("artifact_version") or "").strip(),
+                dataset_version=(r.get("dataset_version") or "").strip(),
             )
         )
 
     n = len(rows)
+    serialized_rows = [asdict(x) for x in eval_rows]
     return {
         "count": n,
         "command_accuracy": cmd_ok / n,
         "arg_accuracy": arg_ok / n,
-        "rows": [asdict(x) for x in eval_rows[:20]],
+        "breakdown": build_metadata_breakdown(serialized_rows),
+        "rows": serialized_rows[:20],
     }
 
 

@@ -44,6 +44,13 @@ python tools/dspy/prepare_dataset.py `
 - `feedback_label`
 - `feedback_correction`
 
+次の列は任意ですが、モデル・プロンプト別の評価と再現性確保のため、resolverイベント抽出時に保持することを推奨します。
+
+- `llm_model`
+- `resolver_prompt_version`
+- `resolver_artifact_version`
+- `resolver_dataset_version`
+
 学習用の自然文は `input_text` 列を優先します。未設定の場合はスキップされます。
 
 ## 3) Optimize + Evaluate
@@ -82,6 +89,7 @@ python tools/dspy/optimize_and_evaluate.py `
 `report.json` には以下を出力します。
 
 - `baseline` / `optimized` の精度
+- `baseline` / `optimized` の利用元モデル・prompt version別精度（`breakdown`）
 - `gate_passed`
 - 失敗した評価ケース（最大20件）
 

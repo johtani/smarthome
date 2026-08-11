@@ -19,6 +19,10 @@ class RequestAggregate:
     resolved_args: str = ""
     feedback_label: str = ""
     feedback_correction: str = ""
+    llm_model: str = ""
+    prompt_version: str = ""
+    artifact_version: str = ""
+    dataset_version: str = ""
     event_count: int = 0
 
 
@@ -56,6 +60,19 @@ def build_dataset_rows(csv_path: Path) -> List[dict]:
             input_text = normalize(row.get("input_text"))
             if input_text:
                 agg.input_text = input_text
+
+            llm_model = normalize(row.get("llm_model"))
+            prompt_version = normalize(row.get("resolver_prompt_version"))
+            artifact_version = normalize(row.get("resolver_artifact_version"))
+            dataset_version = normalize(row.get("resolver_dataset_version"))
+            if llm_model:
+                agg.llm_model = llm_model
+            if prompt_version:
+                agg.prompt_version = prompt_version
+            if artifact_version:
+                agg.artifact_version = artifact_version
+            if dataset_version:
+                agg.dataset_version = dataset_version
 
             event_name = normalize(row.get("event_name"))
             command = normalize(row.get("resolver_resolved_command"))
@@ -96,6 +113,10 @@ def build_dataset_rows(csv_path: Path) -> List[dict]:
                 "expected_command": expected_command,
                 "expected_args": expected_args,
                 "feedback_label": agg.feedback_label or "skip",
+                "llm_model": agg.llm_model,
+                "prompt_version": agg.prompt_version,
+                "artifact_version": agg.artifact_version,
+                "dataset_version": agg.dataset_version,
             }
         )
     return dataset

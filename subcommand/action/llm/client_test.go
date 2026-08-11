@@ -35,7 +35,7 @@ func TestClient_Resolve(t *testing.T) {
 				Message: struct {
 					Content string `json:"content"`
 				}{
-					Content: `{"command": "light on", "args": "", "thought": "user wants to turn on the light"}`,
+					Content: `{"command": "light on", "args": "", "thought": "user wants to turn on the light", "model": "untrusted-model", "prompt_version": "untrusted-prompt", "artifact_version": "untrusted-artifact", "dataset_version": "untrusted-dataset"}`,
 				},
 			},
 		},
@@ -72,6 +72,19 @@ func TestClient_Resolve(t *testing.T) {
 	}
 	if resolved.Thought == "" {
 		t.Error("expected thought to be non-empty")
+	}
+	if resolved.Model != "test-model" {
+		t.Errorf("expected model test-model, got %q", resolved.Model)
+	}
+	if resolved.PromptVersion != "v1" {
+		t.Errorf("expected prompt version v1, got %q", resolved.PromptVersion)
+	}
+	if resolved.ArtifactVersion != "" || resolved.DatasetVersion != "" {
+		t.Errorf(
+			"expected untrusted versions to be cleared, got artifact=%q dataset=%q",
+			resolved.ArtifactVersion,
+			resolved.DatasetVersion,
+		)
 	}
 	if !strings.Contains(requestBody, "コマンドの args 指定に必ず従ってください") {
 		t.Errorf("expected prompt rule in request body, got %s", requestBody)

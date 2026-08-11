@@ -64,7 +64,16 @@ Get-Content -LiteralPath $InputPath | ForEach-Object {
                         resolver_input_text_hash = Get-AttrValue -Attributes $attrs -Key "resolver.input_text_hash"
                         resolver_path            = Get-AttrValue -Attributes $attrs -Key "resolver.path"
                         resolver_mode            = Get-AttrValue -Attributes $attrs -Key "resolver.mode"
-                        llm_model                = Get-AttrValue -Attributes $attrs -Key "llm.model"
+                        llm_model                = $(
+                            $model = Get-AttrValue -Attributes $attrs -Key "llm.model"
+                            if ([string]::IsNullOrWhiteSpace($model)) {
+                                $model = Get-AttrValue -Attributes $attrs -Key "dspy.lm.model"
+                            }
+                            $model
+                        )
+                        resolver_prompt_version = Get-AttrValue -Attributes $attrs -Key "resolver.prompt_version"
+                        resolver_artifact_version = Get-AttrValue -Attributes $attrs -Key "resolver.artifact_version"
+                        resolver_dataset_version = Get-AttrValue -Attributes $attrs -Key "resolver.dataset_version"
                         resolver_initial_command = Get-AttrValue -Attributes $attrs -Key "resolver.initial_command"
                         resolver_initial_args_kind = Get-AttrValue -Attributes $attrs -Key "resolver.initial_args_kind"
                         resolver_command_corrected = Get-AttrValue -Attributes $attrs -Key "resolver.command_corrected"

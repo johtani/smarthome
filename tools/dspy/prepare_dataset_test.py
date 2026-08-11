@@ -25,6 +25,10 @@ class PrepareDatasetTest(unittest.TestCase):
                 "feedback_label": "",
                 "feedback_correction": "",
                 "input_text": "known sample",
+                "llm_model": "qwen-test",
+                "resolver_prompt_version": "prompt-v1",
+                "resolver_artifact_version": "artifact-v1",
+                "resolver_dataset_version": "dataset-v1",
             },
             {
                 "resolver_request_id": "req-unresolved",
@@ -34,6 +38,10 @@ class PrepareDatasetTest(unittest.TestCase):
                 "feedback_label": "",
                 "feedback_correction": "",
                 "input_text": "ヒッキー再生して",
+                "llm_model": "lfm-test",
+                "resolver_prompt_version": "prompt-v2",
+                "resolver_artifact_version": "artifact-v2",
+                "resolver_dataset_version": "dataset-v2",
             },
             {
                 "resolver_request_id": "req-unresolved",
@@ -43,6 +51,10 @@ class PrepareDatasetTest(unittest.TestCase):
                 "feedback_label": "incorrect",
                 "feedback_correction": "search and play 宇多田ヒカル",
                 "input_text": "",
+                "llm_model": "",
+                "resolver_prompt_version": "",
+                "resolver_artifact_version": "",
+                "resolver_dataset_version": "",
             },
         ]
 
@@ -60,6 +72,10 @@ class PrepareDatasetTest(unittest.TestCase):
         self.assertEqual(unresolved["expected_command"], "search and play")
         self.assertEqual(unresolved["expected_args"], "宇多田ヒカル")
         self.assertEqual(unresolved["feedback_label"], "incorrect")
+        self.assertEqual(unresolved["llm_model"], "lfm-test")
+        self.assertEqual(unresolved["prompt_version"], "prompt-v2")
+        self.assertEqual(unresolved["artifact_version"], "artifact-v2")
+        self.assertEqual(unresolved["dataset_version"], "dataset-v2")
 
 
 if __name__ == "__main__":

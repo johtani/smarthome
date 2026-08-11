@@ -29,6 +29,9 @@ func TestRecordDecisionAddsEvent(t *testing.T) {
 		ResolverPath:     "llm",
 		ResolverMode:     "legacy",
 		LLMModel:         "gpt-4o",
+		PromptVersion:    "prompt-v2",
+		ArtifactVersion:  "artifact-v3",
+		DatasetVersion:   "dataset-v4",
 		InitialCommand:   "start music",
 		InitialArgsKind:  "mode",
 		CommandCorrected: true,
@@ -64,6 +67,18 @@ func TestRecordDecisionAddsEvent(t *testing.T) {
 	}
 	if attrs["resolver.correction_reason"] != "specified_music_target" {
 		t.Fatalf("expected correction reason specified_music_target, got %q", attrs["resolver.correction_reason"])
+	}
+	if attrs["llm.model"] != "gpt-4o" {
+		t.Fatalf("expected llm.model gpt-4o, got %q", attrs["llm.model"])
+	}
+	if attrs["resolver.prompt_version"] != "prompt-v2" {
+		t.Fatalf("expected prompt version prompt-v2, got %q", attrs["resolver.prompt_version"])
+	}
+	if attrs["resolver.artifact_version"] != "artifact-v3" {
+		t.Fatalf("expected artifact version artifact-v3, got %q", attrs["resolver.artifact_version"])
+	}
+	if attrs["resolver.dataset_version"] != "dataset-v4" {
+		t.Fatalf("expected dataset version dataset-v4, got %q", attrs["resolver.dataset_version"])
 	}
 }
 

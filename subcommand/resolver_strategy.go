@@ -117,6 +117,9 @@ func (r dspyResolver) Resolve(ctx context.Context, text string, commandList stri
 
 	var resolved llm.ResolvedCommand
 	if err := json.Unmarshal(respBody, &resolved); err == nil {
+		if resolved.PromptVersion == "" {
+			resolved.PromptVersion = promptVersion
+		}
 		return resolved, nil
 	}
 
@@ -137,6 +140,12 @@ func (r dspyResolver) Resolve(ctx context.Context, text string, commandList stri
 	if err := json.Unmarshal([]byte(wrapped.Choices[0].Message.Content), &resolved); err != nil {
 		return llm.ResolvedCommand{}, fmt.Errorf("failed to decode dspy message content: %w", err)
 	}
+	// Compatibility payload metadata is model-generated and therefore not a
+	// trusted source of resolver identity or artifact versions.
+	resolved.Model = ""
+	resolved.PromptVersion = promptVersion
+	resolved.ArtifactVersion = ""
+	resolved.DatasetVersion = ""
 	return resolved, nil
 }
 
