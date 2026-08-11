@@ -8,6 +8,12 @@ param(
     [Parameter(Mandatory = $false)]
     [string]$PromptVersion = "offline-eval-v1",
     [Parameter(Mandatory = $false)]
+    [string]$DatasetVersion = "",
+    [Parameter(Mandatory = $false)]
+    [string]$ArtifactVersion = "",
+    [Parameter(Mandatory = $false)]
+    [string]$ArtifactOut = "",
+    [Parameter(Mandatory = $false)]
     [string]$ApiBase = "",
     [Parameter(Mandatory = $false)]
     [string]$ApiKey = "",
@@ -26,6 +32,10 @@ New-Item -ItemType Directory -Force -Path $WorkDir | Out-Null
 
 $datasetPath = Join-Path $WorkDir "dataset.jsonl"
 $reportPath = Join-Path $WorkDir "report.json"
+if (-not $ArtifactOut) {
+    $modelArtifactKey = $Model -replace '[/\\:]', '_'
+    $ArtifactOut = Join-Path (Join-Path $WorkDir "artifacts") $modelArtifactKey
+}
 
 python tools/dspy/prepare_dataset.py `
   --input-csv $ResolverEventsCsv `
@@ -38,10 +48,18 @@ $optimizeArgs = @(
   "--command-catalog", "tools/dspy/command_catalog.sample.json",
   "--model", $Model,
   "--prompt-version", $PromptVersion,
+  "--artifact-out", $ArtifactOut,
   "--report-out", $reportPath,
   "--min-command-accuracy", "0.80",
   "--min-arg-accuracy", "0.60"
 )
+
+if ($DatasetVersion) {
+  $optimizeArgs += @("--dataset-version", $DatasetVersion)
+}
+if ($ArtifactVersion) {
+  $optimizeArgs += @("--artifact-version", $ArtifactVersion)
+}
 
 if ($ApiBase) {
   $optimizeArgs += @("--api-base", $ApiBase)

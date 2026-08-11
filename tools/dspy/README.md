@@ -27,7 +27,46 @@ Issue #159 Phase D 向けの、オフライン最適化 + 評価ゲートの最�
 
 単一段構成を採用する理由は、本番の1回のLM呼び出しとAPI入出力を維持しながら、オフラインで最適化したものと
 同じプログラムを本番で実行できるためです。意図解析・command選択・引数生成を別々に呼び出す4段構成は使用しません。
-モデル別の最適化成果物を本番ロードする仕組みは後続Issueの対象です。
+最適化成果物はDSPy programの状態と`manifest.json`の組として保存され、本番resolverは
+model / prompt / program schemaが一致し、固定testセットの評価ゲートを通過したものだけをロードします。
+
+## モデル別成果物の生成と採用
+
+データはseed固定でtrain/dev/test（既定60/20/20）へ分割され、最適化に使用しないtestセットの
+command accuracy / args accuracy / unresolved率 / catalog違反率で採用を判定します。
+`--dataset-version`を省略すると入力JSONLのSHA-256からversionを生成します。
+
+```powershell
+# LFM用
+python tools/dspy/optimize_and_evaluate.py `
+  --dataset-jsonl .\tmp\dspy\dataset.jsonl `
+  --command-catalog .\tools\dspy\command_catalog.sample.json `
+  --model openai/lfm2.5-2.6B `
+  --api-base http://192.168.2.240:8080/v1 `
+  --prompt-version resolver-v2 `
+  --dataset-version reviewed-2026-08-11 `
+  --artifact-version lfm-resolver-v1 `
+  --artifact-out .\tmp\dspy\artifacts\lfm2.5-2.6B `
+  --report-out .\tmp\dspy\lfm-report.json
+
+# Qwen用はmodelと出力先を変更して同じデータセットで実行
+```
+
+ゲート未達の場合はreportだけを保存し、成果物は出力しません。`manifest.json`にはmodel、prompt、
+program schema、dataset、artifact version、optimizer設定、baseline/optimized評価を記録します。
+
+本番切替では成果物ディレクトリをresolverへread-only mountし、次を同時に設定します。
+
+```powershell
+$env:MODEL="openai/lfm2.5-2.6B"
+$env:DSPY_PROMPT_VERSION="resolver-v2"
+$env:DSPY_ARTIFACTS_HOST_DIR=".\tmp\dspy\artifacts\lfm2.5-2.6B"
+docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
+```
+
+`/healthz`の`artifact_loaded`、`artifact_version`、`dataset_version`を確認してから段階的に切り替えます。
+model・prompt・schema不一致、欠損、破損、ゲート未達では未最適化の共通Signatureへ自動フォールバックし、
+理由を`artifact_load_error`へ表示します。ロールバックは以前の成果物ディレクトリへ戻して再起動します。
 
 ## 1) Setup
 
