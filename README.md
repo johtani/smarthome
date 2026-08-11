@@ -155,6 +155,11 @@ Subcommand名をもとに、以下のようにSlash Command名として登録す
 `resolver.mode=dspy` の場合は `resolver.dspy_endpoint` にHTTPエンドポイントを指定するとDSPy resolverを優先します。  
 DSPy resolver が未設定または失敗した場合は既存の `legacy`（LLM）解決へフォールバックします。
 
+自然言語resolver（DSPy / legacy LLM）の応答は、実行前にcommand定義の引数仕様で検証されます。
+必須引数の欠落、未定義の引数、enum外の値、`prefix=` / no-prefix規則への違反がある応答は採用されず、
+利用可能な次のresolverへフォールバックします。すべてのresolverが失敗した場合、commandは実行されません。
+検証結果はOpenTelemetryの `resolver.args.valid` と `resolver.args.validation_reason` で確認できます。
+
 #### 音楽再生コマンドの解決
 
 自然言語による音楽再生要求は、指定対象の有無でコマンドを使い分けます。

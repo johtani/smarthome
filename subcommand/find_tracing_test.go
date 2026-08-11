@@ -215,8 +215,8 @@ func TestCommandsFindTracing_DSPyMusicCorrection(t *testing.T) {
 	defer server.Close()
 
 	cmds := Commands{Definitions: []Definition{
-		{Name: StartMusicCmd, Description: "random music", Factory: NewDummySubcommand},
-		{Name: SearchAndPlayMusicCmd, Description: "search music", Factory: NewDummySubcommand},
+		NewStartMusicCmdDefinition(),
+		NewSearchAndPlayMusicCmdDefinition(),
 	}}
 	config := Config{Resolver: ResolverConfig{
 		Mode:               ResolverModeDSPy,
@@ -262,6 +262,49 @@ func TestCommandsFindTracing_DSPyMusicCorrection(t *testing.T) {
 	}
 	if decisionAttrs["resolver.command_corrected"] != "true" {
 		t.Fatalf("event command corrected = %q, want true", decisionAttrs["resolver.command_corrected"])
+	}
+}
+
+func TestCommandsFindTracing_DSPyInvalidArgs(t *testing.T) {
+	exporter := tracetest.NewInMemoryExporter()
+	tp := sdktrace.NewTracerProvider(
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithSyncer(exporter),
+	)
+	defer func() { _ = tp.Shutdown(t.Context()) }()
+
+	prev := otel.GetTracerProvider()
+	otel.SetTracerProvider(tp)
+	defer otel.SetTracerProvider(prev)
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"command":"start music","args":"mode:random","thought":"invalid mode"}`))
+	}))
+	defer server.Close()
+
+	cmds := Commands{Definitions: []Definition{NewStartMusicCmdDefinition()}}
+	config := Config{Resolver: ResolverConfig{
+		Mode:               ResolverModeDSPy,
+		DSPyEndpoint:       server.URL,
+		DSPyTimeoutSeconds: 3,
+	}}
+
+	if _, _, _, err := cmds.Find(t.Context(), config, "音楽をかけて"); err == nil {
+		t.Fatal("Find succeeded with invalid resolver arguments")
+	}
+
+	span := findSpanByName(t, exporter, "Commands.Find")
+	attrs := toAttrMap(span.Attributes)
+	if attrs["resolver.args.valid"] != "false" {
+		t.Fatalf("resolver.args.valid = %q, want false", attrs["resolver.args.valid"])
+	}
+	if attrs["resolver.args.validation_reason"] != argsValidationReasonInvalidPrefix {
+		t.Fatalf(
+			"resolver.args.validation_reason = %q, want %q",
+			attrs["resolver.args.validation_reason"],
+			argsValidationReasonInvalidPrefix,
+		)
 	}
 }
 

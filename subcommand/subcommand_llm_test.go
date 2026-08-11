@@ -202,7 +202,7 @@ func TestCommands_Find_DSPySearchAndPlayStripsTypeArgs(t *testing.T) {
 
 	cmds := Commands{
 		Definitions: []Definition{
-			{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+			NewSearchAndPlayMusicCmdDefinition(),
 		},
 	}
 
@@ -215,6 +215,44 @@ func TestCommands_Find_DSPySearchAndPlayStripsTypeArgs(t *testing.T) {
 	}
 	if args != "宇多田 First Love limit:2 offset:1" {
 		t.Fatalf("args = %q, want type arg stripped", args)
+	}
+}
+
+func TestCommands_Find_DSPyInvalidArgsFallsBackToLegacy(t *testing.T) {
+	dspyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"command":"start music","args":"mode:random","thought":"invalid mode"}`)
+	}))
+	defer dspyServer.Close()
+
+	legacyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = fmt.Fprint(w, `{"choices":[{"message":{"content":"{\"command\":\"light on\",\"args\":\"\",\"thought\":\"fallback\"}"}}]}`)
+	}))
+	defer legacyServer.Close()
+
+	config := Config{
+		Resolver: ResolverConfig{
+			Mode:               ResolverModeDSPy,
+			DSPyEndpoint:       dspyServer.URL,
+			DSPyTimeoutSeconds: 3,
+		},
+		LLM: llm.Config{Endpoint: legacyServer.URL, Model: "test-model"},
+	}
+	cmds := Commands{Definitions: []Definition{
+		NewStartMusicCmdDefinition(),
+		{Name: "light on", Description: "turn on light", Factory: NewDummySubcommand},
+	}}
+
+	def, args, msg, err := cmds.Find(t.Context(), config, "明かりをつけて")
+	if err != nil {
+		t.Fatalf("Find failed: %v", err)
+	}
+	if def.Name != "light on" || args != "" {
+		t.Fatalf("Find returned command=%q args=%q, want light on with empty args", def.Name, args)
+	}
+	if msg != "(LLM) fallback" {
+		t.Fatalf("message = %q, want legacy fallback message", msg)
 	}
 }
 
@@ -272,8 +310,8 @@ func TestCommands_Find_DSPyNormalizesStartMusicResolution(t *testing.T) {
 				},
 			}
 			cmds := Commands{Definitions: []Definition{
-				{Name: StartMusicCmd, Description: "random music", Factory: NewDummySubcommand},
-				{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+				NewStartMusicCmdDefinition(),
+				NewSearchAndPlayMusicCmdDefinition(),
 			}}
 
 			def, args, _, err := cmds.Find(t.Context(), config, tt.input)
@@ -324,7 +362,7 @@ func TestCommands_Find_LLMSearchAndPlayStripsTypeArgs(t *testing.T) {
 
 	cmds := Commands{
 		Definitions: []Definition{
-			{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+			NewSearchAndPlayMusicCmdDefinition(),
 		},
 	}
 
@@ -375,8 +413,8 @@ func TestCommands_Find_LLM_FallbackStartMusicArgsToSearchAndPlay(t *testing.T) {
 
 	cmds := Commands{
 		Definitions: []Definition{
-			{Name: StartMusicCmd, Description: "legacy random music", Factory: NewDummySubcommand},
-			{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+			NewStartMusicCmdDefinition(),
+			NewSearchAndPlayMusicCmdDefinition(),
 		},
 	}
 
@@ -420,8 +458,8 @@ func TestCommands_Find_LLMNormalizesStartMusicWithoutSearchArgs(t *testing.T) {
 
 			config := Config{LLM: llm.Config{Endpoint: server.URL, Model: "test-model"}}
 			cmds := Commands{Definitions: []Definition{
-				{Name: StartMusicCmd, Description: "random music", Factory: NewDummySubcommand},
-				{Name: SearchAndPlayMusicCmd, Description: "search and play music", Factory: NewDummySubcommand},
+				NewStartMusicCmdDefinition(),
+				NewSearchAndPlayMusicCmdDefinition(),
 			}}
 
 			def, args, _, err := cmds.Find(t.Context(), config, "B'zの曲をかけて")
