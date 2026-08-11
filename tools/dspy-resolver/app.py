@@ -18,7 +18,8 @@ TOOLS_DIR = Path(__file__).resolve().parents[1]
 if str(TOOLS_DIR) not in sys.path:
     sys.path.insert(0, str(TOOLS_DIR))
 
-from dspy_common.resolver_program import ResolverProgram, format_command_catalog
+from dspy_common.artifacts import load_artifact
+from dspy_common.resolver_program import format_command_catalog
 
 from lm_config import build_lm_config
 from otel_config import (
@@ -167,8 +168,12 @@ def parse_bool(value: str) -> bool:
 
 
 MODEL = os.getenv("MODEL", "openai/gpt-4o-mini")
-ARTIFACT_VERSION = os.getenv("DSPY_ARTIFACT_VERSION", "").strip()
-DATASET_VERSION = os.getenv("DSPY_DATASET_VERSION", "").strip()
+ARTIFACT_DIR = os.getenv("DSPY_ARTIFACT_DIR", "").strip()
+EXPECTED_PROMPT_VERSION = os.getenv("DSPY_PROMPT_VERSION", "").strip()
+ARTIFACT_VERSION = ""
+DATASET_VERSION = ""
+ARTIFACT_LOADED = False
+ARTIFACT_LOAD_ERROR = ""
 LM_HEALTH: Dict[str, Any] = {
     "model": MODEL,
     "api_base": "",
@@ -190,7 +195,16 @@ except Exception as err:
     # Keep process alive; request handler returns 503 and smarthome can fallback to legacy.
     pass
 
-resolver = ResolverProgram()
+artifact_result = load_artifact(
+    Path(ARTIFACT_DIR) if ARTIFACT_DIR else None,
+    expected_model=MODEL,
+    expected_prompt_version=EXPECTED_PROMPT_VERSION,
+)
+resolver = artifact_result.program
+ARTIFACT_LOADED = artifact_result.loaded
+ARTIFACT_VERSION = artifact_result.artifact_version
+DATASET_VERSION = artifact_result.dataset_version
+ARTIFACT_LOAD_ERROR = artifact_result.error
 music_intent_resolver = MusicIntentResolverModule()
 setup_otel()
 app = FastAPI(title="smarthome-dspy-resolver", version="0.2.0")
@@ -208,6 +222,7 @@ def lm_trace_attrs() -> Dict[str, Any]:
             "dspy.lm.api_key_source": LM_HEALTH.get("api_key_source", "none"),
             "resolver.artifact_version": ARTIFACT_VERSION,
             "resolver.dataset_version": DATASET_VERSION,
+            "resolver.artifact_loaded": ARTIFACT_LOADED,
         }
     )
 
@@ -227,6 +242,8 @@ def healthz() -> dict:
                 "api_key_source": LM_HEALTH["api_key_source"],
                 "artifact_version": ARTIFACT_VERSION,
                 "dataset_version": DATASET_VERSION,
+                "artifact_loaded": ARTIFACT_LOADED,
+                "artifact_load_error": ARTIFACT_LOAD_ERROR,
                 "error": LM_INIT_ERROR,
             },
         )
@@ -240,6 +257,8 @@ def healthz() -> dict:
         "api_key_source": LM_HEALTH["api_key_source"],
         "artifact_version": ARTIFACT_VERSION,
         "dataset_version": DATASET_VERSION,
+        "artifact_loaded": ARTIFACT_LOADED,
+        "artifact_load_error": ARTIFACT_LOAD_ERROR,
     }
 
 

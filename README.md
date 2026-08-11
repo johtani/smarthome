@@ -317,6 +317,7 @@ Resolverまわりは、OTel Event名を固定して出力します（`resolver.s
 - `resolver.prompt_version`
 - `resolver.artifact_version`
 - `resolver.dataset_version`
+- `resolver.artifact_loaded`
 - `resolver.initial_command`
 - `resolver.initial_args_kind`（`empty` / `mode` / `free_text`）
 - `resolver.command_corrected`

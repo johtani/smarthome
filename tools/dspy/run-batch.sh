@@ -13,6 +13,10 @@ LM_MODEL_TYPE="${LM_MODEL_TYPE:-}"
 LM_TEMPERATURE="${LM_TEMPERATURE:-}"
 LM_MAX_TOKENS="${LM_MAX_TOKENS:-}"
 PROMPT_VERSION="${PROMPT_VERSION:-offline-eval-v1}"
+DATASET_VERSION="${DATASET_VERSION:-}"
+ARTIFACT_VERSION="${ARTIFACT_VERSION:-}"
+MODEL_ARTIFACT_KEY=$(printf '%s' "$MODEL" | tr '/:' '__')
+ARTIFACT_OUT="${ARTIFACT_OUT:-$WORK_DIR/artifacts/$MODEL_ARTIFACT_KEY}"
 
 if [ ! -f "$RESOLVER_EVENTS_CSV" ]; then
   echo "resolver events csv not found: $RESOLVER_EVENTS_CSV" >&2
@@ -34,9 +38,17 @@ set -- \
   --command-catalog "$COMMAND_CATALOG" \
   --model "$MODEL" \
   --prompt-version "$PROMPT_VERSION" \
+  --artifact-out "$ARTIFACT_OUT" \
   --report-out "$REPORT_JSON" \
   --min-command-accuracy "$MIN_COMMAND_ACCURACY" \
   --min-arg-accuracy "$MIN_ARG_ACCURACY"
+
+if [ -n "$DATASET_VERSION" ]; then
+  set -- "$@" --dataset-version "$DATASET_VERSION"
+fi
+if [ -n "$ARTIFACT_VERSION" ]; then
+  set -- "$@" --artifact-version "$ARTIFACT_VERSION"
+fi
 
 if [ -n "$LM_API_BASE" ]; then
   set -- "$@" --api-base "$LM_API_BASE"
