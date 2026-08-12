@@ -407,14 +407,31 @@ OTLPの `resourceSpans` 文書に加え、Elasticsearchのnative OTel mappingで
 
 ```powershell
 $env:ES_API_KEY = "..."
-python tools/resolver-events/extract-from-elasticsearch.py `
-  --url https://localhost:9200 `
-  --index "otel-v1-apm-span-*" `
-  --from 2026-08-01T00:00:00Z `
-  --to 2026-08-08T00:00:00Z `
-  --service smarthome `
+pwsh tools/resolver-events/extract-from-elasticsearch.ps1 `
+  -Url http://192.168.2.240:9200 `
+  -Index ".ds-traces-generic.otel*" `
+  -From 2026-08-01T00:00:00Z `
+  -To 2026-08-08T00:00:00Z `
+  -Service smarthome `
+  -OutputDir tmp/resolver-events/2026-08-01
+```
+
+Ubuntu / bashでは同等のラッパーを利用できます。
+
+```bash
+export ES_API_KEY="..."
+bash tools/resolver-events/extract-from-elasticsearch.sh \
+  --url http://192.168.2.240:9200 \
+  --index ".ds-traces-generic.otel*" \
+  --from 2026-08-01T00:00:00Z \
+  --to 2026-08-08T00:00:00Z \
+  --service smarthome \
   --output-dir tmp/resolver-events/2026-08-01
 ```
+
+Python 3の標準ライブラリだけを使用するため、追加パッケージのインストールは不要です。
+PowerShellラッパーでPythonコマンド名を変更する場合は `-Python py` のように指定し、
+bashでは `PYTHON=/path/to/python3` を設定します。Python CLIを直接実行しても同じ結果になります。
 
 PITと `search_after` によりページングします。service名を指定した場合は
 Elasticsearchの `service.name` フィールドで絞り込み、出力先には次の4ファイルを生成します。
