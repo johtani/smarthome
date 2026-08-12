@@ -1,0 +1,43 @@
+{
+  "groups": [
+    {
+      "expected_command": "start ps5",
+      "expected_args": "",
+      "targets": ["PS5", "プレステ5"],
+      "variants": [
+        {"scenario": "normal", "templates": ["{target}を起動して"]},
+        {"scenario": "colloquial", "templates": ["{target}やるぞ"]},
+        {"scenario": "omission", "templates": ["{target}"]},
+        {"scenario": "polite", "templates": ["{target}を起動してください"]},
+        {"scenario": "notation_variation", "templates": ["{target}つけて"]},
+        {"scenario": "negation", "expected_command": "", "expected_args": "", "templates": ["{target}は起動しないで"]},
+        {"scenario": "contrast", "templates": ["音楽じゃなくて{target}を起動して"]},
+        {"scenario": "ambiguous", "expected_command": "", "expected_args": "", "templates": ["{target}どうしよう"]}
+      ]
+    },
+    {
+      "expected_command": "search and play",
+      "expected_args": "サカナクション type:artist",
+      "targets": ["サカナクション"],
+      "variants": [
+        {"scenario": "normal", "templates": ["{target}を再生して"]},
+        {"scenario": "colloquial", "templates": ["{target}かけて"]},
+        {"scenario": "polite", "templates": ["{target}を流してください"]},
+        {"scenario": "contrast", "templates": ["ランダムじゃなくて{target}をかけて"]},
+        {"scenario": "invalid_prefix", "templates": ["artist={target}で再生して"]},
+        {"scenario": "invalid_enum", "templates": ["{target}を歌手種別で探して"]},
+        {"scenario": "extra_args", "templates": ["{target}を音量20で再生して"]}
+      ]
+    },
+    {
+      "expected_command": "",
+      "expected_args": "",
+      "targets": ["それ", "いつものやつ"],
+      "variants": [
+        {"scenario": "ambiguous", "templates": ["{target}お願い"]},
+        {"scenario": "negation", "templates": ["何もしないで"]},
+        {"scenario": "unknown_command", "templates": ["{target}でエアコンをつけて"]}
+      ]
+    }
+  ]
+}

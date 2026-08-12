@@ -477,6 +477,27 @@ UIでは未レビュー、incorrectかつ補正なし、catalog違反などを�
 レビュー済み正解の矛盾も警告します。出力には実データが含まれるため、Git除外済みの `tmp/`
 以下を指定し、リポジトリへコミットしないでください。
 
+#### 合成レビュー候補を生成する
+
+`tools/resolver-synthetic/generate.py` はcommand catalogとテンプレート設定から、レビュー前の
+合成候補JSONLを再現可能に生成します。Python 3の標準ライブラリだけで動作します。
+
+```powershell
+python tools/resolver-synthetic/generate.py `
+  --catalog .\tools\dspy\command_catalog.sample.json `
+  --config .\tools\resolver-synthetic\templates.sample.json `
+  --output .\tmp\resolver-synthetic\review-candidates.jsonl
+```
+
+設定では機器名・別名を `targets`、言い換えをscenario別の `templates` に指定します。否定や
+判断不能などはvariantの `expected_command` / `expected_args` で候補正解を上書きできます。同じgroupの
+展開結果は共通の `group_id` を持ち、内容から決まる `case_id` により同じ設定から同じ結果を
+生成できます。各行は `source=synthetic_template`、generator、scenario、候補の
+`expected_command` / `expected_args` を含みますが、`reviewed=false`、
+`review_status=unreviewed` のレビュー候補です。確定datasetへ直接渡さず、上記のレビューUIで
+確認してください。sampleには通常表現、口語、省略、丁寧語、表記揺れ、否定、対比、判断不能、
+catalog外のprefix・enumや余分なargsを誘発するケースが含まれます。
+
 ## DSPy
 
 オフラインで最適化と評価を行うための最小パイプラインを `tools/dspy/` に追加しています。
