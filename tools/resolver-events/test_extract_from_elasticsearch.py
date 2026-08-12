@@ -80,6 +80,39 @@ class ExtractFromElasticsearchTest(unittest.TestCase):
         self.assertEqual("再生して", row.input_text)
         self.assertEqual("llm.request_body.preview", row.input_text_source)
 
+    def test_normalizes_elasticsearch_span_document_without_events(self):
+        source = {
+            "@timestamp": "2026-08-09T03:50:10Z",
+            "trace_id": "trace-es",
+            "resource": {"attributes": {"service.name": "smarthome"}},
+            "name": "dspy.Resolve",
+            "attributes": {
+                "dspy.request.text": "TM Networkを再生して",
+                "dspy.request.prompt_version": "v3",
+                "dspy.response_body": json.dumps({
+                    "command": "search and play", "args": "keyword:TM Network",
+                    "model": "model-1", "artifact_version": "artifact-2", "dataset_version": "dataset-2",
+                }),
+            },
+        }
+        rows = MODULE.normalize(MODULE.events_from_source(source))
+        self.assertEqual(1, len(rows))
+        self.assertEqual("TM Networkを再生して", rows[0].input_text)
+        self.assertEqual("search and play", rows[0].candidate_command)
+        self.assertEqual("keyword:TM Network", rows[0].candidate_args)
+        self.assertEqual("model-1", rows[0].llm_model)
+
+    def test_infers_feedback_from_elasticsearch_span_attributes(self):
+        source = {
+            "@timestamp": "2026-08-09T03:50:10Z", "trace_id": "feedback-trace",
+            "resource": {"attributes": {"service.name": "smarthome"}},
+            "name": "ResolverFeedback.Record",
+            "attributes": {"resolver.request_id": "req-1", "feedback.label": "correct", "resolver.resolved_command": "search and play"},
+        }
+        event = list(MODULE.events_from_source(source))[0]
+        self.assertEqual("resolver.feedback", event["name"])
+        self.assertEqual("correct", MODULE.normalize([event])[0].feedback_label)
+
     def test_writes_jsonl_csv_and_audits(self):
         rows = MODULE.normalize(MODULE.events_from_source(self.fixture()))
         meta = {"from": "2026-01-01T00:00:00Z", "to": "2026-01-02T00:00:00Z", "index": "traces-*", "service": "smarthome", "page_size": 100, "documents": 1, "events": 3}
@@ -100,7 +133,7 @@ class ExtractFromElasticsearchTest(unittest.TestCase):
 
         def request(path, body=None, method="POST"):
             calls.append((path, body, method))
-            if path.endswith("/_pit?keep_alive=2m"):
+            if path.endswith("/_pit?keep_alive=2m&expand_wildcards=all"):
                 return {"id": "pit-1"}
             if method == "DELETE":
                 return {"succeeded": True}
@@ -111,8 +144,9 @@ class ExtractFromElasticsearchTest(unittest.TestCase):
             return {"hits": {"hits": []}}
 
         client.request = request
-        hits = list(client.hits("2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", "", 1))
+        hits = list(client.hits("2026-01-01T00:00:00Z", "2026-01-02T00:00:00Z", "smarthome", 1))
         self.assertEqual(1, len(hits))
+        self.assertEqual({"term": {"service.name": "smarthome"}}, calls[1][1]["query"]["bool"]["filter"][1])
         self.assertEqual(["2026-01-01T00:00:00Z", 1], calls[2][1]["search_after"])
         self.assertEqual(("/_pit", {"id": "pit-2"}, "DELETE"), calls[-1])
 

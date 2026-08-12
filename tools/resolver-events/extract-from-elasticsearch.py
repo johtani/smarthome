@@ -118,10 +118,12 @@ def iter_spans(source: dict[str, Any]) -> Iterator[tuple[str, str, dict[str, Any
 def events_from_source(source: dict[str, Any]) -> Iterator[dict[str, Any]]:
     for trace_id, service, span in iter_spans(source):
         span_attrs = attrs_map(span.get("attributes"))
+        emitted = False
         for event in span.get("events") or []:
             name = str(event.get("name") or "")
             if name not in EVENT_NAMES:
                 continue
+            emitted = True
             event_attrs = {**span_attrs, **attrs_map(event.get("attributes"))}
             yield {
                 "trace_id": trace_id,
@@ -130,6 +132,31 @@ def events_from_source(source: dict[str, Any]) -> Iterator[dict[str, Any]]:
                 "name": name,
                 "attrs": event_attrs,
             }
+        if not emitted:
+            # Elasticsearch's native OTel mapping stores one span per document
+            # and does not retain the OTLP events array. Resolver attributes are
+            # still present, so represent the span as its equivalent event.
+            name = inferred_event_name(span_attrs)
+            if name:
+                yield {
+                    "trace_id": trace_id,
+                    "service_name": service,
+                    "timestamp": str(source.get("@timestamp") or span.get("startTimeUnixNano") or span.get("start_time_unix_nano") or ""),
+                    "name": name,
+                    "attrs": span_attrs,
+                }
+
+
+def inferred_event_name(attrs: dict[str, Any]) -> str:
+    if first(attrs, "feedback.label", "feedback.correction"):
+        return "resolver.feedback"
+    if first(attrs, "resolver.execution_status"):
+        return "resolver.execution"
+    if first(attrs, "dspy.request.text", "dspy.request.utterance.preview"):
+        return "dspy.request"
+    if first(attrs, "resolver.resolved_command", "resolver.selected_command"):
+        return "resolver.decision"
+    return ""
 
 
 def extract_body_input(value: str) -> str:
@@ -169,6 +196,21 @@ def normalize(events: Iterable[dict[str, Any]]) -> list[Candidate]:
         for event in sorted(group, key=lambda item: item["timestamp"]):
             merged.update({k: v for k, v in event["attrs"].items() if v not in (None, "")})
             sources.append(event["name"])
+
+        response_body = first(merged, "dspy.response_body")
+        if response_body:
+            try:
+                response = json.loads(response_body)
+            except (json.JSONDecodeError, TypeError):
+                response = {}
+            if isinstance(response, dict):
+                for source_key, target_key in (
+                    ("command", "resolver.selected_command"), ("args", "resolver.selected_args"),
+                    ("model", "llm.model"), ("prompt_version", "resolver.prompt_version"),
+                    ("artifact_version", "resolver.artifact_version"), ("dataset_version", "resolver.dataset_version"),
+                ):
+                    if response.get(source_key) not in (None, ""):
+                        merged.setdefault(target_key, response[source_key])
 
         trace_id = next((e["trace_id"] for e in group if e["trace_id"]), "")
         request_id = first(merged, "resolver.request_id")
@@ -230,7 +272,9 @@ class ElasticsearchClient:
 
     def hits(self, start: str, end: str, service: str, page_size: int) -> Iterator[dict[str, Any]]:
         filters: list[dict[str, Any]] = [{"range": {"@timestamp": {"gte": start, "lt": end}}}]
-        pit = self.request(f"/{self.index}/_pit?keep_alive=2m")
+        if service:
+            filters.append({"term": {"service.name": service}})
+        pit = self.request(f"/{self.index}/_pit?keep_alive=2m&expand_wildcards=all")
         pit_id = str(pit.get("id") or "")
         if not pit_id:
             raise RuntimeError("Elasticsearch did not return a point-in-time ID")
