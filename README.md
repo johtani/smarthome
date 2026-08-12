@@ -447,6 +447,36 @@ Elasticsearchの `service.name` フィールドで絞り込み、出力先には
 versionの欠損数、機密情報らしい文字列の警告件数が含まれます。出力は実データを
 含むため、Git除外済みの `tmp/resolver-events/` 以下へ保存し、不要になったら削除してください。
 
+#### レビュー候補を人手で確認する
+
+`tools/resolver-review/review.py` は候補JSONL/CSVを1件ずつ確認するローカル専用UIです。
+Python 3の標準ライブラリだけで動作し、loopbackアドレス以外では起動しません。
+
+```powershell
+python tools/resolver-review/review.py `
+  --input .\tmp\resolver-events\2026-08-01\review-candidates.jsonl `
+  --catalog .\tools\dspy\command_catalog.sample.json `
+  --output .\tmp\resolver-events\2026-08-01\reviewed.jsonl
+```
+
+表示された `http://127.0.0.1:8765` をブラウザで開きます。採用・修正・除外・保留の
+操作ごとに出力へ保存され、同じコマンドで再起動すると `case_id` を使って再開します。
+`--port` でポートを変更できます。実ログだけでなく手書きfixtureや合成候補も、候補スキーマに
+`case_id`、`group_id`、`source`、`input_text`、候補値を設定すれば同じ画面でレビューできます。
+安全な例は `tools/resolver-review/fixtures/review-candidates.jsonl` にあります。
+
+出力は `resolver-reviewed/v1` JSONLです。元の候補フィールドを保持したまま、各行へ次を追加します。
+
+- `review_status`: `unreviewed` / `accepted` / `corrected` / `excluded` / `pending`
+- `reviewed`: 未レビュー以外では `true`
+- `expected_command` / `expected_args`: 人が採用または修正した行だけに設定
+- `reviewed_at`: レビュー操作時のUTC日時
+- `review_note`: 任意の理由・メモ
+
+UIでは未レビュー、incorrectかつ補正なし、catalog違反などを絞り込めます。同じ入力の重複と、
+レビュー済み正解の矛盾も警告します。出力には実データが含まれるため、Git除外済みの `tmp/`
+以下を指定し、リポジトリへコミットしないでください。
+
 ## DSPy
 
 オフラインで最適化と評価を行うための最小パイプラインを `tools/dspy/` に追加しています。
