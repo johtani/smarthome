@@ -389,6 +389,64 @@ bash tools/resolver-events/extract-from-collector-file.sh \
 - `feedback_label`
 - `feedback_correction`
 
+#### Elasticsearchからレビュー候補を抽出する
+
+`tools/resolver-events/extract-from-elasticsearch.py` は、Elasticsearchに保存された
+OTel Traceを期間・index・service名で検索し、trace IDを主キーとして関連イベントを
+結合します。正規化の主形式はJSONLで、CSVは閲覧用の派生出力です。
+OTLPの `resourceSpans` 文書に加え、Elasticsearchのnative OTel mappingで
+1 spanが1文書として保存され、Event配列が保持されない形式にも対応します。この形式では
+`attributes` からresolverイベント種別を復元し、`dspy.response_body` があれば予測結果を補完します。
+
+認証情報は引数やURLへ含めず、次の環境変数のいずれかで渡します。
+
+- `ES_API_KEY`
+- `ES_USERNAME` と `ES_PASSWORD`
+
+実行例:
+
+```powershell
+$env:ES_API_KEY = "..."
+pwsh tools/resolver-events/extract-from-elasticsearch.ps1 `
+  -Url http://192.168.2.240:9200 `
+  -Index ".ds-traces-generic.otel*" `
+  -From 2026-08-01T00:00:00Z `
+  -To 2026-08-08T00:00:00Z `
+  -Service smarthome `
+  -OutputDir tmp/resolver-events/2026-08-01
+```
+
+Ubuntu / bashでは同等のラッパーを利用できます。
+
+```bash
+export ES_API_KEY="..."
+bash tools/resolver-events/extract-from-elasticsearch.sh \
+  --url http://192.168.2.240:9200 \
+  --index ".ds-traces-generic.otel*" \
+  --from 2026-08-01T00:00:00Z \
+  --to 2026-08-08T00:00:00Z \
+  --service smarthome \
+  --output-dir tmp/resolver-events/2026-08-01
+```
+
+Python 3の標準ライブラリだけを使用するため、追加パッケージのインストールは不要です。
+PowerShellラッパーでPythonコマンド名を変更する場合は `-Python py` のように指定し、
+bashでは `PYTHON=/path/to/python3` を設定します。Python CLIを直接実行しても同じ結果になります。
+
+PITと `search_after` によりページングします。service名を指定した場合は
+Elasticsearchの `service.name` フィールドで絞り込み、出力先には次の4ファイルを生成します。
+
+- `review-candidates.jsonl`: 後続処理の共通入力
+- `review-candidates.csv`: レビュー・閲覧用
+- `audit.json`: 自動処理用の件数・欠損情報
+- `audit.md`: 人が確認する監査サマリー
+
+入力文は `dspy.request.text`、`resolver.input.preview`、
+`dspy.request.utterance.preview`、LLM request body内候補の順で採用し、取得元と
+`truncated` を保持します。監査にはtrace/request数、model・prompt・artifact・dataset
+versionの欠損数、機密情報らしい文字列の警告件数が含まれます。出力は実データを
+含むため、Git除外済みの `tmp/resolver-events/` 以下へ保存し、不要になったら削除してください。
+
 ## DSPy
 
 オフラインで最適化と評価を行うための最小パイプラインを `tools/dspy/` に追加しています。

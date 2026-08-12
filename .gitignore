@@ -6,3 +6,5 @@ config/*.json
 .output.txt
 .claude/
 *.bck.yml
+tmp/resolver-events/
+__pycache__/
