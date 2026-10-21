@@ -252,7 +252,7 @@ func findResolveSpan(t *testing.T, exporter *tracetest.InMemoryExporter) tracete
 func attrsAsMap(attrs []attribute.KeyValue) map[string]string {
 	m := make(map[string]string, len(attrs))
 	for _, kv := range attrs {
-		m[string(kv.Key)] = kv.Value.Emit()
+		m[string(kv.Key)] = kv.Value.String()
 	}
 	return m
 }
