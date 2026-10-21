@@ -508,6 +508,12 @@ catalog外のprefix・enumや余分なargsを誘発するケースが含まれ�
 
 詳細は [tools/dspy/README.md](./tools/dspy/README.md) を参照してください。
 
+バッチ処理と外部DSPy resolverの両方で、LiteLLMは `1.106.2` 以下に制限し、
+侵害報告のある `1.82.7`・`1.82.8`・`1.107.0` を明示的に除外しています（[Issue #232](https://github.com/johtani/smarthome/issues/232)）。
+上限を更新する際も、これらの除外指定は維持してください。
+既存の仮想環境には自動反映されないため、各ツールの `requirements.txt` を使って環境を再作成してください。
+Dockerではイメージの再ビルドとコンテナの再作成が必要です。
+
 バッチ実行例:
 
 ```powershell
