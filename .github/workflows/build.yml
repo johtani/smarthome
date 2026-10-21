@@ -70,6 +70,8 @@ jobs:
         run: python -m pip check
 
       - name: Test DSPy tools
+        env:
+          PYTHONPATH: tools
         run: |
           if [ "${{ matrix.requirements }}" = "tools/dspy/requirements.txt" ]; then
             python -m pytest tools/dspy tools/dspy_common
