@@ -105,9 +105,8 @@ func run() error {
 		// cronはgoroutineで実行するため、エラーハンドリングが必要
 		errChan := make(chan error, 1)
 		go func() {
-			if err := cron.Run(configStore); err != nil {
-				errChan <- err
-			}
+			// cron.Runは正常時には戻らず、起動に失敗した場合のみエラーを返す。
+			errChan <- cron.Run(configStore)
 		}()
 
 		// cron起動時のエラーチェック（非ブロッキング）
