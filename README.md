@@ -543,6 +543,33 @@ docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
 * **ブランチ作成**: 作業を開始する前に、必ず新しいブランチを作成してください。
 * **一時ファイル**: 作業用の一時ファイルは `tmp/` ディレクトリの下に作成するか、作業が完了したら削除してください。 `tmp/` ディレクトリは `.gitignore` に含まれています。
 
+### Goの定期脆弱性チェック
+
+[Go Vulnerability Check](./.github/workflows/govulncheck.yml) は、毎日日本時間9:17（UTC 00:17、cron: `17 0 * * *`）に、
+デフォルトブランチ（現在は `master`）の最新コミットを検査します。
+`go.mod` に指定されたGoをセットアップし、`go run golang.org/x/vuln/cmd/govulncheck@latest ./...` を実行します。
+既存の `Go` ワークフローによるpush・PR時の脆弱性チェックも継続します。
+定期実行はワークフローをデフォルトブランチへマージした後に有効になります。
+GitHub側の混雑などで実行時刻が遅延する場合があります（[scheduleの仕様](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)）。
+
+手動実行は、リポジトリの **Actions → Go Vulnerability Check → Run workflow** から `master` を選んで実行します。
+GitHub CLIからも実行できます。
+
+```shell
+gh workflow run govulncheck.yml --ref master
+```
+
+手動実行でも、検査対象は常にデフォルトブランチの最新コミットです。
+実行結果はActionsの実行一覧から `govulncheck` ジョブを開き、`Vulnerability Check (govulncheck)` ステップのログで確認します。
+脆弱性を検出するとコマンドの終了ステータスが非ゼロになり、ステップとジョブが失敗します。
+検出内容や修正版の情報は同じログに出力されます。依存関係の更新や自動修正PR・Issueの作成は行いません。
+
+失敗通知を受け取るには、GitHubの **Settings → Notifications → System → Actions** で **On GitHub** または **Email** を有効にします。
+失敗時だけ通知する場合は **Only notify for failed workflows** を選んで保存します。
+定期実行の通知先は、ワークフローファイルのcron構文を最後に変更したユーザーです。
+詳細は[GitHub Actionsの通知設定](https://docs.github.com/en/subscriptions-and-notifications/how-tos/managing-github-actions-notifications)と
+[定期実行の通知仕様](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#schedule)を参照してください。
+
 ## ライセンス
 
 MITライセンス
