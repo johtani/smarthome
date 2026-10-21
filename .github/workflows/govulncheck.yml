@@ -2,8 +2,8 @@ name: Go Vulnerability Check
 
 on:
   schedule:
-    # Daily at 09:17 JST (00:17 UTC).
-    - cron: '17 0 * * *'
+    # Every Monday at 09:17 JST (00:17 UTC).
+    - cron: '17 0 * * 1'
   workflow_dispatch:
 
 permissions:

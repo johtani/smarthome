@@ -547,7 +547,7 @@ docker compose -f tools/dspy-resolver/docker-compose.yml up -d --build
 
 ### Goの定期脆弱性チェック
 
-[Go Vulnerability Check](./.github/workflows/govulncheck.yml) は、毎日日本時間9:17（UTC 00:17、cron: `17 0 * * *`）に、
+[Go Vulnerability Check](./.github/workflows/govulncheck.yml) は、毎週月曜の日本時間9:17（UTC 月曜00:17、cron: `17 0 * * 1`）に、
 デフォルトブランチ（現在は `master`）の最新コミットを検査します。
 `go.mod` に指定されたGoをセットアップし、`go run golang.org/x/vuln/cmd/govulncheck@latest ./...` を実行します。
 既存の `Go` ワークフローによるpush・PR時の脆弱性チェックも継続します。
