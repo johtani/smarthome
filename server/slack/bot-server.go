@@ -114,9 +114,5 @@ func Run(configStore *configstore.Store) error {
 	socketModeHandler.HandleInteractionBlockAction(feedbackIncorrectActionID, newFeedbackBlockActionHandler())
 	socketModeHandler.HandleInteraction(slack.InteractionTypeViewSubmission, newFeedbackViewSubmissionHandler())
 	socketModeHandler.HandleDefault(defaultHandler)
-	err = socketModeHandler.RunEventLoop()
-	if err != nil {
-		return err
-	}
-	return nil
+	return socketModeHandler.RunEventLoop()
 }

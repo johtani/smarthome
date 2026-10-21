@@ -1,4 +1,6 @@
 dspy>=2.5.0
+# Keep LiteLLM at or below 1.106.2 and exclude compromised releases (issue #232).
+litellm<=1.106.2,!=1.82.7,!=1.82.8,!=1.107.0
 fastapi>=0.115.0
 opentelemetry-api>=1.28.0
 opentelemetry-exporter-otlp-proto-http>=1.28.0
