@@ -86,14 +86,11 @@ func run() error {
 	go func() {
 		for range sigChan {
 			slog.InfoContext(ctx, "SIGHUP受信、設定を再読み込みします")
-			newConfig, err := loadConfig()
-			if err != nil {
+			if err := configStore.Reload(loadConfig); err != nil {
 				slog.ErrorContext(ctx, "設定の再読み込みに失敗（古い設定を維持します）", "error", err)
 				continue
 			}
-			// 設定は不変スナップショットとして atomic に差し替える。
-			configStore.Set(newConfig)
-			logLLMDisabled(newConfig)
+			logLLMDisabled(configStore.Get())
 			slog.InfoContext(ctx, "設定を更新しました")
 		}
 	}()
