@@ -2,17 +2,80 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"strings"
 	"testing"
+	"testing/synctest"
+	"time"
 
+	"github.com/go-co-op/gocron/v2"
 	"github.com/johtani/smarthome/internal/configstore"
+	"github.com/johtani/smarthome/server/cron"
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/johtani/smarthome/subcommand/action/owntone"
 	"github.com/johtani/smarthome/subcommand/action/switchbot"
 	"github.com/johtani/smarthome/subcommand/action/yamaha"
 )
+
+func TestRunServerDelayedCronFailure(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		release := make(chan struct{})
+		result := make(chan error, 1)
+		cause := errors.New("cron initialization failed")
+		slackCalled := false
+		go func() {
+			result <- runServer(nil, func(*configstore.Store) (gocron.Scheduler, error) {
+				<-release
+				return nil, cause
+			}, func(*configstore.Store) error {
+				slackCalled = true
+				return nil
+			})
+		}()
+		synctest.Wait()
+		close(release)
+		if err := <-result; !errors.Is(err, cause) {
+			t.Errorf("runServer returned %v, want wrapped %v", err, cause)
+		}
+		if slackCalled {
+			t.Error("Slack started despite cron initialization failure")
+		}
+	})
+}
+
+func TestRunServerStartsTemperatureJobBeforeSlack(t *testing.T) {
+	synctest.Test(t, func(t *testing.T) {
+		var scheduler gocron.Scheduler
+		startedAt := time.Now()
+		slackResult := errors.New("Slack returned")
+		err := runServer(nil, func(store *configstore.Store) (gocron.Scheduler, error) {
+			var err error
+			scheduler, err = cron.Start(store)
+			return scheduler, err
+		}, func(*configstore.Store) error {
+			jobs := scheduler.Jobs()
+			if len(jobs) != 1 {
+				t.Fatalf("got %d registered jobs, want 1", len(jobs))
+			}
+			runs, err := jobs[0].NextRuns(2)
+			if err != nil || len(runs) != 2 {
+				t.Fatalf("NextRuns(2) = %v, %v", runs, err)
+			}
+			if runs[0].Location().String() != "Asia/Tokyo" || runs[0].Minute()%10 != 0 || runs[0].Second() != 0 || runs[1].Sub(runs[0]) != 10*time.Minute {
+				t.Errorf("unexpected temperature job schedule: %v", runs)
+			}
+			if !time.Now().Equal(startedAt) {
+				t.Error("startup advanced the test clock before Slack started")
+			}
+			return slackResult
+		})
+		if !errors.Is(err, slackResult) {
+			t.Errorf("runServer returned %v, want %v", err, slackResult)
+		}
+	})
+}
 
 func TestRunCmd(t *testing.T) {
 	config := subcommand.Config{

@@ -14,6 +14,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/go-co-op/gocron/v2"
 	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/johtani/smarthome/internal/otel"
 	"github.com/johtani/smarthome/internal/resolver"
@@ -102,26 +103,25 @@ func run() error {
 	case serverFlag:
 		_, _ = fmt.Fprintf(os.Stdout, "%v\n", os.Getpid())
 
-		// cronはgoroutineで実行するため、エラーハンドリングが必要
-		errChan := make(chan error, 1)
-		go func() {
-			// cron.Runは正常時には戻らず、起動に失敗した場合のみエラーを返す。
-			errChan <- cron.Run(configStore)
-		}()
-
-		// cron起動時のエラーチェック（非ブロッキング）
-		select {
-		case err := <-errChan:
-			return fmt.Errorf("cron起動失敗: %w", err)
-		default:
-		}
-
-		return slack.Run(configStore)
+		return runServer(configStore, cron.Start, slack.Run)
 	case mcpFlag:
 		return mcp.Run(configStore)
 	default:
 		return runCmd(ctx, configStore, flag.Args())
 	}
+}
+
+func runServer(store *configstore.Store, startCron func(*configstore.Store) (gocron.Scheduler, error), runSlack func(*configstore.Store) error) error {
+	scheduler, err := startCron(store)
+	if err != nil {
+		return fmt.Errorf("cron起動失敗: %w", err)
+	}
+	defer func() {
+		if err := scheduler.Shutdown(); err != nil {
+			slog.Error("cron停止失敗", "error", err)
+		}
+	}()
+	return runSlack(store)
 }
 
 func logLLMDisabled(config subcommand.Config) {
