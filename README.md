@@ -287,6 +287,7 @@ smarthome start meeting
 ## 定期実行処理
 
 Switchbotの温湿度計のデータを取得し、10分おきにInfluxDBに保存します。
+`-server` はジョブの登録とスケジューラーの開始後にSlackボットを起動します。cronの初期化に失敗した場合は原因を表示して終了します。
 対象となる機器は[record-temperature.go](https://github.com/johtani/smarthome/blob/master/server/cron/record-temperature.go#L11)で指定しています。
 
 ## OpenTelemetry

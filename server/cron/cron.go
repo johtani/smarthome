@@ -6,32 +6,39 @@ package cron
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/go-co-op/gocron/v2"
 	"github.com/johtani/smarthome/internal/configstore"
-	"time"
 )
 
-// Run starts the cron scheduler and runs scheduled jobs.
-func Run(configStore *configstore.Store) error {
-	jst, err := time.LoadLocation("Asia/Tokyo")
+// Start registers the temperature job and starts its scheduler.
+// The caller must shut down the returned scheduler.
+func Start(configStore *configstore.Store) (gocron.Scheduler, error) {
+	return start(configStore, "Asia/Tokyo", "*/10 * * * *", gocron.NewScheduler)
+}
+
+func start(configStore *configstore.Store, zone, schedule string, newScheduler func(...gocron.SchedulerOption) (gocron.Scheduler, error)) (gocron.Scheduler, error) {
+	jst, err := time.LoadLocation(zone)
 	if err != nil {
-		return fmt.Errorf("タイムゾーンの読み込みに失敗しました: %w", err)
+		return nil, fmt.Errorf("タイムゾーンの読み込みに失敗しました: %w", err)
 	}
-	s, err := gocron.NewScheduler(gocron.WithLocation(jst))
+	s, err := newScheduler(gocron.WithLocation(jst))
 	if err != nil {
-		return fmt.Errorf("スケジューラーの初期化に失敗しました: %w", err)
+		return nil, fmt.Errorf("スケジューラーの初期化に失敗しました: %w", err)
 	}
 	_, err = s.NewJob(
-		gocron.CronJob("*/10 * * * *", false),
+		gocron.CronJob(schedule, false),
 		gocron.NewTask(
 			RecordTemp,
 			configStore,
 		),
 	)
 	if err != nil {
-		return fmt.Errorf("ジョブの登録に失敗しました: %w", err)
+		_ = s.Shutdown()
+		return nil, fmt.Errorf("ジョブの登録に失敗しました: %w", err)
 	}
 	s.Start()
 	fmt.Println("Start cron service...")
-	select {}
+	return s, nil
 }
