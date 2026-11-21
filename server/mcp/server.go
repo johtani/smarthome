@@ -8,27 +8,38 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/johtani/smarthome/internal/configstore"
 	"github.com/johtani/smarthome/subcommand"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
-	"strings"
 )
 
 // Run starts the MCP server.
 func Run(configStore *configstore.Store) error {
 	s := NewMCPServer()
-	config := configStore.Get()
-
-	// 登録してあるコマンドをMCPのツールとして登録していく
-	for _, definition := range config.Commands.Definitions {
-		s.AddTool(NewMCPTool(definition, configStore))
-	}
+	unsubscribe := observeTools(s, configStore)
+	defer unsubscribe()
 
 	if err := server.ServeStdio(s); err != nil {
 		return fmt.Errorf("MCPサーバーの起動に失敗しました: %w", err)
 	}
 	return nil
+}
+
+func observeTools(s *server.MCPServer, store *configstore.Store) func() {
+	return store.Observe(func(config subcommand.Config) {
+		// Keep definitions and connection settings from the same snapshot, even
+		// when a reload overlaps a call that is already running.
+		snapshot := func() subcommand.Config { return config }
+		tools := make([]server.ServerTool, 0, len(config.Commands.Definitions))
+		for _, definition := range config.Commands.Definitions {
+			tool, handler := newMCPTool(definition, snapshot)
+			tools = append(tools, server.ServerTool{Tool: tool, Handler: handler})
+		}
+		s.SetTools(tools...)
+	})
 }
 
 // NewMCPServer creates and returns a new MCPServer instance.
@@ -37,16 +48,21 @@ func NewMCPServer() *server.MCPServer {
 		"Smart Home MCP",
 		"0.1.0",
 		server.WithLogging(),
+		server.WithToolCapabilities(true),
 	)
 }
 
 // NewMCPTool creates an MCP tool and its handler from a subcommand definition.
 func NewMCPTool(definition subcommand.Definition, configStore *configstore.Store) (mcp.Tool, server.ToolHandlerFunc) {
+	return newMCPTool(definition, configStore.Get)
+}
+
+func newMCPTool(definition subcommand.Definition, getConfig func() subcommand.Config) (mcp.Tool, server.ToolHandlerFunc) {
 	if definition.Args == nil {
 		tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), mcp.WithDescription(definition.Description))
 		return tmp,
 			func(ctx context.Context, _ mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-				config := configStore.Get()
+				config := getConfig()
 				msg, err := definition.Init(config).Exec(ctx, "")
 				if err != nil {
 					return nil, errors.New(definition.Name + ": " + err.Error())
@@ -75,10 +91,10 @@ func NewMCPTool(definition subcommand.Definition, configStore *configstore.Store
 	tmp := mcp.NewTool(strings.ReplaceAll(definition.Name, " ", "_"), args...)
 	return tmp,
 		func(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-			config := configStore.Get()
+			config := getConfig()
 			params := []string{}
 			for _, arg := range definition.Args {
-				if p, ok := request.Params.Arguments[arg.Name]; ok {
+				if p, ok := request.GetArguments()[arg.Name]; ok {
 					if arg.Prefix != "" {
 						params = append(params, fmt.Sprint(arg.Prefix, p))
 					} else {

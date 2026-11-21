@@ -11,7 +11,7 @@ require (
 	github.com/ikawaha/kagome-dict/uni v1.2.0
 	github.com/ikawaha/kagome/v2 v2.10.0
 	github.com/influxdata/influxdb-client-go/v2 v2.14.0
-	github.com/mark3labs/mcp-go v0.18.0
+	github.com/mark3labs/mcp-go v0.55.0
 	github.com/nasa9084/go-switchbot/v3 v3.2.0
 	github.com/slack-go/slack v0.15.0
 	go.opentelemetry.io/contrib/bridges/otelslog v0.20.0
@@ -36,6 +36,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
+	github.com/google/jsonschema-go v0.4.2 // indirect
 	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.3 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
@@ -43,6 +44,8 @@ require (
 	github.com/jonboulle/clockwork v0.4.0 // indirect
 	github.com/oapi-codegen/runtime v1.1.1 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
+	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
+	github.com/spf13/cast v1.7.1 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.45.0 // indirect
