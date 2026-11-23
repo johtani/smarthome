@@ -115,3 +115,28 @@ func normalizePlaybackRequest(input string) string {
 		return unicode.ToLower(r)
 	}, strings.TrimSpace(input))
 }
+
+// checkResolverOutput applies the corrections and checks used before execution.
+func (c Commands) checkResolverOutput(text string, raw llm.ResolvedCommand) (llm.ResolvedCommand, Definition, string, bool) {
+	result := normalizeMusicResolution(text, raw)
+	if result.Command == SearchAndPlayMusicCmd {
+		result.Args = stripNaturalLanguageSearchTypeArgs(result.Args)
+	}
+	for _, def := range c.Definitions {
+		if def.Name == result.Command {
+			reason, valid := validateResolvedArgs(def, result.Args)
+			return result, def, reason, valid
+		}
+	}
+	return result, Definition{}, "", false
+}
+
+// GuardResolverOutput returns the decision that survives command and argument
+// checks, without invoking another resolver or executing a command.
+func (c Commands) GuardResolverOutput(text string, raw llm.ResolvedCommand) llm.ResolvedCommand {
+	result, _, _, valid := c.checkResolverOutput(text, raw)
+	if valid {
+		return result
+	}
+	return llm.ResolvedCommand{}
+}

@@ -8,6 +8,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -72,6 +73,9 @@ type ResolvedCommand struct {
 	ArtifactVersion string `json:"artifact_version,omitempty"`
 	DatasetVersion  string `json:"dataset_version,omitempty"`
 }
+
+// ErrInvalidModelOutput indicates that the model's content could not be decoded as a command.
+var ErrInvalidModelOutput = errors.New("failed to unmarshal resolved command")
 
 const maxTraceBodyLength = 4096
 
@@ -222,7 +226,7 @@ func (c *Client) Resolve(ctx context.Context, text string, commandList string, p
 
 	var resolved ResolvedCommand
 	if err := json.Unmarshal([]byte(content), &resolved); err != nil {
-		return ResolvedCommand{}, fmt.Errorf("failed to unmarshal resolved command: %w", err)
+		return ResolvedCommand{}, fmt.Errorf("%w: %w", ErrInvalidModelOutput, err)
 	}
 	resolved.Model = c.config.Model
 	resolved.PromptVersion = promptVersion

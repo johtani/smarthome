@@ -318,60 +318,54 @@ func (c Commands) Find(ctx context.Context, config Config, text string) (Definit
 			}
 
 			initialResolution := resolved
-			resolved = normalizeMusicResolution(text, resolved)
+			resolved, d, validationReason, argsValid := c.checkResolverOutput(text, resolved)
 			correction := describeResolutionCorrection(initialResolution, resolved)
-			if resolved.Command == SearchAndPlayMusicCmd {
-				resolved.Args = stripNaturalLanguageSearchTypeArgs(resolved.Args)
-			}
 
-			for _, d := range c.Definitions {
-				if d.Name == resolved.Command {
-					validationReason, argsValid := validateResolvedArgs(d, resolved.Args)
-					span.AddEvent("resolver.args.validation", trace.WithAttributes(
-						attribute.String("resolver.path", nlr.Path()),
-						attribute.String("resolver.resolved_command", resolved.Command),
-						attribute.Bool("resolver.args.valid", argsValid),
-						attribute.String("resolver.args.validation_reason", validationReason),
-					))
-					span.SetAttributes(
-						attribute.Bool("resolver.args.valid", argsValid),
-						attribute.String("resolver.args.validation_reason", validationReason),
+			if d.Name != "" {
+				span.AddEvent("resolver.args.validation", trace.WithAttributes(
+					attribute.String("resolver.path", nlr.Path()),
+					attribute.String("resolver.resolved_command", resolved.Command),
+					attribute.Bool("resolver.args.valid", argsValid),
+					attribute.String("resolver.args.validation_reason", validationReason),
+				))
+				span.SetAttributes(
+					attribute.Bool("resolver.args.valid", argsValid),
+					attribute.String("resolver.args.validation_reason", validationReason),
+				)
+				if !argsValid {
+					slog.WarnContext(
+						ctx,
+						"natural language resolver returned invalid arguments",
+						"resolver", nlr.Path(),
+						"command", resolved.Command,
+						"reason", validationReason,
 					)
-					if !argsValid {
-						slog.WarnContext(
-							ctx,
-							"natural language resolver returned invalid arguments",
-							"resolver", nlr.Path(),
-							"command", resolved.Command,
-							"reason", validationReason,
-						)
-						continue resolverLoop
-					}
-					span.SetAttributes(
-						attribute.String("resolver.initial_command", correction.initialCommand),
-						attribute.String("resolver.initial_args_kind", correction.initialArgsKind),
-						attribute.Bool("resolver.command_corrected", correction.commandCorrected),
-						attribute.String("resolver.correction_reason", correction.reason),
-						attribute.String("resolver.resolved_command", resolved.Command),
-						attribute.String("resolver.resolved_args", resolved.Args),
-					)
-					resolver.RecordDecision(ctx, resolver.DecisionRecord{
-						InputTextHash:    inputHash,
-						ResolverPath:     nlr.Path(),
-						ResolverMode:     config.Resolver.Mode,
-						LLMModel:         resolved.Model,
-						PromptVersion:    resolved.PromptVersion,
-						ArtifactVersion:  resolved.ArtifactVersion,
-						DatasetVersion:   resolved.DatasetVersion,
-						InitialCommand:   correction.initialCommand,
-						InitialArgsKind:  correction.initialArgsKind,
-						CommandCorrected: correction.commandCorrected,
-						CorrectionReason: correction.reason,
-						ResolvedCommand:  resolved.Command,
-						ResolvedArgs:     resolved.Args,
-					})
-					return d, resolved.Args, fmt.Sprintf("(%s) %s", nlr.Prefix(), resolved.Thought), nil
+					continue resolverLoop
 				}
+				span.SetAttributes(
+					attribute.String("resolver.initial_command", correction.initialCommand),
+					attribute.String("resolver.initial_args_kind", correction.initialArgsKind),
+					attribute.Bool("resolver.command_corrected", correction.commandCorrected),
+					attribute.String("resolver.correction_reason", correction.reason),
+					attribute.String("resolver.resolved_command", resolved.Command),
+					attribute.String("resolver.resolved_args", resolved.Args),
+				)
+				resolver.RecordDecision(ctx, resolver.DecisionRecord{
+					InputTextHash:    inputHash,
+					ResolverPath:     nlr.Path(),
+					ResolverMode:     config.Resolver.Mode,
+					LLMModel:         resolved.Model,
+					PromptVersion:    resolved.PromptVersion,
+					ArtifactVersion:  resolved.ArtifactVersion,
+					DatasetVersion:   resolved.DatasetVersion,
+					InitialCommand:   correction.initialCommand,
+					InitialArgsKind:  correction.initialArgsKind,
+					CommandCorrected: correction.commandCorrected,
+					CorrectionReason: correction.reason,
+					ResolvedCommand:  resolved.Command,
+					ResolvedArgs:     resolved.Args,
+				})
+				return d, resolved.Args, fmt.Sprintf("(%s) %s", nlr.Prefix(), resolved.Thought), nil
 			}
 			slog.WarnContext(ctx, "resolver returned an unknown command", "resolver", nlr.Path(), "command", resolved.Command)
 			span.SetAttributes(attribute.Bool("resolver.nl_unknown_command", true))

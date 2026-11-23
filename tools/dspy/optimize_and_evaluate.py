@@ -69,17 +69,15 @@ def to_examples(
     return ex
 
 
-def metric(example: dspy.Example, pred: dspy.Prediction, trace: Any = None) -> float:
-    exp_cmd = (example.selected_command or "").strip().lower()
-    exp_args = (example.selected_args or "").strip()
-    got_cmd = (pred.selected_command or "").strip().lower()
-    got_args = (pred.selected_args or "").strip()
+def metric(example: dspy.Example, pred: dspy.Prediction, trace: Any = None) -> bool:
+    expected = ((example.selected_command or "").strip(), (example.selected_args or "").strip())
+    predicted = ((pred.selected_command or "").strip(), (pred.selected_args or "").strip())
+    return predicted == expected and (bool(expected[0]) or not expected[1])
 
-    cmd_score = 1.0 if exp_cmd == got_cmd else 0.0
-    arg_score = 1.0 if exp_args == got_args else 0.0
-    if exp_cmd == "":
-        return 1.0 if got_cmd == "" else 0.0
-    return (cmd_score * 0.8) + (arg_score * 0.2)
+
+def compile_resolver(trainset):
+    optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4, max_labeled_demos=4)
+    return optimizer.compile(ResolverProgram(), trainset=trainset)
 
 
 def violates_catalog(command: str, args: str, command_catalog: str) -> bool:
@@ -308,8 +306,7 @@ def main() -> int:
     baseline = ResolverProgram()
 
     trainset = to_examples(train_rows, catalog_text, args.prompt_version)
-    optimizer = dspy.BootstrapFewShot(metric=metric, max_bootstrapped_demos=4, max_labeled_demos=4)
-    optimized = optimizer.compile(ResolverProgram(), trainset=trainset)
+    optimized = compile_resolver(trainset)
     optimized_dev_eval = evaluate(optimized, dev_rows, catalog_text, args.prompt_version)
     baseline_eval = evaluate(baseline, test_rows, catalog_text, args.prompt_version)
     optimized_eval = evaluate(optimized, test_rows, catalog_text, args.prompt_version)
