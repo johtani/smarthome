@@ -239,3 +239,15 @@ python tools/dspy/optimize_and_evaluate.py --evaluation-manifest "$dir/evaluatio
 ```
 
 `dataset.jsonl` は3分割を連結したものです。`regression.jsonl` の固定例は独立しており、通常の評価精度の分母に含めません。
+
+## 同じ Qwen で Go と DSPy を比較する
+
+リポジトリのルートで Go と DSPy の Python 環境を使用します。#227 で確定した train/dev/test の JSONL とカタログスナップショットを指定してください。各行には input_text、group_id、expected_command、expected_args が必要です。組み込みコマンドと config-dir の macros.json から作ったカタログがスナップショットと一致することを確認します。
+
+~~~powershell
+python tools/dspy/compare_resolvers.py --train tmp/dspy/train.jsonl --dev tmp/dspy/dev.jsonl --test tmp/dspy/test.jsonl --command-catalog tmp/dspy/catalog.json --config-dir config --model openai/qwen2.5:14b --api-base http://localhost:11434/v1 --prompt-version resolver-v2 --artifact-version qwen-exact-v1 --server-cache "prefix cache off, warm model" --report-out tmp/dspy/qwen-comparison.json
+~~~
+
+model と api-base は同じ Qwen を配信しているサーバーの値に変更し、認証が必要な場合は LM_API_KEY を設定します。server-cache には実際のサーバー側の設定とウォームアップ条件を記録します。DSPy のクライアントキャッシュを無効にし、train だけで BootstrapFewShot を実行します。dev は分割の重複確認に使い、三者の採点には test を使います。
+
+JSON レポートの summary には経路別に Raw（補正前）と Final（Go の補正・引数検証後）の同時正解数、対象外発話の誤判定数と母数、未解決件数が入ります。rows で同じ発話の correct を見比べると改善・悪化の例を確認できます。median_ms は resolver 呼び出しの中央値で、最適化時間・Go のビルド・共通ガードは含みません。各経路は独立して呼び出し、通信失敗時は比較を中断します。Go 直呼びでモデルの JSON をコマンドとして読み取れない場合は、その発話を不正解とし、未解決とは別に invalid_output に数えます。実ログ由来の発話を含むレポートはローカルで保管してください。
