@@ -120,25 +120,33 @@ func (d Definition) Help() string {
 		help = fmt.Sprintf("  %s : %s\n", d.Name, d.Description)
 	}
 	if len(d.Args) > 0 {
-		var items []string
-		for _, arg := range d.Args {
-			var details []string
-			if arg.Required {
-				details = append(details, "required")
-			} else {
-				details = append(details, "optional")
-			}
-			if arg.Prefix != "" {
-				details = append(details, "prefix="+arg.Prefix)
-			}
-			if len(arg.Enum) > 0 {
-				details = append(details, "enum="+strings.Join(arg.Enum, "|"))
-			}
-			items = append(items, fmt.Sprintf("%s(%s)", arg.Name, strings.Join(details, ",")))
-		}
-		help += fmt.Sprintf("    args: %s\n", strings.Join(items, ", "))
+		help += fmt.Sprintf("    args: %s\n", d.ArgHints(false))
 	}
 	return help
+}
+
+// ArgHints formats the argument schema for help and offline catalog snapshots.
+func (d Definition) ArgHints(explicitNoPrefix bool) string {
+	var items []string
+	for _, arg := range d.Args {
+		var details []string
+		if arg.Required {
+			details = append(details, "required")
+		} else {
+			details = append(details, "optional")
+		}
+		if arg.Prefix != "" {
+			details = append(details, "prefix="+arg.Prefix)
+		}
+		if len(arg.Enum) > 0 {
+			details = append(details, "enum="+strings.Join(arg.Enum, "|"))
+		}
+		if explicitNoPrefix && arg.Prefix == "" {
+			details = append(details, "no-prefix")
+		}
+		items = append(items, fmt.Sprintf("%s(%s)", arg.Name, strings.Join(details, ",")))
+	}
+	return strings.Join(items, ", ")
 }
 
 // Distance calculates the Levenshtein distance between the input and the command names.

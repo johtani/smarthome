@@ -189,47 +189,100 @@ def evaluate(
     }
 
 
+def read_manifest(path: Path, model: str):
+    manifest = json.loads(path.read_bytes())
+    if manifest["schema_version"] != "resolver-evaluation/v1" or model not in manifest["model_ids"]:
+        raise ValueError("unsupported evaluation manifest or model")
+    files = {}
+    for name in ("dataset.jsonl", "train.jsonl", "dev.jsonl", "test.jsonl", "regression.jsonl", "catalog.json"):
+        data = (path.parent / name).read_bytes()
+        if hashlib.sha256(data).hexdigest() != manifest["sha256"][name]:
+            raise ValueError(f"evaluation manifest hash mismatch for {name}")
+        files[name] = data
+    for field, name in (("dataset_version", "dataset.jsonl"), ("fixture_version", "regression.jsonl")):
+        if manifest[field] != "sha256:" + manifest["sha256"][name]:
+            raise ValueError(f"evaluation manifest version mismatch for {name}")
+    split_names = ("train.jsonl", "dev.jsonl", "test.jsonl")
+    if b"".join(files[name] for name in split_names) != files["dataset.jsonl"]:
+        raise ValueError("dataset does not match its splits")
+    splits = [[json.loads(line) for line in files[name].splitlines()] for name in split_names]
+    return manifest, splits, json.loads(files["catalog.json"])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset-jsonl", required=True)
-    parser.add_argument("--command-catalog", required=True)
+    source = parser.add_mutually_exclusive_group(required=True)
+    source.add_argument("--dataset-jsonl")
+    source.add_argument("--evaluation-manifest", type=Path)
+    parser.add_argument("--command-catalog")
     parser.add_argument("--model", required=True, help="e.g. openai/gpt-4o-mini")
     parser.add_argument("--api-base", default=None, help="OpenAI-compatible API base URL")
     parser.add_argument("--api-key", default=None, help="API key for the configured LM")
     parser.add_argument("--model-type", default=None, help="DSPy LM model_type, e.g. chat")
     parser.add_argument("--temperature", default=None, type=float)
     parser.add_argument("--max-tokens", default=None, type=int)
-    parser.add_argument("--prompt-version", default="offline-eval-v1")
-    parser.add_argument("--dataset-version", default="")
+    parser.add_argument("--prompt-version")
+    parser.add_argument("--dataset-version")
     parser.add_argument("--artifact-version", default="")
     parser.add_argument("--artifact-out", default="")
     parser.add_argument("--report-out", required=True)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--train-ratio", type=float, default=0.6)
-    parser.add_argument("--dev-ratio", type=float, default=0.2)
-    parser.add_argument("--min-command-accuracy", type=float, default=0.80)
-    parser.add_argument("--min-arg-accuracy", type=float, default=0.60)
+    parser.add_argument("--seed", type=int)
+    parser.add_argument("--train-ratio", type=float)
+    parser.add_argument("--dev-ratio", type=float)
+    parser.add_argument("--min-command-accuracy", type=float)
+    parser.add_argument("--min-arg-accuracy", type=float)
     args = parser.parse_args()
 
-    random.seed(args.seed)
-    data = read_jsonl(Path(args.dataset_jsonl))
-    if len(data) < 10:
-        raise SystemExit("dataset is too small: need at least 10 rows")
+    manifest_hash = None
+    if args.evaluation_manifest:
+        manifest, (train_rows, dev_rows, test_rows), catalog_obj = read_manifest(args.evaluation_manifest, args.model)
+        conditions = dict(manifest["thresholds"], seed=manifest["seed"], prompt_version=manifest["prompt_version"],
+                          dataset_version=manifest["dataset_version"], train_ratio=manifest["target_group_ratios"]["train"],
+                          dev_ratio=manifest["target_group_ratios"]["dev"])
+        if args.command_catalog or any(getattr(args, key) is not None for key in conditions):
+            parser.error("the evaluation manifest supplies the catalog and all dataset conditions")
+        for key, value in conditions.items():
+            setattr(args, key, value)
+        data = train_rows + dev_rows + test_rows
+        manifest_hash = hashlib.sha256(args.evaluation_manifest.read_bytes()).hexdigest()
+        random.seed(args.seed)
+    else:
+        if not args.command_catalog:
+            parser.error("--command-catalog is required with --dataset-jsonl")
+        if args.prompt_version is None:
+            args.prompt_version = 'offline-eval-v1'
+        if args.dataset_version is None:
+            args.dataset_version = ''
+        if args.seed is None:
+            args.seed = 42
+        if args.train_ratio is None:
+            args.train_ratio = 0.6
+        if args.dev_ratio is None:
+            args.dev_ratio = 0.2
+        if args.min_command_accuracy is None:
+            args.min_command_accuracy = 0.8
+        if args.min_arg_accuracy is None:
+            args.min_arg_accuracy = 0.6
+        random.seed(args.seed)
+        data = read_jsonl(Path(args.dataset_jsonl))
+        if len(data) < 10:
+            raise SystemExit("dataset is too small: need at least 10 rows")
 
-    with Path(args.command_catalog).open("r", encoding="utf-8") as f:
-        catalog_obj = json.load(f)
+        with Path(args.command_catalog).open("r", encoding="utf-8") as f:
+            catalog_obj = json.load(f)
+
+        if args.train_ratio <= 0 or args.dev_ratio <= 0 or args.train_ratio + args.dev_ratio >= 1:
+            raise SystemExit("train-ratio and dev-ratio must be positive and sum to less than 1")
+        random.shuffle(data)
+        train_end = max(1, int(len(data) * args.train_ratio))
+        dev_end = max(train_end + 1, train_end + int(len(data) * args.dev_ratio))
+        train_rows = data[:train_end]
+        dev_rows = data[train_end:dev_end]
+        test_rows = data[dev_end:]
+        if not dev_rows or not test_rows:
+            raise SystemExit("dataset split must leave at least one dev and one test row")
+
     catalog_text = format_command_catalog(catalog_obj)
-
-    if args.train_ratio <= 0 or args.dev_ratio <= 0 or args.train_ratio + args.dev_ratio >= 1:
-        raise SystemExit("train-ratio and dev-ratio must be positive and sum to less than 1")
-    random.shuffle(data)
-    train_end = max(1, int(len(data) * args.train_ratio))
-    dev_end = max(train_end + 1, train_end + int(len(data) * args.dev_ratio))
-    train_rows = data[:train_end]
-    dev_rows = data[train_end:dev_end]
-    test_rows = data[dev_end:]
-    if not dev_rows or not test_rows:
-        raise SystemExit("dataset split must leave at least one dev and one test row")
 
     dataset_version = args.dataset_version.strip()
     if not dataset_version:
@@ -269,6 +322,7 @@ def main() -> int:
 
     report = {
         "dataset_size": len(data),
+        "evaluation_manifest_sha256": manifest_hash,
         "train_size": len(train_rows),
         "dev_size": len(dev_rows),
         "test_size": len(test_rows),
