@@ -470,6 +470,10 @@ python tools/resolver-review/review.py `
 `case_id`、`group_id`、`source`、`input_text`、候補値を設定すれば同じ画面でレビューできます。
 安全な例は `tools/resolver-review/fixtures/review-candidates.jsonl` にあります。
 
+レビューが終わったら `tools/dspy/finalize_dataset.py` で正解を現行コマンド定義と照合し、
+train/dev/test、固定回帰ケース、評価マニフェストを確定します。Qwen と LFM には同じ
+`evaluation-manifest.json` を指定します。[確定と評価の手順](./tools/dspy/README.md#レビュー済みデータの確定)
+
 出力は `resolver-reviewed/v1` JSONLです。元の候補フィールドを保持したまま、各行へ次を追加します。
 
 - `review_status`: `unreviewed` / `accepted` / `corrected` / `excluded` / `pending`

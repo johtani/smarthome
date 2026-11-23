@@ -209,3 +209,33 @@ LM 設定の優先順位:
 - Model type: `--model-type` / wrapper parameter -> `LM_MODEL_TYPE` -> `chat`
 - Temperature: `--temperature` / wrapper parameter -> `LM_TEMPERATURE`
 - Max tokens: `--max-tokens` / wrapper parameter -> `LM_MAX_TOKENS`
+
+## レビュー済みデータの確定
+
+リポジトリ直下で、Python 3.11 以降と本プロジェクト用の Go を使います。入力はレビュー画面が出力した `resolver-reviewed/v1` です。実ログ・グループ対応表・出力は Git 管理外の `tmp/` に保存します。
+
+```powershell
+$dir = "tmp/resolver-events/example"
+python tools/dspy/finalize_dataset.py `
+  --reviewed "$dir/reviewed.jsonl" --group-map "$dir/groups.json" `
+  --config-dir config --output-dir "$dir/evaluation-v1" `
+  --model openai/qwen3.6-35b-a3b-mtp --model openai/lfm2.5-2.6B `
+  --prompt-version resolver-v2 --seed 42 --min-command-accuracy 0.80 --min-arg-accuracy 0.60 `
+  --from 2026-01-01T00:00:00Z --to 2026-02-01T00:00:00Z
+```
+
+`--from` と `--to` には収集時の開始日時と終了日時（終了を含まない）を指定します。
+`--group-map` は任意です。たとえば `{"group-a":"artist-1","group-b":"artist-1"}` とすると、同じ対象の別表記を一緒に分割します。固定例の言い換えには、対応する `regression_cases.jsonl` の `request_id` を割り当てます。表記の正規化だけで見つからない言い換えは、この対応表で指定してください。
+
+確定処理は Go のコマンド定義（指定ディレクトリのマクロを含む）で必須引数・prefix・enum を検証します。判断不能の正解はコマンドと引数を両方空文字にします。保留・未レビュー・矛盾はエラー、明示的な除外は件数に記録します。エラー時は新規出力先に `validation.json` と `validation.md` だけを残します。修正後は新しい出力先で再実行してください。
+
+同一の正規化入力は1件にまとめ、固定例と同じグループを通常分割から除きます。残りのグループを seed で順序付け、6:2:2 を目安に train/dev/test に割り当てます。test では実ログを優先し、判断不能の実ログがあれば最低1グループを含めます。件数・出典は検証レポート、重複や回帰例に重なる入力の ID は JSON で確認できます。
+
+評価環境に `tools/dspy/requirements.txt` をインストールし、各モデルの API 接続先を設定して実行します。両方の実行に同じマニフェストを渡すと、ファイルの SHA-256 を照合した上で、保存済みの分割・catalog・prompt version・seed・閾値を使用します。
+
+```powershell
+python tools/dspy/optimize_and_evaluate.py --evaluation-manifest "$dir/evaluation-v1/evaluation-manifest.json" --model openai/qwen3.6-35b-a3b-mtp --api-base $env:QWEN_API_BASE --report-out "$dir/qwen.json"
+python tools/dspy/optimize_and_evaluate.py --evaluation-manifest "$dir/evaluation-v1/evaluation-manifest.json" --model openai/lfm2.5-2.6B --api-base $env:LFM_API_BASE --report-out "$dir/lfm.json"
+```
+
+`dataset.jsonl` は3分割を連結したものです。`regression.jsonl` の固定例は独立しており、通常の評価精度の分母に含めません。

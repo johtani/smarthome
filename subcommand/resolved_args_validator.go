@@ -14,6 +14,11 @@ const (
 	argsValidationReasonDuplicateArgument = "duplicate_argument"
 )
 
+// ValidateResolvedArgs checks offline labels with the same rules as the resolver.
+func (d Definition) ValidateResolvedArgs(args string) (string, bool) {
+	return validateResolvedArgs(d, args)
+}
+
 // validateResolvedArgs validates natural-language resolver output against the
 // command definition. It intentionally requires exact enum values: fuzzy
 // matching is useful for direct user input, but must not silently repair model

@@ -53,6 +53,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Go for runtime catalog validation
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

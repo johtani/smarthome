@@ -285,15 +285,23 @@ func LoadConfigFromDir(dir string) (Config, error) {
 		return Config{}, err
 	}
 
-	macros, err := loadMacrosFromFile(filepath.Join(dir, "macros.json"))
+	config.Commands, err = LoadCommandDefinitions(dir)
 	if err != nil {
 		return Config{}, err
 	}
 
 	warnUnknownFiles(dir)
 
-	config.Commands = NewCommands(macros...)
 	return config, nil
+}
+
+// LoadCommandDefinitions loads the command catalog without device credentials.
+func LoadCommandDefinitions(dir string) (Commands, error) {
+	macros, err := loadMacrosFromFile(filepath.Join(dir, "macros.json"))
+	if err != nil {
+		return Commands{}, err
+	}
+	return NewCommands(macros...), nil
 }
 
 // LoadConfigWithPath loads the configuration from the specified file path.
