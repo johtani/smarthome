@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import json
 import random
-import re
+import subprocess
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -80,46 +80,24 @@ def compile_resolver(trainset):
     return optimizer.compile(ResolverProgram(), trainset=trainset)
 
 
-def violates_catalog(command: str, args: str, command_catalog: str) -> bool:
-    """Check command presence and the catalog's no-args, prefix, and enum constraints."""
-
-    matching_line = next(
-        (line for line in command_catalog.splitlines() if line.startswith(f"- {command}:")),
-        "",
+def catalog_errors(catalog, labels):
+    """Validate one split against its frozen schema using the production Go validator."""
+    binary = Path(__file__).with_name("resolver-catalog")
+    command = [str(binary)] if binary.is_file() else ["go", "run", "./tools/resolver-catalog"]
+    result = subprocess.run(
+        [*command, "-snapshot"],
+        cwd=TOOLS_DIR.parent,
+        input=json.dumps({"catalog": catalog, "labels": labels}).encode("utf-8"),
+        stdout=subprocess.PIPE,
+        check=True,
     )
-    if not command:
-        return bool(args)
-    if not matching_line:
-        return True
-
-    hint_match = re.search(r" \[args: (.+)\]$", matching_line)
-    if not hint_match:
-        return bool(args)
-    if not args:
-        return "required" in hint_match.group(1)
-
-    hint = hint_match.group(1)
-    allowed_prefixes = set(re.findall(r"prefix=([^,)]+)", hint))
-    supplied_prefixed = re.findall(r"(?:^|\s)([^\s:]+:)([^\s]+)", args)
-    for prefix, value in supplied_prefixed:
-        if prefix not in allowed_prefixes:
-            return True
-        spec_match = re.search(
-            rf"[^,]*prefix={re.escape(prefix)}[^)]*enum=([^)]*)", hint
-        )
-        if spec_match and value not in spec_match.group(1).split("|"):
-            return True
-
-    no_prefix_enum = re.search(r"\([^)]*enum=([^)]*)[^)]*no-prefix[^)]*\)", hint)
-    if no_prefix_enum and not supplied_prefixed and args not in no_prefix_enum.group(1).split("|"):
-        return True
-    return False
+    return json.loads(result.stdout)
 
 
 def evaluate(
     program: ResolverProgram,
     rows: List[Dict[str, Any]],
-    command_catalog: str,
+    catalog: List[Dict[str, str]],
     prompt_version: str,
 ) -> Dict[str, Any]:
     if not rows:
@@ -137,7 +115,7 @@ def evaluate(
     cmd_ok = 0
     arg_ok = 0
     unresolved = 0
-    catalog_violations = 0
+    command_catalog = format_command_catalog(catalog)
     for r in rows:
         pred = program(
             utterance=r["input_text"],
@@ -151,8 +129,6 @@ def evaluate(
 
         if not got_cmd:
             unresolved += 1
-        if violates_catalog(got_cmd, got_args, command_catalog):
-            catalog_violations += 1
 
         if exp_cmd == got_cmd:
             cmd_ok += 1
@@ -175,6 +151,8 @@ def evaluate(
         )
 
     n = len(rows)
+    labels = [{"command": row.pred_command, "args": row.pred_args} for row in eval_rows]
+    catalog_violations = sum(bool(reason) for reason in catalog_errors(catalog, labels))
     serialized_rows = [asdict(x) for x in eval_rows]
     return {
         "count": n,
@@ -281,6 +259,8 @@ def main() -> int:
             raise SystemExit("dataset split must leave at least one dev and one test row")
 
     catalog_text = format_command_catalog(catalog_obj)
+    # Check the snapshot schema and the validator before making any LM calls.
+    catalog_errors(catalog_obj, [])
 
     dataset_version = args.dataset_version.strip()
     if not dataset_version:
@@ -307,9 +287,9 @@ def main() -> int:
 
     trainset = to_examples(train_rows, catalog_text, args.prompt_version)
     optimized = compile_resolver(trainset)
-    optimized_dev_eval = evaluate(optimized, dev_rows, catalog_text, args.prompt_version)
-    baseline_eval = evaluate(baseline, test_rows, catalog_text, args.prompt_version)
-    optimized_eval = evaluate(optimized, test_rows, catalog_text, args.prompt_version)
+    optimized_dev_eval = evaluate(optimized, dev_rows, catalog_obj, args.prompt_version)
+    baseline_eval = evaluate(baseline, test_rows, catalog_obj, args.prompt_version)
+    optimized_eval = evaluate(optimized, test_rows, catalog_obj, args.prompt_version)
 
     gate_passed = (
         optimized_eval["command_accuracy"] >= args.min_command_accuracy

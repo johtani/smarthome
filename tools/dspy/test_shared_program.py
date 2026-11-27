@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 from dspy_common.resolver_program import (
     ResolverProgram as SharedResolverProgram,
@@ -8,7 +9,8 @@ from dspy_common.resolver_program import (
 from optimize_and_evaluate import (
     ResolverProgram as BatchResolverProgram,
     to_examples,
-    violates_catalog,
+    catalog_errors,
+    evaluate,
 )
 
 
@@ -46,16 +48,31 @@ def test_offline_catalog_uses_production_prompt_format():
     assert catalog == "- start ps5: Actions before starting PS5"
 
 
-def test_catalog_violation_detects_invalid_prefix_and_enum():
-    catalog = (
-        "- start music: random playback [args: mode(optional,enum=artist|genre,no-prefix)]\n"
-        "- search and play: targeted playback "
-        "[args: keyword(required,no-prefix), type(optional,prefix=type:,enum=artist|album)]"
-    )
+def test_catalog_errors_use_frozen_schema_and_go_validation():
+    catalog = json.loads(Path(__file__).with_name("command_catalog.sample.json").read_bytes())
+    pairs = [
+        ("search and play", "type:artist"),
+        ("search and play", "Meja type:artist"),
+        ("search and play", "Meja type:video"),
+        ("search and play", "keyword:Meja"),
+        ("start music", "artist"),
+        ("start music", "random"),
+        ("unknown", ""),
+        ("", ""),
+        ("", "artist"),
+    ]
+    labels = [{"command": command, "args": args} for command, args in pairs]
+    assert catalog_errors(catalog, labels) == [
+        "missing_required_argument", "", "invalid_enum_value", "invalid_prefix",
+        "", "invalid_enum_value", "unknown_command", "", "invalid_unresolved",
+    ]
 
-    assert violates_catalog("start music", "mode:random", catalog) is True
-    assert violates_catalog("start music", "random", catalog) is True
-    assert violates_catalog("start music", "artist", catalog) is False
-    assert violates_catalog("search and play", "Meja type:artist", catalog) is False
-    assert violates_catalog("search and play", "Meja type:genre", catalog) is True
-    assert violates_catalog("unknown", "", catalog) is True
+
+def test_evaluation_counts_missing_required_keyword():
+    catalog = json.loads(Path(__file__).with_name("command_catalog.sample.json").read_bytes())
+    rows = [{"input_text": "artist", "expected_command": "search and play", "expected_args": "artist"}]
+
+    def predict(**kwargs):
+        return SimpleNamespace(selected_command="search and play", selected_args="type:artist")
+
+    assert evaluate(predict, rows, catalog, "test")["catalog_violation_rate"] == 1.0

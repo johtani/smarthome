@@ -33,7 +33,9 @@ model / prompt / program schemaが一致し、固定testセットの評価ゲー
 ## モデル別成果物の生成と採用
 
 データはseed固定でtrain/dev/test（既定60/20/20）へ分割され、最適化に使用しないtestセットの
-command accuracy / args accuracy / unresolved率 / catalog違反率で採用を判定します。
+command accuracy と args accuracy が各閾値を満たし、catalog 違反率がゼロのときに評価ゲートを通過します。未解決率もレポートに出力します。
+違反率は指定した catalog のスナップショットに対して、本番と共通の Go 引数検証器で予測を一括検証して算出します。ローカル実行には `go.mod` に対応した Go が必要です。Docker イメージには検証器が含まれます。
+カタログの `args` は `Definition.ArgHints` の形式です。#210 より前のサンプルなど、`<query>` や `(empty)` を含む説明文形式のカタログは、対象版の定義と照合し、[現行サンプル](./command_catalog.sample.json)の形式に変換してから評価してください。読み取れない形式は推論開始前にエラーになります。
 `--dataset-version`を省略すると入力JSONLのSHA-256からversionを生成します。
 
 ```powershell

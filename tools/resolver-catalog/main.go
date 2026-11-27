@@ -24,7 +24,22 @@ type label struct {
 
 func run() error {
 	dir := flag.String("config-dir", "config", "directory containing macros.json")
+	snapshot := flag.Bool("snapshot", false, "validate a batch against a supplied catalog snapshot on stdin")
 	flag.Parse()
+	if *snapshot {
+		var batch struct {
+			Catalog []entry `json:"catalog"`
+			Labels  []label `json:"labels"`
+		}
+		if err := json.NewDecoder(os.Stdin).Decode(&batch); err != nil {
+			return err
+		}
+		defs, err := snapshotDefinitions(batch.Catalog)
+		if err != nil {
+			return err
+		}
+		return json.NewEncoder(os.Stdout).Encode(validateLabels(defs, batch.Labels))
+	}
 	commands, err := subcommand.LoadCommandDefinitions(*dir)
 	if err != nil {
 		return err
@@ -39,6 +54,10 @@ func run() error {
 		defs[d.Name] = d
 		catalog = append(catalog, entry{d.Name, d.Description, d.ArgHints(true)})
 	}
+	return json.NewEncoder(os.Stdout).Encode(map[string]any{"catalog": catalog, "errors": validateLabels(defs, labels)})
+}
+
+func validateLabels(defs map[string]subcommand.Definition, labels []label) []string {
 	reasons := make([]string, len(labels))
 	for i, l := range labels {
 		switch {
@@ -57,7 +76,7 @@ func run() error {
 			}
 		}
 	}
-	return json.NewEncoder(os.Stdout).Encode(map[string]any{"catalog": catalog, "errors": reasons})
+	return reasons
 }
 
 func main() {
