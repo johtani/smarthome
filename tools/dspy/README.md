@@ -25,8 +25,7 @@ Issue #159 Phase D 向けの、オフライン最適化 + 評価ゲートの最�
 本番HTTP resolverとオフライン最適化は、どちらも
 `tools/dspy_common/resolver_program.py` の単一段 `ResolverProgram` / `ResolveSignature` を使用します。
 
-単一段構成を採用する理由は、本番の1回のLM呼び出しとAPI入出力を維持しながら、オフラインで最適化したものと
-同じプログラムを本番で実行できるためです。意図解析・command選択・引数生成を別々に呼び出す4段構成は使用しません。
+構成の採用理由と得失は [ADR 0001](../../docs/adr/0001-shared-dspy-resolver.md) に記録しています。
 最適化成果物はDSPy programの状態と`manifest.json`の組として保存され、本番resolverは
 model / prompt / program schemaが一致し、固定testセットの評価ゲートを通過したものだけをロードします。
 
