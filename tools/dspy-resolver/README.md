@@ -56,7 +56,7 @@ smarthome側にも共通ガードがあり、DSPyが具体的な対象を含む�
 `POST /resolve` は、オフライン最適化と共通の
 `tools/dspy_common/resolver_program.py` にある単一段 `ResolverProgram` / `ResolveSignature` を使用します。
 これにより、本番と評価で入力フィールド（`utterance` / `command_catalog` / `prompt_version`）および
-出力フィールド（`selected_command` / `selected_args` / `rationale`）が一致します。
+出力フィールド（`selected_command` / `selected_args` / `rationale`）が一致します。構成の判断理由は [ADR 0001](../../docs/adr/0001-shared-dspy-resolver.md) に記録しています。
 
 ### Request (`POST /resolve-music-intent`)
 
