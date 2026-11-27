@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"go.opentelemetry.io/otel"
-	otellogglobal "go.opentelemetry.io/otel/log/global"
 	sdklog "go.opentelemetry.io/otel/sdk/log"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -98,8 +97,8 @@ func TestTracingHandler(t *testing.T) {
 }
 
 func TestLoggerProviderExportsSlogRecords(t *testing.T) {
-	previousLogProvider := otellogglobal.GetLoggerProvider()
-	defer otellogglobal.SetLoggerProvider(previousLogProvider)
+	previousLogProvider := otel.GetLoggerProvider()
+	defer otel.SetLoggerProvider(previousLogProvider)
 
 	exporter := &recordingLogExporter{}
 	res := resource.NewWithAttributes(
@@ -107,7 +106,7 @@ func TestLoggerProviderExportsSlogRecords(t *testing.T) {
 		semconv.ServiceNameKey.String("test-service"),
 	)
 	loggerProvider := newLoggerProvider(exporter, res)
-	otellogglobal.SetLoggerProvider(loggerProvider)
+	otel.SetLoggerProvider(loggerProvider)
 
 	var stderr bytes.Buffer
 	logger := slog.New(NewLoggerHandler(slog.NewJSONHandler(&stderr, nil), slog.LevelInfo))
